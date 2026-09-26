@@ -1,0 +1,96 @@
+{
+  "title": "Photosynthesis — How Plants Eat Light",
+  "video": { "width": 1920, "height": 1080, "scale": 2, "fps": 30 },
+  "vignette": true,
+  "fadeIn": 600,
+  "fadeOut": 800,
+  "scenes": [
+    {
+      "layout": "title",
+      "duration": 5400,
+      "transition": { "name": "dissolve", "duration": 900 },
+      "kicker": "Class 10 · Biology",
+      "badge": "LESSON 04",
+      "headline": "How plants eat *light*",
+      "sub": "Every calorie you have ever eaten began as sunlight caught by a leaf.",
+      "foot": { "left": "GlobusLearn", "right": "01 / 07" }
+    },
+    {
+      "layout": "bullets",
+      "duration": 6200,
+      "transition": { "name": "pushLeft", "duration": 750 },
+      "kicker": "The inputs",
+      "headline": "Three things a leaf needs",
+      "items": [
+        { "chip": "CO₂", "title": "Carbon dioxide",
+          "detail": "Drawn in through *stomata* — microscopic pores on the underside of the leaf." },
+        { "chip": "H₂O", "title": "Water",
+          "detail": "Pulled up from the roots through the xylem, against gravity, all day long." },
+        { "chip": "hv", "title": "Light energy",
+          "detail": "Absorbed by *chlorophyll*, which reflects green — that is why leaves look green." }
+      ],
+      "foot": { "left": "Inputs", "right": "02 / 07" }
+    },
+    {
+      "layout": "stat",
+      "duration": 5800,
+      "transition": { "name": "scaleBlur", "duration": 700 },
+      "kicker": "The balance sheet",
+      "headline": "One glucose molecule costs",
+      "stats": [
+        { "count": 6, "label": "molecules of carbon dioxide", "countDur": 1200 },
+        { "count": 6, "label": "molecules of water", "countDur": 1400 },
+        { "count": 48, "label": "photons of light absorbed", "countDur": 1700 }
+      ],
+      "note": "6 CO₂ + 6 H₂O + light → C₆H₁₂O₆ + 6 O₂",
+      "foot": { "left": "Stoichiometry", "right": "03 / 07" }
+    },
+    {
+      "layout": "bullets",
+      "duration": 6400,
+      "transition": { "name": "pushUp", "duration": 750 },
+      "kicker": "The mechanism",
+      "headline": "It happens in two stages",
+      "items": [
+        { "chip": "01", "title": "Light reactions — in the thylakoid",
+          "detail": "Light splits water. Oxygen leaves as waste; energy is banked as *ATP and NADPH*." },
+        { "chip": "02", "title": "Calvin cycle — in the stroma",
+          "detail": "That banked energy fixes CO₂ into sugar. No light needed here, only the products of stage one." }
+      ],
+      "foot": { "left": "Mechanism", "right": "04 / 07" }
+    },
+    {
+      "layout": "title",
+      "variant": "statement",
+      "duration": 5200,
+      "transition": { "name": "maskWipe", "duration": 800 },
+      "headline": "The oxygen in this breath was *waste* from a plant splitting water.",
+      "attrib": "— the part worth remembering",
+      "foot": { "left": "Takeaway", "right": "05 / 07" }
+    },
+    {
+      "layout": "stat",
+      "duration": 5800,
+      "transition": { "name": "scaleBlur", "duration": 700 },
+      "kicker": "Scale",
+      "headline": "Run across the whole planet",
+      "stats": [
+        { "count": 100, "unit": "B", "label": "tonnes of carbon fixed each year", "countDur": 1600 },
+        { "count": 70, "unit": "%", "label": "of that oxygen comes from the ocean", "countDur": 1500 },
+        { "value": "1%", "label": "of incoming sunlight is actually captured" }
+      ],
+      "note": "Inefficient per leaf — overwhelming at planetary scale.",
+      "foot": { "left": "Scale", "right": "06 / 07" }
+    },
+    {
+      "layout": "title",
+      "duration": 5200,
+      "transition": { "name": "dissolve", "duration": 800 },
+      "kicker": "Next lesson",
+      "badge": "LESSON 05",
+      "headline": "Respiration — *running it backwards*",
+      "sub": "Same molecules, opposite direction. Bring your notes on the Calvin cycle.",
+      "foot": { "left": "GlobusLearn", "right": "07 / 07" }
+    }
+  ]
+}

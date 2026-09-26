@@ -1,0 +1,15 @@
+{
+  "name": "html-video-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Render animated HTML layouts to video with Chromium + ffmpeg",
+  "bin": { "hvr": "./src/cli.js" },
+  "scripts": {
+    "render": "node src/cli.js render projects/demo.json",
+    "preview": "node src/cli.js preview projects/demo.json"
+  },
+  "dependencies": {
+    "playwright-core": "^1.56.0"
+  }
+}

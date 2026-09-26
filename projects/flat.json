@@ -1,0 +1,39 @@
+{
+  "title": "Haloalkanes and Haloarenes",
+  "video": { "width": 1920, "height": 1080, "scale": 2, "fps": 30 },
+  "fadeIn": 300,
+  "fadeOut": 400,
+  "scenes": [
+    {
+      "layout": "doc", "theme": "light",
+      "duration": 6000,
+      "transition": { "name": "cut", "duration": 0 },
+      "kicker": "Classification", "brand": "Prepzy",
+      "headline": "Haloalkanes and Haloarenes",
+      "lead": "Haloalkanes are alkanes in which one or more hydrogens are replaced by halogen atoms.",
+      "groups": [
+        ["Halogen may be F, Cl, Br, or I.",
+         "They are also called *alkyl halides*.",
+         "The C-X bond is attached to an alkyl group."],
+        ["Haloarenes are benzene derivatives.",
+         "A hydrogen of the benzene nucleus is replaced by a halogen.",
+         "Their general formula is C₆H₅X."]
+      ],
+      "figure": { "src": "assets/halo-table.png",
+                  "caption": "Classification of haloalkanes and haloarenes by bond type and halogen count" }
+    },
+    {
+      "layout": "doc", "theme": "light",
+      "duration": 5500,
+      "transition": { "name": "dissolve", "duration": 400 },
+      "kicker": "Nomenclature", "brand": "Prepzy",
+      "headline": "Naming the compounds",
+      "lead": "Two systems are in common use; the IUPAC name is built from the parent alkane.",
+      "groups": [
+        ["Common system: *alkyl halide* — e.g. isopropyl chloride.",
+         "IUPAC: *halo* prefix on the alkane — e.g. 2-chloropropane.",
+         "Number the chain to give the halogen the lowest locant."]
+      ]
+    }
+  ]
+}

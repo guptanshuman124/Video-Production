@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>stage</title>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="vignette"></div>
+  <div id="fader"></div>
+  <script type="module">
+    import { prepare, seek, motionIntervals, duration } from './runtime.js';
+    // The renderer injects the project + options, then drives everything
+    // through these globals. No autoplay, ever.
+    window.__prepare = async (project, opts) => {
+      // The vignette is a dark-deck flourish; it muddies light slides, so it
+      // is opt-in per project.
+      document.getElementById('vignette').style.display = project.vignette ? '' : 'none';
+      const info = prepare(project, opts);
+      await document.fonts.ready;
+      // Figures are often external files; an undecoded <img> would render as
+      // a blank box in early frames and pop in later.
+      await Promise.all([...document.images].map((im) =>
+        im.complete ? im.decode().catch(() => {}) : new Promise((r) => {
+          im.onload = im.onerror = r;
+        })));
+      seek(0);
+      return info;
+    };
+    window.__seek = (t) => seek(t);
+    window.__motionIntervals = (pad) => motionIntervals(pad);
+    window.__duration = () => duration();
+    window.__ready = true;
+  </script>
+</body>
+</html>
