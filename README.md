@@ -7,8 +7,8 @@ slide-to-slide transition. The renderer knows this and only screenshots the mome
 actually change; the rest of the timeline is the previous frame re-piped to ffmpeg.
 
 ```bash
-npm run render                 # projects/lesson.json -> out/final.mp4 (4K)
-node src/cli.js render projects/lesson.json --draft    # 1080p, fast, for iterating
+npm run render                 # projects/lesson.json -> out/final.mp4 (1080p)
+node src/cli.js render projects/lesson.json --draft    # fast, for iterating
 node src/cli.js preview projects/lesson.json           # headed browser + scrub bar
 node src/cli.js probe projects/lesson.json             # print the timeline
 ```
@@ -39,16 +39,16 @@ scene 1 enter   hold        transition   scene 2 enter   hold
 For `projects/lesson.json` that is 19.1s of motion in a 35.5s video — 46% of frames are held rather
 than shot.
 
-**Authoring at 1080p, rendering at 4K.** The viewport is 1920×1080 CSS px at `deviceScaleFactor: 2`,
-so layout CSS is written in familiar units while text and vectors rasterize at 2×. `--draft` drops
-the scale factor to 1 and changes nothing else.
+**Authoring and rendering at 1080p.** The viewport is 1920×1080 CSS px at `deviceScaleFactor: 1`.
+Pass `--scale 2` (or set `"scale": 2`) to rasterize at 2× for 4K output. `--draft` forces
+the scale factor to 1.
 
 ## Project format
 
 ```jsonc
 {
   "title": "...",
-  "video": { "width": 1920, "height": 1080, "scale": 2, "fps": 30 },
+  "video": { "width": 1920, "height": 1080, "scale": 1, "fps": 30 },
   "fadeIn": 600, "fadeOut": 800,        // fade from/to black
   "audio": "narration.m4a",             // optional; muxed only if the file exists
   "scenes": [

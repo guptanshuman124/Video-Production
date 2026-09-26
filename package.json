@@ -6,7 +6,7 @@
   "description": "Render animated HTML layouts to video with Chromium + ffmpeg",
   "bin": { "hvr": "./src/cli.js" },
   "scripts": {
-    "render": "node src/cli.js render projects/demo.json",
+    "render": "node src/cli.js render projects/lesson.json",
     "preview": "node src/cli.js preview projects/demo.json"
   },
   "dependencies": {

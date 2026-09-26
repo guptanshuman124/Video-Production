@@ -1,6 +1,6 @@
 {
   "title": "Haloalkanes and Haloarenes",
-  "video": { "width": 1920, "height": 1080, "scale": 2, "fps": 30 },
+  "video": { "width": 1920, "height": 1080, "scale": 1, "fps": 30 },
   "fadeIn": 300,
   "fadeOut": 400,
   "scenes": [

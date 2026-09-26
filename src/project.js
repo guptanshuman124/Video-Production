@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const DEFAULTS = { width: 1920, height: 1080, scale: 2, fps: 30 };
+const DEFAULTS = { width: 1920, height: 1080, scale: 1, fps: 30 };
 
 export async function loadProject(file) {
   const abs = path.resolve(file);

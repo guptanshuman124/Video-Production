@@ -1,13 +1,14 @@
 {
   "title": "Photosynthesis — How Plants Eat Light",
-  "video": { "width": 1920, "height": 1080, "scale": 2, "fps": 30 },
+  "video": { "width": 1920, "height": 1080, "scale": 1, "fps": 30 },
   "vignette": true,
   "fadeIn": 600,
   "fadeOut": 800,
+  "audio": "assets/narration_4999_1_hinglish.wav",
   "scenes": [
     {
       "layout": "title",
-      "duration": 5400,
+      "duration": 11180,
       "transition": { "name": "dissolve", "duration": 900 },
       "kicker": "Class 10 · Biology",
       "badge": "LESSON 04",
@@ -17,7 +18,7 @@
     },
     {
       "layout": "bullets",
-      "duration": 6200,
+      "duration": 12840,
       "transition": { "name": "pushLeft", "duration": 750 },
       "kicker": "The inputs",
       "headline": "Three things a leaf needs",
@@ -33,7 +34,7 @@
     },
     {
       "layout": "stat",
-      "duration": 5800,
+      "duration": 12010,
       "transition": { "name": "scaleBlur", "duration": 700 },
       "kicker": "The balance sheet",
       "headline": "One glucose molecule costs",
@@ -47,7 +48,7 @@
     },
     {
       "layout": "bullets",
-      "duration": 6400,
+      "duration": 13250,
       "transition": { "name": "pushUp", "duration": 750 },
       "kicker": "The mechanism",
       "headline": "It happens in two stages",
@@ -62,7 +63,7 @@
     {
       "layout": "title",
       "variant": "statement",
-      "duration": 5200,
+      "duration": 10770,
       "transition": { "name": "maskWipe", "duration": 800 },
       "headline": "The oxygen in this breath was *waste* from a plant splitting water.",
       "attrib": "— the part worth remembering",
@@ -70,7 +71,7 @@
     },
     {
       "layout": "stat",
-      "duration": 5800,
+      "duration": 12010,
       "transition": { "name": "scaleBlur", "duration": 700 },
       "kicker": "Scale",
       "headline": "Run across the whole planet",
@@ -84,7 +85,7 @@
     },
     {
       "layout": "title",
-      "duration": 5200,
+      "duration": 10750,
       "transition": { "name": "dissolve", "duration": 800 },
       "kicker": "Next lesson",
       "badge": "LESSON 05",
