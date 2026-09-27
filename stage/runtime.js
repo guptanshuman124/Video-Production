@@ -11,12 +11,14 @@ import title from './layouts/title.js';
 import bullets from './layouts/bullets.js';
 import stat from './layouts/stat.js';
 import doc from './layouts/doc.js';
+import { templates as TEMPLATES } from './__templates.js';
 
 const LAYOUTS = { title, bullets, stat, doc };
 
 const NEUTRAL = { opacity: 1, transform: 'none', filter: 'none', clipPath: 'inset(0 0 0 0)' };
 
 const anims = [];
+const sceneTimes = [];      // per scene: { exitStart } for stills tooling
 const motion = [];          // raw [start,end] windows where pixels actually change
 let totalDuration = 0;
 
@@ -84,7 +86,9 @@ function inheritedStagger(el, root) {
   return 0;
 }
 
-function buildElementAnims(sceneEl, base) {
+// `local` holds the scene template's own named presets, which shadow the
+// global ones in anims.js.
+function buildElementAnims(sceneEl, base, local = {}) {
   // Assign stagger offsets first. Elements doing their own word-level stagger
   // are skipped so data-stagger is unambiguous.
   sceneEl.querySelectorAll('[data-stagger]').forEach((c) => {
@@ -96,7 +100,12 @@ function buildElementAnims(sceneEl, base) {
 
   sceneEl.querySelectorAll('[data-anim]').forEach((el) => {
     const name = el.dataset.anim;
-    const delay = base + inheritedStagger(el, sceneEl) + Number(el.dataset.delay || 0);
+    // data-at pins the start to an absolute time on the video timeline (=
+    // audio time), for reveals synced to narration; it overrides stagger and
+    // delay, but never starts before this scene's entrance has finished.
+    const delay = el.dataset.at != null
+      ? Math.max(base, Number(el.dataset.at))
+      : base + inheritedStagger(el, sceneEl) + Number(el.dataset.delay || 0);
     const ease = EASE[el.dataset.ease] || null;
 
     if (name === 'words') {
@@ -110,7 +119,7 @@ function buildElementAnims(sceneEl, base) {
       return;
     }
 
-    const preset = ELEMENT_ANIMS[name];
+    const preset = name === '@inline' ? el.__anim : (local[name] || ELEMENT_ANIMS[name]);
     if (!preset) { console.warn('[runtime] unknown animation:', name); return; }
 
     if (name === 'countTo') {
@@ -121,9 +130,9 @@ function buildElementAnims(sceneEl, base) {
       return;
     }
 
-    const dur = Number(el.dataset.dur) || preset.dur;
-    push(el, preset.kf, { delay, duration: dur, easing: ease || preset.ease },
-         [[delay, delay + dur]]);
+    const dur = Number(el.dataset.dur) || preset.dur || 700;
+    const easing = ease || EASE[preset.ease] || preset.ease || EASE.out;
+    push(el, preset.kf, { delay, duration: dur, easing }, [[delay, delay + dur]]);
   });
 }
 
@@ -148,6 +157,50 @@ function buildPresence(sceneEl, { start, dur, tIn, tOut, easeIn, easeOut, isLast
        [[start, start + tIn], ...(isLast ? [] : [[start + dur - tOut, start + dur]])]);
 }
 
+// Exit animations play at the END of a scene and finish by `outPoint` (the
+// moment the outgoing scene transition starts). They use fill:'forwards', not
+// 'both': before they start they contribute nothing, so they never mask the
+// entrance animation on the same element. Created after the entrances, they
+// sit higher in the composite order and win once active.
+//
+//   data-exit="fadeOut"        preset (template-local first, then global)
+//   data-exit-delay="300"      finish this many ms BEFORE outPoint
+//   data-exit-dur / -ease      timing overrides
+//   data-exit-stagger="80"     on a parent: children exit in document order,
+//                              first child first, the last one finishing at
+//                              outPoint - the parent's data-exit-delay
+function buildExitAnims(sceneEl, outPoint, local = {}) {
+  let first = Infinity;
+  sceneEl.querySelectorAll('[data-exit-stagger]').forEach((c) => {
+    const step = Number(c.dataset.exitStagger) || 0;
+    const base = Number(c.dataset.exitDelay || 0);
+    const kids = [...c.children];
+    kids.forEach((k, i) => { k.__xbase = base + (kids.length - 1 - i) * step; });
+  });
+
+  sceneEl.querySelectorAll('[data-exit]').forEach((el) => {
+    const name = el.dataset.exit;
+    const preset = name === '@inline' ? el.__exit : (local[name] || ELEMENT_ANIMS[name]);
+    if (!preset?.kf) { console.warn('[runtime] unknown exit animation:', name); return; }
+    let inherited = 0;
+    for (let n = el; n && n !== sceneEl.parentNode; n = n.parentElement) {
+      if (n.__xbase != null) { inherited = n.__xbase; break; }
+    }
+    const own = el.dataset.exitStagger != null ? 0 : Number(el.dataset.exitDelay || 0);
+    const dur = Number(el.dataset.exitDur) || preset.dur || 500;
+    const end = outPoint - inherited - own;
+    const start = end - dur;
+    const easing = EASE[el.dataset.exitEase] || el.dataset.exitEase || EASE[preset.ease] || preset.ease || EASE.inOut;
+    const a = el.animate(preset.kf, { fill: 'forwards', delay: start, duration: dur, easing });
+    a.pause();
+    a.currentTime = 0;
+    anims.push(a);
+    motion.push([start, end]);
+    first = Math.min(first, start);
+  });
+  return first;
+}
+
 // ---- public API -----------------------------------------------------------
 
 export function prepare(project, opts = {}) {
@@ -166,13 +219,27 @@ export function prepare(project, opts = {}) {
 
   const stage = document.getElementById('stage');
   scenes.forEach((s, i) => {
-    const layout = LAYOUTS[s.layout];
-    if (!layout) throw new Error(`unknown layout: ${s.layout}`);
     const el = document.createElement('section');
-    el.className = s.theme === 'light' ? 'scene light' : 'scene';
     el.style.zIndex = String(10 + i);
     el.dataset.scene = String(i);
-    el.innerHTML = layout(s);
+    let localAnims = {};
+    if (s.template) {
+      // Template scenes own the whole 1920x1080 frame; their CSS is scoped
+      // to [data-template=<id>], which is this section.
+      const tpl = TEMPLATES[s.template];
+      if (!tpl) throw new Error(`unknown template: ${s.template}`);
+      el.className = 'scene tpl';
+      el.dataset.template = s.template;
+      const out = tpl.mod.default(s.data || {}, { index: i, scene: s, example: tpl.example });
+      if (typeof out === 'string') el.innerHTML = out;
+      else if (out) el.appendChild(out);
+      localAnims = tpl.mod.animations || {};
+    } else {
+      const layout = LAYOUTS[s.layout];
+      if (!layout) throw new Error(`unknown layout: ${s.layout}`);
+      el.className = s.theme === 'light' ? 'scene light' : 'scene';
+      el.innerHTML = layout(s);
+    }
     stage.appendChild(el);
 
     const isLast = i === scenes.length - 1;
@@ -182,7 +249,16 @@ export function prepare(project, opts = {}) {
       easeIn: s.transition, easeOut: scenes[i + 1]?.transition,
       isLast,
     });
-    buildElementAnims(el, starts[i] + tIn[i]);
+    buildElementAnims(el, starts[i] + tIn[i], localAnims);
+    // `"exit": false` on a scene keeps its content on screen through the
+    // outgoing transition (e.g. two slides that share a header).
+    if (s.exit !== false) {
+      const tail = isLast ? (project.fadeOut ?? 700) : tIn[i + 1];
+      const exitStart = buildExitAnims(el, starts[i] + s.duration - tail, localAnims);
+      sceneTimes[i] = { exitStart: Number.isFinite(exitStart) ? exitStart : null };
+    } else {
+      sceneTimes[i] = { exitStart: null };
+    }
   });
 
   // Fade from / to black.
@@ -215,3 +291,4 @@ export function motionIntervals(pad = 0) {
 }
 
 export const duration = () => totalDuration;
+export const sceneTime = (i) => sceneTimes[i] || { exitStart: null };

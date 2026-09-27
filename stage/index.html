@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <title>stage</title>
 <link rel="stylesheet" href="./theme.css">
+<link rel="stylesheet" href="./__templates.css">
 </head>
 <body>
   <div id="stage"></div>
   <div id="vignette"></div>
   <div id="fader"></div>
   <script type="module">
-    import { prepare, seek, motionIntervals, duration } from './runtime.js';
+    import { prepare, seek, motionIntervals, duration, sceneTime } from './runtime.js';
     // The renderer injects the project + options, then drives everything
     // through these globals. No autoplay, ever.
     window.__prepare = async (project, opts) => {
@@ -31,6 +32,7 @@
     window.__seek = (t) => seek(t);
     window.__motionIntervals = (pad) => motionIntervals(pad);
     window.__duration = () => duration();
+    window.__sceneTime = (i) => sceneTime(i);
     window.__ready = true;
   </script>
 </body>

@@ -1,0 +1,30 @@
+{
+ "lecture": "Lecture Name",
+ "title": "Slide Title",
+ "items": [
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  },
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  },
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  },
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  },
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  },
+  {
+   "title": "Main Text",
+   "text": "Secondary Text"
+  }
+ ]
+}

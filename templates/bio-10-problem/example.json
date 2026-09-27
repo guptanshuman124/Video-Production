@@ -1,0 +1,11 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Solved Example",
+  "problem": "A sarcomere is 2.4 µm long at rest. During contraction each I-band shortens by 0.2 µm. What is the new sarcomere length?",
+  "answer": "The A-band stays constant; only the I-bands shorten.",
+  "steps": [
+    "Each sarcomere has two half I-bands, so total shortening = 2 × 0.2 µm = 0.4 µm",
+    "New length = 2.4 µm − 0.4 µm = **2.0 µm**"
+  ],
+  "caption": "Sarcomere before and after contraction"
+}

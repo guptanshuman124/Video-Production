@@ -1,0 +1,315 @@
+{
+  "title": "Biology template demo",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "scale": 1,
+    "fps": 30
+  },
+  "fadeIn": 500,
+  "fadeOut": 700,
+  "shared": {
+    "lecture": "Locomotion and Movement"
+  },
+  "scenes": [
+    {
+      "template": "bio-01",
+      "transition": {
+        "name": "cut",
+        "duration": 0
+      },
+      "data": {
+        "title": "Locomotion and Movement",
+        "items": [
+          "Types of Movement",
+          "Muscle",
+          "Structure of Contractile Proteins",
+          "Mechanism of Muscle Contraction",
+          "Skeletal System",
+          "Joints",
+          "Disorders of Muscles and Bones"
+        ]
+      }
+    },
+    {
+      "template": "bio-02",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Muscle Tissue",
+        "definition": "Muscle is a specialised tissue of mesodermal origin that contracts to produce movement.",
+        "points": [
+          "Properties: excitability, contractility, extensibility, elasticity",
+          "Types: skeletal, visceral and cardiac"
+        ],
+        "columns": [
+          "Muscle type",
+          "Control"
+        ],
+        "rows": [
+          [
+            "Skeletal",
+            "Voluntary"
+          ],
+          [
+            "Visceral",
+            "Involuntary"
+          ],
+          [
+            "Cardiac",
+            "Involuntary"
+          ]
+        ],
+        "caption": "Types of muscle fibres"
+      }
+    },
+    {
+      "template": "bio-04",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Properties of Muscle",
+        "items": [
+          {
+            "title": "Excitability",
+            "text": "Responds to a nerve impulse or other stimulus"
+          },
+          {
+            "title": "Contractility",
+            "text": "Shortens actively to generate force"
+          },
+          {
+            "title": "Extensibility",
+            "text": "Can be stretched beyond its resting length"
+          },
+          {
+            "title": "Elasticity",
+            "text": "Returns to its original shape after stretching"
+          },
+          {
+            "title": "Conductivity",
+            "text": "Carries the impulse along the whole fibre"
+          },
+          {
+            "title": "Fatigue",
+            "text": "Repeated activity builds up lactic acid"
+          }
+        ]
+      }
+    },
+    {
+      "template": "bio-05",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Types of Muscle",
+        "columns": [
+          "Basis",
+          "Skeletal",
+          "Visceral",
+          "Cardiac"
+        ],
+        "rows": [
+          [
+            "Location",
+            "Attached to bones",
+            "Walls of hollow organs",
+            "Heart wall"
+          ],
+          [
+            "Striations",
+            "Present",
+            "Absent",
+            "Present"
+          ],
+          [
+            "Nuclei",
+            "Many, peripheral",
+            "One, central",
+            "One or two, central"
+          ],
+          [
+            "Control",
+            "Voluntary",
+            "Involuntary",
+            "Involuntary"
+          ],
+          [
+            "Fatigue",
+            "Fatigues quickly",
+            "Does not fatigue",
+            "Never fatigues"
+          ]
+        ]
+      }
+    },
+    {
+      "template": "bio-07",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Structure of a Sarcomere",
+        "caption": "Arrangement of actin and myosin filaments in a sarcomere"
+      }
+    },
+    {
+      "template": "bio-08",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Energy for Contraction",
+        "caption": "ATP hydrolysis at the myosin head",
+        "points": [
+          {
+            "text": "ATP is split by myosin ATPase to power the cross-bridge cycle",
+            "formula": "\\ce{ATP + H2O -> ADP + P_i}"
+          },
+          {
+            "text": "Creatine phosphate quickly regenerates ATP",
+            "formula": "\\ce{CrP + ADP -> Cr + ATP}"
+          }
+        ]
+      }
+    },
+    {
+      "template": "bio-09",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Sliding Filament Theory",
+        "caption": "Cross-bridge formation between actin and myosin",
+        "sections": [
+          {
+            "heading": "Mechanism / Concept used",
+            "text": "Muscle contracts when thin actin filaments slide over thick myosin filaments; the filaments themselves do not shorten."
+          },
+          {
+            "heading": "Key steps",
+            "points": [
+              "Ca²⁺ binds troponin and exposes actin sites",
+              "Myosin heads form cross-bridges",
+              "Power stroke pulls actin towards the M-line"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "template": "bio-11",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Solved Example",
+        "problem": "A sarcomere is 2.4 µm long at rest. During contraction each I-band shortens by 0.2 µm. What is the new sarcomere length?",
+        "answer": "The A-band stays constant; only the I-bands shorten.",
+        "steps": [
+          "Each sarcomere has two half I-bands, so total shortening = 2 × 0.2 µm = 0.4 µm",
+          "New length = 2.4 µm − 0.4 µm = **2.0 µm**"
+        ],
+        "caption": "Sarcomere before and after contraction"
+      }
+    },
+    {
+      "template": "bio-12",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "question": "Which protein binds Ca²⁺ ions to start muscle contraction?",
+        "options": [
+          "Myosin",
+          "Troponin",
+          "Tropomyosin",
+          "Actin"
+        ],
+        "answer": "B",
+        "wrong": [
+          "C"
+        ],
+        "description": "Ca²⁺ binds troponin, which shifts tropomyosin and exposes the myosin-binding sites on actin.",
+        "caption": "The thin filament"
+      }
+    },
+    {
+      "template": "bio-13",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "assertion": "Skeletal muscle fibres are multinucleate.",
+        "reason": "Each skeletal muscle fibre forms by the fusion of many myoblasts during development.",
+        "answer": "A",
+        "wrong": [
+          "B"
+        ],
+        "explanation": "Both statements are true, and the fusion of myoblasts is exactly why a single fibre carries many nuclei."
+      }
+    },
+    {
+      "template": "bio-14",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "rows": [
+          {
+            "myth": "Muscle fibres get shorter because actin and myosin shrink",
+            "fact": "The filaments keep their length",
+            "factDetail": "Actin slides over myosin; only the I-band and H-zone shorten."
+          },
+          {
+            "myth": "Muscles can push as well as pull",
+            "fact": "Muscles only pull",
+            "factDetail": "Movement in both directions needs antagonistic pairs, e.g. biceps and triceps."
+          },
+          {
+            "myth": "Cardiac muscle is under voluntary control",
+            "fact": "Cardiac muscle is involuntary",
+            "factDetail": "It contracts rhythmically on its own, set by the SA node."
+          }
+        ]
+      }
+    },
+    {
+      "template": "bio-15",
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "keyPoints": [
+          "Movement is a property of all living things; locomotion is movement from place to place",
+          "Muscle contraction follows the sliding filament theory",
+          "Ca²⁺ and ATP are essential for every contraction cycle"
+        ],
+        "glossary": [
+          {
+            "term": "Sarcomere",
+            "meaning": "functional unit of a myofibril, between two Z-lines"
+          },
+          {
+            "term": "Cross-bridge",
+            "meaning": "link formed when a myosin head binds actin"
+          }
+        ]
+      }
+    }
+  ]
+}

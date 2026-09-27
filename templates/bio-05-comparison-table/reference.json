@@ -1,0 +1,41 @@
+{
+ "lecture": "Lecture Name",
+ "title": "Slide Title",
+ "columns": [
+  "Basis",
+  "Entity A",
+  "Entity B"
+ ],
+ "rows": [
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ],
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ],
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ],
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ],
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ],
+  [
+   "Characteristic",
+   "characteristic",
+   "characteristic"
+  ]
+ ]
+}

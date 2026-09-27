@@ -1,0 +1,2 @@
+{ "lecture": "Lecture Name", "question": "Text", "options": ["option","option","option","option"], "description": "Description",
+  "image": "../_shared/assets/blank.png", "caption": "Caption" }

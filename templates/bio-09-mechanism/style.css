@@ -1,0 +1,13 @@
+--brand-bg: var(--bg-lavender);
+.side { left: 84px; top: 240px; width: 864px; height: 736px; }
+.side .panel-caption { padding-bottom: 15px; }
+.sections {
+  position: absolute; left: 972px; top: 241px; width: 864px;
+  display: flex; flex-direction: column; gap: 36px;
+}
+h2 { font: 700 32px/1.15 var(--font-card); color: var(--brand-navy); }
+p, li { font: 400 28px/1.3 var(--font-card); color: var(--brand-ink); }
+p { margin-top: 12px; }
+.bullets { margin-top: 12px; gap: 8px; }
+.bullets > li { padding-left: 34px; }
+.bullets > li::before { left: 10px; }

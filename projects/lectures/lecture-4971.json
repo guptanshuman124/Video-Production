@@ -1,0 +1,183 @@
+{
+  "title": "Lecture 4971",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "scale": 1,
+    "fps": 30
+  },
+  "fadeIn": 500,
+  "fadeOut": 800,
+  "audio": "assets/narration_4971_hinglish_track.wav",
+  "_generated": "hvr lecture — language hinglish, pace 0.9; edit the source JSON and regenerate rather than hand-editing cues",
+  "shared": {
+    "lecture": "Cell: The Unit of Life"
+  },
+  "scenes": [
+    {
+      "template": "bio-02",
+      "_slide": "1. definition — narration narration_4971_1_hinglish.wav (92.8s, 278 words, 180 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 95471,
+      "transition": {
+        "name": "cut",
+        "duration": 0
+      },
+      "data": {
+        "title": "How Cells Define Life",
+        "definition": "Cell theory states that all living organisms are made of cells and cell products, and that new cells arise from pre-existing cells.",
+        "points": [
+          "It explains the cellular basis of life.",
+          "It links structure with function.",
+          "It also makes cell division central."
+        ],
+        "image": "assets/img_4971_1_b3.webp",
+        "caption": "The central idea of cell theory",
+        "cues": {
+          "points": [
+            8.93,
+            36.77,
+            39.27
+          ],
+          "definition": 5.93
+        }
+      }
+    },
+    {
+      "template": "bio-02",
+      "_slide": "2. definition — narration narration_4971_2_hinglish.wav (98.4s, 276 words, 168 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 101680,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Schleiden, Schwann, Virchow",
+        "definition": "Schleiden, Schwann, and Virchow built cell theory through plant studies, animal studies, and the idea of cell formation from pre-existing cells.",
+        "points": [
+          "Schleiden focused on plants.",
+          "Schwann extended the idea to animals.",
+          "Virchow finalized the concept."
+        ],
+        "columns": [
+          "Scientist",
+          "Main idea",
+          "Contribution"
+        ],
+        "rows": [
+          [
+            "Matthias Schleiden",
+            "Plants are cellular",
+            "Plant tissues are made of cells"
+          ],
+          [
+            "Theodore Schwann",
+            "Animals are cellular",
+            "Animal bodies are also cellular"
+          ],
+          [
+            "Rudolf Virchow",
+            "Cells come from cells",
+            "Omnis cellula e cellula"
+          ]
+        ],
+        "image": "assets/img_4971_2_b4.webp",
+        "caption": "Three scientists completed the idea of cell theory",
+        "cues": {
+          "points": [
+            150.16,
+            153.44,
+            155.94
+          ],
+          "rows": [
+            100.36,
+            113.98,
+            133.96
+          ],
+          "definition": 96.37,
+          "table": 99.76
+        }
+      }
+    },
+    {
+      "template": "bio-14",
+      "_slide": "3. common_misconception — narration narration_4971_3_hinglish.wav (95.5s, 278 words, 175 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 98836,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Cell Theory Misconceptions",
+        "rows": [
+          {
+            "myth": "Animal cells have no outer boundary",
+            "fact": "Animal cells have a plasma membrane",
+            "factDetail": "Schwann observed the thin outer layer in animals"
+          },
+          {
+            "myth": "Plants and animals are not both cellular",
+            "fact": "Both plant and animal bodies are cellular",
+            "factDetail": "Cell theory unites both kingdoms at the cellular level"
+          },
+          {
+            "myth": "Cells appear by spontaneous formation",
+            "fact": "New cells come from pre-existing cells",
+            "factDetail": "Virchow rejected spontaneous formation"
+          }
+        ],
+        "cues": {
+          "rows": [
+            [
+              201.54,
+              204.61
+            ],
+            [
+              218.39,
+              226.46
+            ],
+            [
+              234.69,
+              240.01
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "template": "bio-12",
+      "_slide": "4. mcq — narration narration_4971_4_hinglish.wav (75.2s, 222 words, 177 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 78529,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Who Completed Cell Theory?",
+        "question": "Which scientist gave the final shape to cell theory?",
+        "options": [
+          "Matthias Schleiden",
+          "Theodore Schwann",
+          "Rudolf Virchow",
+          "Louis Pasteur"
+        ],
+        "answer": "C",
+        "wrong": [
+          "B"
+        ],
+        "description": "Virchow added the idea that new cells arise from pre-existing cells, which completed the theory.",
+        "cues": {
+          "question": 297.55,
+          "options": [
+            298.55,
+            298.85,
+            299.15,
+            299.45
+          ],
+          "answer": 324.12,
+          "wrong": 305.38,
+          "description": 325.32
+        }
+      }
+    }
+  ]
+}

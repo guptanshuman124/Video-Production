@@ -1,0 +1,4 @@
+{ "lecture": "Lecture Name", "rows": [
+  { "myth": "Main Text", "fact": "Main text", "factDetail": "Secondary text" },
+  { "myth": "Main Text", "fact": "Main text", "factDetail": "Secondary text" },
+  { "myth": "Main Text", "fact": "Main text", "factDetail": "Secondary text" } ] }

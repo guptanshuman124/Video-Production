@@ -1,0 +1,14 @@
+--brand-bg: var(--bg-white);
+
+.topic {
+  position: absolute; width: 560px; height: 75px;
+  display: flex; align-items: center; gap: 20px; list-style: none;
+}
+.badge {
+  flex: 0 0 auto; width: 75px; height: 75px; border-radius: 50%;
+  background: var(--brand-orange);
+  display: flex; align-items: center; justify-content: center;
+  font: 800 32px/1 var(--font-body); color: #000;
+}
+.label { font: 400 28px/1.2 var(--font-body); color: #000; }
+.side { left: 1268px; top: 157px; width: 548px; height: 819px; }

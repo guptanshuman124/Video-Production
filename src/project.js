@@ -1,27 +1,66 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { buildTemplates, validate, lookup } from './templates.js';
 
 const DEFAULTS = { width: 1920, height: 1080, scale: 1, fps: 30 };
+const LAYOUTS = new Set(['title', 'bullets', 'stat', 'doc']);
 
 export async function loadProject(file) {
   const abs = path.resolve(file);
   const project = JSON.parse(await readFile(abs, 'utf8'));
+  return normalizeProject(project, path.dirname(abs), file);
+}
+
+// Validates a project object and resolves everything the stage needs. `dir`
+// is where relative asset paths (figures, template images, audio) resolve.
+export async function normalizeProject(project, dir, label = 'project') {
   const v = { ...DEFAULTS, ...(project.video || {}) };
 
   if (!Array.isArray(project.scenes) || project.scenes.length === 0) {
-    throw new Error(`${file}: project has no scenes`);
+    throw new Error(`${label}: project has no scenes`);
   }
 
-  const known = new Set(['title', 'bullets', 'stat', 'doc']);
+  const needsTemplates = project.scenes.some((s) => s.template);
+  const build = needsTemplates ? await buildTemplates() : { registry: {}, aliases: {} };
+  const errors = [];
+
   project.scenes.forEach((s, i) => {
-    if (!known.has(s.layout)) throw new Error(`scene ${i}: unknown layout "${s.layout}"`);
-    if (!(s.duration > 0)) throw new Error(`scene ${i}: duration must be > 0`);
+    if (s.template) {
+      const t = lookup(build, s.template);
+      if (!t) {
+        errors.push(`scene ${i}: unknown template "${s.template}"` +
+                    ` (registered: ${Object.keys(build.registry).join(', ') || 'none'})`);
+        return;
+      }
+      s.template = t.id;                      // aliases resolve to the canonical id
+      s.duration ??= t.meta.duration;
+      // Project-level `shared` values (lecture name, logo…) fill any field the
+      // template declares and the scene leaves unset.
+      const data = { ...(s.data || {}) };
+      for (const [k, v] of Object.entries(project.shared || {})) {
+        if (k in t.schema && data[k] === undefined) data[k] = structuredClone(v);
+      }
+      const where = `scene ${i} (${s.template}) data`;
+      const r = validate(t.schema, data, { where, assetDir: dir });
+      errors.push(...r.errors);
+      // Cross-field rules a schema can't express (e.g. every row has one
+      // cell per column) live in the template's optional check(data).
+      if (!r.errors.length && t.check) {
+        for (const msg of [t.check(r.value) || []].flat()) errors.push(`${where}: ${msg}`);
+      }
+      s.data = r.value;
+    } else if (!LAYOUTS.has(s.layout)) {
+      errors.push(`scene ${i}: needs "template" or a known "layout" (got "${s.layout}")`);
+      return;
+    }
+    if (!(s.duration > 0)) errors.push(`scene ${i}: duration must be > 0`);
     const t = s.transition?.duration ?? 0;
     const next = project.scenes[i + 1]?.transition?.duration ?? 0;
     if (t + next > s.duration) {
-      throw new Error(`scene ${i}: transitions (${t}+${next}ms) exceed duration (${s.duration}ms)`);
+      errors.push(`scene ${i}: transitions (${t}+${next}ms) exceed duration (${s.duration}ms)`);
     }
   });
+  if (errors.length) throw new Error(`${label}:\n    ${errors.join('\n    ')}`);
 
   // Figures are authored relative to the project file; the stage serves them
   // under /__assets/ so the page can fetch them over http rather than file://.
@@ -31,7 +70,7 @@ export async function loadProject(file) {
   }
 
   project.video = v;
-  project.dir = path.dirname(abs);
+  project.dir = dir;
   return project;
 }
 

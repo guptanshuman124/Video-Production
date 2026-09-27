@@ -1,0 +1,21 @@
+--brand-bg: var(--bg-teal);
+
+.card { position: absolute; border-radius: 12px; background: var(--brand-surface-alt); }
+.stmt { left: var(--frame-left); width: 864px; height: 213px; padding: 19px 26px; }
+.a { top: 240px; }
+.r { top: 480px; }
+h2 { font: 600 32px/1.2 var(--font-body); color: var(--brand-navy); }
+.stmt p { margin-top: 19px; font: 400 28px/1.3 var(--font-card); color: var(--brand-ink); }
+.options {
+  position: absolute; left: 972px; top: 240px; width: 864px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+.opt {
+  height: 92px; padding: 0 24px 0 23px; border-radius: 12px;
+  display: flex; align-items: center; gap: 43px;
+  background: var(--brand-surface-alt); border: 3px solid transparent;
+}
+.letter { flex: 0 0 19px; font: 700 26.7px/1 var(--font-card); color: var(--brand-navy); }
+.otext { font: 400 28px/1.25 var(--font-body); color: var(--brand-ink); }
+.expl { left: var(--frame-left); top: 716px; width: 1752px; height: 278px; padding: 24px 24px; }
+.expl p { margin-top: 13px; font: 300 28px/1.35 var(--font-body); color: var(--brand-ink); }

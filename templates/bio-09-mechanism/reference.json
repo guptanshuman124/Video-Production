@@ -1,0 +1,11 @@
+{
+ "lecture": "Lecture Name",
+ "title": "Slide Title",
+ "caption": "Caption",
+ "sections": [
+  {
+   "heading": "Mechanism / Concept used",
+   "text": "Explanation"
+  }
+ ]
+}

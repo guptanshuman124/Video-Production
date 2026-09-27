@@ -11,7 +11,9 @@ export function startEncoder({ out, fps, crf = 18, preset = 'slow', audio = null
     '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-r', String(fps),
     '-movflags', '+faststart',
   );
-  if (audio) args.push('-c:a', 'aac', '-b:a', '192k', '-shortest');
+  // apad extends the audio with silence so the video's length always wins:
+  // narration shorter than the timeline no longer truncates the last scene.
+  if (audio) args.push('-af', 'apad', '-c:a', 'aac', '-b:a', '192k', '-shortest');
   args.push(out);
 
   const proc = spawn('ffmpeg', args, { stdio: ['pipe', 'ignore', 'pipe'] });
@@ -65,7 +67,9 @@ export function concatChunks({ files, out, audio = null }) {
   const args = ['-y', '-f', 'concat', '-safe', '0', '-i', listFile];
   if (audio) args.push('-i', audio);
   args.push('-c:v', 'copy', '-movflags', '+faststart');
-  if (audio) args.push('-c:a', 'aac', '-b:a', '192k', '-shortest');
+  // apad extends the audio with silence so the video's length always wins:
+  // narration shorter than the timeline no longer truncates the last scene.
+  if (audio) args.push('-af', 'apad', '-c:a', 'aac', '-b:a', '192k', '-shortest');
   args.push(out);
 
   const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });

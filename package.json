@@ -4,12 +4,17 @@
   "private": true,
   "type": "module",
   "description": "Render animated HTML layouts to video with Chromium + ffmpeg",
-  "bin": { "hvr": "./src/cli.js" },
+  "bin": {
+    "hvr": "./src/cli.js"
+  },
   "scripts": {
     "render": "node src/cli.js render projects/lesson.json",
-    "preview": "node src/cli.js preview projects/demo.json"
+    "preview": "node src/cli.js preview projects/demo.json",
+    "templates": "node src/cli.js templates"
   },
   "dependencies": {
+    "esbuild": "^0.28.2",
+    "katex": "^0.18.9",
     "playwright-core": "^1.56.0"
   }
 }

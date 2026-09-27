@@ -13,6 +13,32 @@ node src/cli.js preview projects/lesson.json           # headed browser + scrub 
 node src/cli.js probe projects/lesson.json             # print the timeline
 ```
 
+**Server lectures → video.** `hvr lecture` turns the Prepzy server's lecture JSON into ready-to-render projects:
+
+- **Language:** it picks each slide's narration in the chosen language (`--lang`, default `hinglish`) and downloads the audio and images.
+- **Timing:** it times every block's trigger phrase against that narration and maps each slide to a biology template.
+- **Audio:** it writes one narration track aligned to the scenes.
+
+```bash
+node src/cli.js lecture projects/lectures.json --lecture-name "Cell: The Unit of Life"
+node src/cli.js render projects/lectures/lecture-4971.json --out out/lecture-4971.mp4 --jobs 6
+```
+
+- **Pace:** `pace` is Sarvam Bulbul's speed multiplier: 1.0 is normal speed and 0.9 is 10% slower. At 0.9, Hinglish narration runs about 176 words/min including pauses.
+- **Word timing:** a words-per-minute model weighted by word length, numbers and punctuation pauses, calibrated to each clip's real length. Against whisper word timestamps it's about 0.4s off at the median.
+- **Trigger matching:** trigger phrases are paraphrases, so they're matched fuzzily.
+- **Slide types:** `definition` maps to `bio-02`, `mcq` to `bio-12` (trap option red when it's named, answer green when it's confirmed), and `common_misconception` to `bio-14`.
+- **Review file:** each generated project gets a `.cues.txt` listing what matched where.
+
+**Slide templates.** Besides the built-in layouts, scenes can use registry templates:
+reusable 1920×1080 slides written in JSX with their own schema and animations, filled from JSON
+(`{ "template": "<id>", "data": {…} }`). See [templates/README.md](templates/README.md).
+
+```bash
+node src/cli.js templates                 # list registered templates
+node src/cli.js template <id> --snap      # render a template's example data to PNG
+```
+
 ## How it works
 
 **One timeline, no realtime playback.** All scenes live in the DOM at once as stacked `<section>`s.

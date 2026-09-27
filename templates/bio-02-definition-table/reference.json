@@ -1,0 +1,27 @@
+{
+ "lecture": "Lecture Name",
+ "title": "Slide Title",
+ "definition": "Definition",
+ "points": [
+  "Properties/Types"
+ ],
+ "columns": [
+  "column",
+  "column"
+ ],
+ "rows": [
+  [
+   "value",
+   "value"
+  ],
+  [
+   "value",
+   "value"
+  ],
+  [
+   "value",
+   "value"
+  ]
+ ],
+ "caption": "Caption"
+}

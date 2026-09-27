@@ -1,0 +1,15 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Energy for Contraction",
+  "caption": "ATP hydrolysis at the myosin head",
+  "points": [
+    {
+      "text": "ATP is split by myosin ATPase to power the cross-bridge cycle",
+      "formula": "\\ce{ATP + H2O -> ADP + P_i}"
+    },
+    {
+      "text": "Creatine phosphate quickly regenerates ATP",
+      "formula": "\\ce{CrP + ADP -> Cr + ATP}"
+    }
+  ]
+}

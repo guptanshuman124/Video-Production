@@ -1,0 +1,11 @@
+--brand-bg: var(--bg-white);
+.side { left: 84px; top: 240px; width: 901px; height: 758px; }
+.side .panel-caption { padding-bottom: 12px; }
+.points {
+  position: absolute; left: 1005px; top: 240px; width: 831px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+.desc { font: 400 28px/1.21 var(--font-body); color: var(--brand-body); }
+.formula { margin-top: 6px; font-size: 29px; color: var(--brand-navy); }
+.formula .katex-display { margin: 0; text-align: left; }
+.formula .katex-display > .katex { text-align: left; font-size: 1.21em; }

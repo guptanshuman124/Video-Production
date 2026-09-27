@@ -1,0 +1,13 @@
+--brand-bg: var(--bg-mist);
+
+.rows {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.row { display: grid; grid-template-columns: 864px 864px; gap: 24px; }
+.card { height: 229px; padding: 33px 26px; border-radius: var(--radius-card); }
+/* PDF rows 2–3 (row 1 sits 13px higher in the design; the majority wins) */
+.myth { background: var(--brand-myth); padding-left: 28px; }
+.fact { background: var(--brand-fact); }
+.main { font: 600 26.7px/1.25 var(--font-body); color: #000; }
+.detail { margin-top: 15px; font: 300 24px/1.35 var(--font-body); color: #000; }

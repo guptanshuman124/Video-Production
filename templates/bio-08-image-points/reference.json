@@ -1,0 +1,11 @@
+{
+ "lecture": "Lecture Name",
+ "title": "Slide Title",
+ "caption": "Caption",
+ "points": [
+  {
+   "text": "point - description",
+   "formula": "\\int x^2\\,dx = \\frac{x^3}{3} + C"
+  }
+ ]
+}

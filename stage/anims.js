@@ -60,6 +60,83 @@ export const ELEMENT_ANIMS = {
     kf: [{ opacity: 0, transform: 'translateY(22px)' },
          { opacity: 1, transform: 'translateY(0)' }],
   },
+  fadeRight: {
+    dur: 760, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'translateX(-54px)' },
+         { opacity: 1, transform: 'translateX(0)' }],
+  },
+  zoomIn: {
+    dur: 900, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'scale(1.14)' },
+         { opacity: 1, transform: 'scale(1)' }],
+  },
+  popIn: {
+    dur: 560, ease: EASE.back,
+    kf: [{ opacity: 0, transform: 'scale(.4)' },
+         { opacity: 1, transform: 'scale(1)' }],
+  },
+  // Pure translate, no fade — pair with an overflow:hidden parent for a
+  // "text rises out of a slot" reveal.
+  slideUp: {
+    dur: 820, ease: EASE.out,
+    kf: [{ transform: 'translateY(105%)' }, { transform: 'translateY(0)' }],
+  },
+  clipDown: {
+    dur: 900, ease: EASE.out,
+    kf: [{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }],
+  },
+  clipLeft: {
+    dur: 900, ease: EASE.out,
+    kf: [{ clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)' }],
+  },
+  // Circular reveal from the element's centre.
+  irisIn: {
+    dur: 900, ease: EASE.out,
+    kf: [{ clipPath: 'circle(0% at 50% 50%)' }, { clipPath: 'circle(75% at 50% 50%)' }],
+  },
+  // Vertical grow (bar charts, dividers). Set transform-origin in CSS.
+  growY: {
+    dur: 760, ease: EASE.out,
+    kf: [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }],
+  },
+  // SVG stroke drawing. The element needs pathLength="1" and
+  // stroke-dasharray: 1 so the offset runs 1 -> 0 regardless of real length.
+  draw: {
+    dur: 1200, ease: EASE.inOut,
+    kf: [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
+  },
+  // ---- deck vocabulary: content fades in rising, leaves fading out rising ----
+  riseIn: {
+    dur: 700, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'translateY(28px)' },
+         { opacity: 1, transform: 'translateY(0)' }],
+  },
+  // Image panels settle in from a hair larger — no filter, cheap to rasterise.
+  panelIn: {
+    dur: 800, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'scale(1.03)' },
+         { opacity: 1, transform: 'scale(1)' }],
+  },
+  // ---- exits (use with exit=) ----
+  fadeOut: {
+    dur: 500, ease: EASE.inOut,
+    kf: [{ opacity: 1 }, { opacity: 0 }],
+  },
+  fadeOutUp: {
+    dur: 560, ease: EASE.inOut,
+    kf: [{ opacity: 1, transform: 'translateY(0)' },
+         { opacity: 0, transform: 'translateY(-36px)' }],
+  },
+  riseOut: {
+    dur: 520, ease: EASE.inOut,
+    kf: [{ opacity: 1, transform: 'translateY(0)' },
+         { opacity: 0, transform: 'translateY(-28px)' }],
+  },
+  fadeOutDown: {
+    dur: 560, ease: EASE.inOut,
+    kf: [{ opacity: 1, transform: 'translateY(0)' },
+         { opacity: 0, transform: 'translateY(36px)' }],
+  },
   // Numeric count-up driven by a registered @property, so it stays on the
   // same deterministic clock as every other animation (no JS tick).
   countTo: {

@@ -1,0 +1,28 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Muscle Tissue",
+  "definition": "Muscle is a specialised tissue of mesodermal origin that contracts to produce movement.",
+  "points": [
+    "Properties: excitability, contractility, extensibility, elasticity",
+    "Types: skeletal, visceral and cardiac"
+  ],
+  "columns": [
+    "Muscle type",
+    "Control"
+  ],
+  "rows": [
+    [
+      "Skeletal",
+      "Voluntary"
+    ],
+    [
+      "Visceral",
+      "Involuntary"
+    ],
+    [
+      "Cardiac",
+      "Involuntary"
+    ]
+  ],
+  "caption": "Types of muscle fibres"
+}

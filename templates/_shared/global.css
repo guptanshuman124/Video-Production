@@ -1,0 +1,134 @@
+/* Brand-wide styles for every registry template: fonts, colour tokens and
+   the shared header / slide-title components from hvr/shared. Not scoped —
+   loaded once, before any template's own style.css.
+   Measurements are 1920x1080 CSS px.
+   Specificity: the root rule is .scene:where(.tpl) (0,1,0) so it beats the
+   base .scene rule in theme.css by source order, and a template's own
+   [data-template] rules (0,1,0, loaded later) beat it in turn. */
+
+@font-face { font-family: 'Inter'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/inter-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/inter-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/inter-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/inter-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 300; font-style: normal; font-display: block; src: url('./fonts/inter-latin-300-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 800; font-style: normal; font-display: block; src: url('./fonts/inter-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Arimo'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/arimo-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Arimo'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/arimo-latin-700-normal.woff2') format('woff2'); }
+/* Greek subset: λ, π, Δ … in formulas */
+@font-face { font-family: 'Inter'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/inter-greek-400-normal.woff2') format('woff2'); unicode-range: U+0370-03FF; }
+@font-face { font-family: 'Inter'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/inter-greek-500-normal.woff2') format('woff2'); unicode-range: U+0370-03FF; }
+@font-face { font-family: 'Inter'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/inter-greek-600-normal.woff2') format('woff2'); unicode-range: U+0370-03FF; }
+@font-face { font-family: 'Inter'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/inter-greek-700-normal.woff2') format('woff2'); unicode-range: U+0370-03FF; }
+@font-face { font-family: 'Poppins'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-700-normal.woff2') format('woff2'); }
+
+.scene:where(.tpl) {
+  /* ---- colour: exact values from the Prepzy template PDF ---- */
+  --brand-navy:         #1b2e83;   /* labels, lecture name, formulas, option letters */
+  --brand-orange:       #f5a623;   /* title bar, number badges */
+  --brand-ink:          #14181f;   /* titles, running text */
+  --brand-body:         #4b5563;   /* secondary text, table cells */
+  --brand-muted:        #8a93a0;   /* small caps labels (PROBLEM, Question) */
+  --brand-rule:         #8a93a0;   /* header divider */
+  --brand-surface:      #ffffff;
+  --brand-surface-alt:  #f6f7f9;   /* panels, cards, alt rows */
+  --brand-surface-head: #e8ebf6;   /* table heads, section bars */
+  --brand-panel-line:   #e3e6ea;   /* image panel border */
+  --brand-cream:        #fdf3e0;   /* answer / description boxes */
+  --brand-myth:         #f6d9d5;   /* misconception (wrong idea) */
+  --brand-fact:         #c2e1d4;   /* misconception (correct idea) */
+
+  /* slide backgrounds used across the deck */
+  --bg-white:    #ffffff;
+  --bg-grey:     #d9d9d9;
+  --bg-lavender: #e8ebf6;
+  --bg-teal:     #b9d9db;
+  --bg-mist:     #f6f7f9;
+
+  /* MCQ answer states (PDF page 16) */
+  --mcq-correct-bg:     #e8f4ef;
+  --mcq-correct-border: #1f7a5a;
+  --mcq-wrong-bg:       #fbecea;
+  --mcq-wrong-border:   #c0392b;
+
+  /* ---- type ---- */
+  --font-display: 'Poppins', 'Inter', system-ui, sans-serif;   /* slide titles */
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-card:    'Arimo', Arial, 'Helvetica Neue', sans-serif; /* card / option text */
+
+  /* ---- frame ---- */
+  --frame-left:  84px;
+  --frame-right: 84px;
+  --header-h:    95px;
+  --content-top: 240px;
+  --radius-panel: 14px;
+  --radius-card:  16px;
+  --radius-row:   8px;
+
+  background: var(--brand-bg, var(--bg-grey));
+  color: var(--brand-ink);
+  font-family: var(--font-body);
+  font-kerning: normal;
+}
+
+.scene.tpl .accent { color: var(--brand-navy); }
+.scene.tpl .katex { color: var(--brand-navy); font-size: 1.15em; }
+
+/* ---- <Header> -------------------------------------------------------------- */
+:where(.scene.tpl) .brand-header {
+  position: absolute; left: 0; right: 0; top: 0; height: var(--header-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 108px 0 var(--frame-left);
+  border-bottom: 1px solid var(--brand-rule);
+}
+:where(.scene.tpl) .brand-lecture {
+  font: 700 21.3px/1.2 var(--font-body);
+  text-transform: uppercase; color: var(--brand-navy);
+}
+:where(.scene.tpl) .brand-logo { height: 49px; width: auto; display: block; margin-top: 3px; }
+:where(.scene.tpl) .brand-wordmark {
+  font: 700 40px/1 Georgia, 'Times New Roman', serif; letter-spacing: .02em; color: #3b2f7a;
+}
+:where(.scene.tpl) .brand-wordmark b { color: var(--brand-orange); font-weight: 700; }
+
+/* ---- <SlideTitle> ---------------------------------------------------------- */
+:where(.scene.tpl) .brand-title {
+  position: absolute; left: 79px; top: 127px; height: 77px;
+  display: flex; align-items: center; gap: 28px;
+}
+:where(.scene.tpl) .brand-title::before {
+  content: ''; flex: 0 0 auto; width: 10px; height: 77px;
+  border-radius: 5px; background: var(--brand-orange);
+}
+:where(.scene.tpl) .brand-title h1 {
+  font: 600 61.3px/1.4 var(--font-display);
+  color: var(--brand-ink); white-space: nowrap;
+}
+
+/* ---- <Panel>: image placeholder box with caption --------------------------- */
+:where(.scene.tpl) .panel {
+  position: absolute; display: flex; flex-direction: column;
+  background: var(--brand-surface-alt);
+  border: 1px solid var(--brand-panel-line); border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+:where(.scene.tpl) .panel-media {
+  flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+:where(.scene.tpl) .panel-media img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+:where(.scene.tpl) .panel.cover .panel-media { padding: 0; }
+:where(.scene.tpl) .panel.cover .panel-media img { width: 100%; height: 100%; object-fit: cover; max-width: none; max-height: none; }
+:where(.scene.tpl) .panel-caption {
+  flex: 0 0 auto; padding: 0 24px 22px; text-align: center;
+  font: 400 24px/1.2 var(--font-body); color: #000;
+}
+
+/* ---- <Bullets> ------------------------------------------------------------- */
+:where(.scene.tpl) .bullets { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+:where(.scene.tpl) .bullets > li { position: relative; padding-left: 48px; }
+:where(.scene.tpl) .bullets > li::before {
+  content: ''; position: absolute; left: 23px; top: .62em; width: 9px; height: 9px;
+  border-radius: 50%; background: currentColor;
+}

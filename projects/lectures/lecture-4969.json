@@ -1,0 +1,194 @@
+{
+  "title": "Lecture 4969",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "scale": 1,
+    "fps": 30
+  },
+  "fadeIn": 500,
+  "fadeOut": 800,
+  "audio": "assets/narration_4969_hinglish_track.wav",
+  "_generated": "hvr lecture — language hinglish, pace 0.9; edit the source JSON and regenerate rather than hand-editing cues",
+  "shared": {
+    "lecture": "Cell: The Unit of Life"
+  },
+  "scenes": [
+    {
+      "template": "bio-02",
+      "_slide": "1. definition — narration narration_4969_1_hinglish.wav (93.5s, 283 words, 182 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 96236,
+      "transition": {
+        "name": "cut",
+        "duration": 0
+      },
+      "data": {
+        "title": "Cell: The Living Unit",
+        "definition": "A cell is the smallest unit capable of independent life and all essential life functions.",
+        "points": [
+          "Basic structural unit of life.",
+          "Basic functional unit of life.",
+          "Seen in both unicellular and multicellular organisms."
+        ],
+        "image": "assets/img_4969_1_b3.webp",
+        "caption": "A cell as the basic unit of life",
+        "cues": {
+          "points": [
+            26.31,
+            35.15,
+            37.65
+          ],
+          "definition": 3.59
+        }
+      }
+    },
+    {
+      "template": "bio-02",
+      "_slide": "2. definition — narration narration_4969_2_hinglish.wav (93.7s, 277 words, 177 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 97033,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Unicellular and Multicellular",
+        "definition": "Unicellular organisms are made of one cell; multicellular organisms are made of many cells.",
+        "points": [
+          "Bacteria are examples of unicellular life.",
+          "Elephant is an example of multicellular life.",
+          "Cellular organisation stays common in both."
+        ],
+        "image": "assets/img_4969_2_b3.webp",
+        "caption": "One cell versus many cells",
+        "cues": {
+          "points": [
+            110.25,
+            143.08,
+            157.21
+          ],
+          "definition": 100.08
+        }
+      }
+    },
+    {
+      "template": "bio-02",
+      "_slide": "3. definition — narration narration_4969_3_hinglish.wav (97.5s, 292 words, 180 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 100826,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Cell Theory Idea",
+        "definition": "Cell theory states that all living organisms are made of cells, and cells arise from pre-existing cells.",
+        "points": [
+          "Explains unity of life forms.",
+          "Links structure with function.",
+          "Raises a question about cell continuity."
+        ],
+        "image": "assets/img_4969_3_b3.webp",
+        "caption": "The core ideas of cell theory",
+        "cues": {
+          "points": [
+            200.58,
+            216.93,
+            246.49
+          ],
+          "definition": 197.58
+        }
+      }
+    },
+    {
+      "template": "bio-02",
+      "_slide": "4. definition — narration narration_4969_4_hinglish.wav (97.8s, 284 words, 174 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 101110,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Cell Discovery Names",
+        "definition": "Hooke, Leeuwenhoek, and Brown are key early scientists in cell discovery.",
+        "points": [
+          "Hooke saw cork cell walls.",
+          "Leeuwenhoek saw free-living cells.",
+          "Brown discovered the nucleus."
+        ],
+        "image": "assets/img_4969_4_b3.webp",
+        "caption": "Early observations that shaped cell study",
+        "cues": {
+          "points": [
+            302.47,
+            316.41,
+            318.91
+          ],
+          "definition": 299.17
+        }
+      }
+    },
+    {
+      "template": "bio-02",
+      "_slide": "5. definition — narration narration_4969_5_hinglish.wav (99.6s, 285 words, 172 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 102913,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Microscope Reveals Detail",
+        "definition": "Microscopes revealed structural detail of cells and made cellular organisation visible.",
+        "points": [
+          "Improved observation over time.",
+          "Electron microscope later expanded detail.",
+          "Microscopy changed biology itself."
+        ],
+        "image": "assets/img_4969_5_b3.webp",
+        "caption": "Microscopy opened the cell to detailed study",
+        "cues": {
+          "points": [
+            400.83,
+            413.24,
+            485.39
+          ],
+          "definition": 397.83
+        }
+      }
+    },
+    {
+      "template": "bio-12",
+      "_slide": "6. mcq — narration narration_4969_6_hinglish.wav (84.6s, 257 words, 182 wpm effective; nominal 176 at pace 0.9)",
+      "duration": 87932,
+      "transition": {
+        "name": "dissolve",
+        "duration": 600
+      },
+      "data": {
+        "title": "Quick Check: Cell Basics",
+        "question": "Which statement best describes a cell?",
+        "options": [
+          "Smallest unit of independent life",
+          "Largest unit of life",
+          "Only found in animals",
+          "A non-living body part"
+        ],
+        "answer": "A",
+        "wrong": [
+          "B"
+        ],
+        "description": "A cell is the smallest living unit that can perform essential life functions on its own.",
+        "cues": {
+          "question": 500.88,
+          "options": [
+            501.88,
+            502.18,
+            502.48,
+            502.78
+          ],
+          "answer": 523.62,
+          "wrong": 507.95,
+          "description": 524.82
+        }
+      }
+    }
+  ]
+}
