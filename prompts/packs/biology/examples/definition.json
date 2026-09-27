@@ -1,0 +1,16 @@
+{
+  "data": {
+    "title": "Osmosis Across a Membrane",
+    "definition": "Osmosis is the net movement of water across a selectively permeable membrane from higher to lower water potential.",
+    "points": [
+      "Needs no external energy",
+      "Only water crosses, not solute",
+      "Stops when potentials equalise"
+    ],
+    "columns": null,
+    "rows": null,
+    "caption": "Water moves toward lower water potential"
+  },
+  "narration": "Think about two solutions of different strength, separated only by a membrane that lets water through but blocks the solute. What happens next? {{b1}} Water moves from a region of higher water potential to a region of lower water potential. That's the whole idea of osmosis in one line. {{b2.1}} Notice it needs no external energy at all — no pump, no active transport, just the natural tendency of water to spread out evenly. {{b2.2}} Only the water crosses freely here, not the dissolved particles, and that selective crossing is exactly what makes the membrane selectively permeable. So which way does the water actually go? Toward the more concentrated side, because that side has the lower water potential. {{b2.3}} Movement keeps happening until the water potential becomes equal on both sides, and then it stops — not because water wants to stop, but because there is no gradient left to drive it. You'll see this idea everywhere: it's why a plant cell in salty water shrinks, and why the same cell in pure water swells. Root hair cells depend on exactly this process to pull water in from the soil. And here's a distinction the board exam likes — osmosis is specifically water crossing a membrane, while diffusion is any substance spreading through open space.",
+  "narration_hinglish": "दो solutions को सोचो, अलग-अलग strength वाले, जो सिर्फ़ एक membrane से अलग हैं जो water को जाने देती है पर solute को रोकती है। आगे क्या होता है? {{b1}} Water higher water potential वाली region से lower water potential वाली region में जाता है। बस यही पूरी बात है osmosis की, एक लाइन में। {{b2.1}} ध्यान दो, इसे किसी external energy की ज़रूरत नहीं — कोई pump नहीं, कोई active transport नहीं, बस water की natural tendency कि वह evenly spread हो जाए। {{b2.2}} यहाँ सिर्फ़ water freely cross करता है, dissolved particles नहीं, और यही selective crossing membrane को selectively permeable बनाता है। तो water आखिर किस तरफ़ जाता है? उस तरफ़ जो ज़्यादा concentrated है, क्योंकि वहाँ water potential कम है। {{b2.3}} यह movement तब तक चलता रहता है जब तक दोनों तरफ़ water potential बराबर न हो जाए, और फिर रुक जाता है — इसलिए नहीं कि water रुकना चाहता है, बल्कि इसलिए कि अब कोई gradient बचा ही नहीं जो उसे किसी तरफ़ धकेले। एक बार देखना शुरू करो तो यह idea हर जगह दिखेगा: यही कारण है कि plant cell को नमकीन पानी में डालने पर वह सिकुड़ जाता है, और वही cell साफ़ पानी में डालने पर फूल जाता है। Root hair cells बिल्कुल इसी process पर depend करते हैं मिट्टी से पानी खींचने के लिए। और board exam के लिए एक फ़र्क याद रखो — osmosis specifically membrane के आर-पार water के जाने की बात है, जबकि diffusion किसी भी substance का खुली जगह में फैलना है।"
+}

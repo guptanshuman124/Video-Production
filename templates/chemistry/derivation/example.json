@@ -1,0 +1,11 @@
+{
+  "lecture": "Motion in a Straight Line",
+  "title": "Third Equation of Motion",
+  "goal": "v^{2} = u^{2} + 2as",
+  "steps": [
+    { "text": "Displacement is the area under the v–t graph", "formula": "s = \\frac{(u + v)}{2}\\, t" },
+    { "text": "From the first equation, write time in terms of velocities", "formula": "t = \\frac{v - u}{a}" },
+    { "text": "Substitute t and simplify", "formula": "s = \\frac{(v + u)(v - u)}{2a} \\;\\Rightarrow\\; v^{2} = u^{2} + 2as" }
+  ],
+  "caption": "Velocity–time graph for uniform acceleration"
+}

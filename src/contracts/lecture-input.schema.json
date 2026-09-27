@@ -1,0 +1,41 @@
+{
+  "$id": "lecture-input",
+  "title": "Lecture input: one textbook_raw row with its course metadata and chapter context (sources/textbook.js)",
+  "type": "object",
+  "required": ["lecture_id", "module_id", "course_id", "class", "subject", "pack", "chapter_title", "title", "position", "blocks"],
+  "properties": {
+    "lecture_id": { "type": "integer" },
+    "module_id": { "type": "integer" },
+    "course_id": { "type": "integer" },
+    "unmapped": { "type": "boolean" },
+    "class": { "type": "integer", "minimum": 6, "maximum": 12 },
+    "subject": { "type": "string", "minLength": 1 },
+    "pack": { "enum": ["physics", "chemistry", "biology", "mathematics", "commerce", "theory"] },
+    "variant": { "type": ["string", "null"] },
+    "slide_language": { "enum": ["english", "hindi"] },
+    "chapter_title": { "type": "string" },
+    "title": { "type": "string" },
+    "position": {
+      "type": "object", "required": ["index", "count"],
+      "properties": { "index": { "type": "integer", "minimum": 1 }, "count": { "type": "integer", "minimum": 1 } }
+    },
+    "format": { "enum": ["doc", "html", "text"] },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["kind"],
+        "properties": {
+          "kind": { "enum": ["heading", "text", "image"] },
+          "text": { "type": "string" }, "level": { "type": "integer" },
+          "src": { "type": "string" }, "description": { "type": "string" }
+        }
+      }
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "summary": { "type": ["string", "null"] },
+    "summary_placeholder": { "type": "boolean" },
+    "pack_review": { "type": "boolean" },
+    "recap": { "type": ["string", "null"] },
+    "preview": { "type": ["string", "null"] }
+  }
+}

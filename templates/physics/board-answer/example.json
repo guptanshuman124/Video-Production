@@ -1,0 +1,12 @@
+{
+  "lecture": "Chemical Bonding and Molecular Structure",
+  "title": "Why is BeF₂ Linear?",
+  "problem": "Explain why the BeF₂ molecule is linear while H₂O is bent. (3 marks)",
+  "reasoning": [
+    "Be has two bond pairs and no lone pair in its valence shell",
+    "Two electron pairs repel and settle 180° apart, so BeF₂ is linear",
+    "O in H₂O has two bond pairs and two lone pairs",
+    "Lone-pair repulsion squeezes the H–O–H angle to 104.5°, so H₂O is bent"
+  ],
+  "takeaway": "Shape follows the total electron pairs (VSEPR); lone pairs distort it."
+}

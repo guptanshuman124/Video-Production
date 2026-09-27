@@ -1,0 +1,91 @@
+# Product defaults. Override per machine in config/local.yaml (git-ignored) or
+# per run with --config <file>. Secrets never live here — they come from env:
+#   OPENAI_API_KEY, SARVAM_API_KEY, GOOGLE_APPLICATION_CREDENTIALS, ELEVENLABS_API_KEY
+
+curriculum:
+  board: cbse
+  lectures_per_chapter: 5
+  lecture_minutes: 20          # target; each lecture may drift within the band below
+  lecture_minutes_band: [15, 25]
+  slide_minutes: [1.6, 2]      # screen time per slide (Hinglish narration + transitions), for the slide budget
+
+duration:                      # textbook lectures: video length follows the source
+  base_minutes: 5.3            # minutes = base + words/1000 × per_1000, clamped to [min, max]
+  minutes_per_1000_words: 7.35 # ≈ 640 words → 10 min · 1,180 → 14 min · 2,000 → 20 min
+  min_minutes: 8
+  max_minutes: 25              # longer sources are summarised to fit, never padded
+  band: 0.3                    # the voiced lecture may land ±30% around its target (A1 gate)
+
+language:
+  slides: english              # on-screen text and all internal content
+  voice: hinglish              # the only language that is voiced
+
+narration:
+  mode: direct                 # direct: narrator writes Hinglish with markers (one LLM step)
+                               # via-english: English draft, then a Hinglish conversion step (~25-30% more LLM cost)
+  hinglish_word_factor: 1.1    # Hinglish runs ~10% longer than English for the same content;
+                               # scales each slide type's narrationWords range
+
+llm:
+  provider: openai
+  # Chosen by bake-off on real lectures (2026-09-27): gpt-6-luna writes natural Hinglish at
+  # ~$0.007/lecture; gpt-6-sol as the fact reviewer catches what luna misses (one call per lecture).
+  model: gpt-6-luna
+  models:
+    review: gpt-6-sol
+  reasoning_effort: low        # current OpenAI models take reasoning effort, not temperature
+  temperature: null            # only sent when set (older models)
+  timeout_s: 180
+  retries: 3
+  repair_attempts: 2           # LLM repair passes per failing unit before human review
+  review_repair_rounds: 1      # reviewer findings: rewrite the flagged slides and review again this many times
+  batch_size: 4                # slides per call for the writer, narrator and Hinglish layers
+  concurrency: 4               # parallel LLM calls
+  cache: true
+  prices:                      # USD per 1M tokens (developers.openai.com/api/docs/pricing, 2026-09-27); logged per call
+    gpt-6-sol:    { input: 2.00, cached_input: 0.20, output: 10.00 }
+    gpt-6-luna:   { input: 0.10, cached_input: 0.01, output: 0.50 }
+    gpt-5.6-luna: { input: 0.20, cached_input: 0.02, output: 1.20 }
+    gpt-5.4-mini: { input: 0.75, cached_input: 0.075, output: 4.50 }
+    gpt-5-mini:   { input: 0.25, cached_input: 0.025, output: 2.00 }
+
+tts:
+  provider: sarvam             # sarvam | google | elevenlabs
+  strategy: auto               # auto | segments | marks  (auto: marks when the provider returns them)
+  gap_ms: 200                  # silence between marker segments
+  concurrency: 4               # parallel TTS requests; Sarvam rate-limits bursts (HTTP 429)
+  retries: 6                   # transient failures retried with backoff (honours Retry-After)
+  cache: true
+  loudness_lufs: -16
+  sarvam:
+    model: bulbul:v3           # 'shubh' is a v3 voice (v2 rejects it)
+    speaker: shubh
+    pace: 0.9
+    sample_rate: 24000
+    language: hi-IN
+    max_chars: 2400            # API limit is 2,500 characters per request
+  google:
+    voice: null
+    speaking_rate: 1.0
+  elevenlabs:
+    voice_id: null
+    model: null
+
+timing:                         # ms, shared by the audio track and slide cues
+  transition: 600
+  settle: 900                  # after the slide's entrance, before narration starts
+  tail: 1800                   # after narration, for exits and breathing room
+  reveal_lead: 250             # a block appears this long before it is spoken
+
+video:
+  width: 1920
+  height: 1080
+  fps: 25
+  crf: 20
+  preset: medium
+  tune: stillimage
+  capture: jpeg
+  jobs: 4
+
+paths:
+  jobs: jobs                   # per-stage outputs: jobs/<chapter>/<lecture>/<stage>.json

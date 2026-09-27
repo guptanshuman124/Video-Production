@@ -1,0 +1,33 @@
+{
+  "$id": "chapter-input",
+  "title": "Chapter input: one NCERT chapter, as handed to the pipeline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_id", "class", "subject", "pack", "title", "source_text", "images"],
+  "properties": {
+    "chapter_id": { "type": "string", "minLength": 1 },
+    "board": { "const": "cbse" },
+    "class": { "type": "integer", "minimum": 6, "maximum": 12 },
+    "subject": { "type": "string", "minLength": 1 },
+    "pack": { "enum": ["physics", "chemistry", "biology", "mathematics", "commerce", "theory"] },
+    "variant": { "type": ["string", "null"], "description": "e.g. organic | inorganic | physical for chemistry" },
+    "title": { "type": "string", "minLength": 1 },
+    "source_text": { "type": "string", "minLength": 200, "description": "raw NCERT chapter text" },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "url", "description"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "pattern": "^https?://" },
+          "description": { "type": "string", "minLength": 3 },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

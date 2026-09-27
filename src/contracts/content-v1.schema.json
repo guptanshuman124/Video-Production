@@ -1,0 +1,73 @@
+{
+  "$id": "content-v1",
+  "title": "Content JSON v1: one validated lecture, ready for TTS and render. `data` is the template's own data (checked per slide type against the template's meta.slide spec); image and cues are added at build.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "chapter_id", "lecture", "pack", "class", "subject", "title", "slides"],
+  "properties": {
+    "version": { "const": 1 },
+    "chapter_id": { "type": "string" },
+    "lecture": { "type": "integer", "minimum": 1 },
+    "pack": { "type": "string" },
+    "variant": { "type": ["string", "null"] },
+    "class": { "type": "integer", "minimum": 6, "maximum": 12 },
+    "subject": { "type": "string" },
+    "title": { "type": "string" },
+    "slide_language": { "enum": ["english", "hindi"] },
+    "source": {
+      "type": ["object", "null"],
+      "description": "textbook_raw row this lecture came from",
+      "properties": { "course_id": { "type": "integer" }, "module_id": { "type": "integer" }, "lecture_id": { "type": "integer" } }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slide_number", "slide_type", "template", "title", "data", "narration", "markers"],
+        "properties": {
+          "slide_number": { "type": "integer", "minimum": 1 },
+          "slide_type": { "type": "string" },
+          "template": { "type": "string", "description": "registry id, e.g. biology/definition" },
+          "title": { "type": "string" },
+          "data": { "type": "object", "description": "template data without image and cues" },
+          "image": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["id", "url"],
+            "properties": {
+              "id": { "type": "string" },
+              "url": { "type": "string", "pattern": "^https?://" },
+              "caption": { "type": "string" }
+            }
+          },
+          "narration": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["hinglish"],
+            "properties": {
+              "english": { "type": ["string", "null"], "description": "only in narration.mode via-english" },
+              "hinglish": { "type": "string", "minLength": 1 }
+            }
+          },
+          "markers": {
+            "type": "array",
+            "description": "marker ids in spoken order, e.g. [\"b1\", \"b2.1\", \"b2.2\", \"b3.1.2\"]",
+            "items": { "type": "string", "pattern": "^b[0-9]+(\\.[0-9]+){0,2}$" }
+          },
+          "source_refs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "model": { "type": ["string", "null"] },
+        "prompt_hashes": { "type": "object" },
+        "gates": { "type": "object" },
+        "created_at": { "type": "string" }
+      }
+    }
+  }
+}

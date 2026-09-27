@@ -1,0 +1,28 @@
+{
+  "$id": "gate-report",
+  "title": "Result of one validation gate on one unit (chapter, lecture or slide)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stage", "unit", "status", "issues"],
+  "properties": {
+    "stage": { "type": "string", "description": "G-0 … G-6 (generation), G5 … G7 (audio/render)" },
+    "unit": { "type": "string", "description": "e.g. ch-12, ch-12/L2, ch-12/L2/s07" },
+    "status": { "enum": ["pass", "warn", "fail"] },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "message"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+          "severity": { "enum": ["error", "warning"] },
+          "path": { "type": "string" },
+          "message": { "type": "string" },
+          "autoFixed": { "type": "boolean" }
+        }
+      }
+    },
+    "at": { "type": "string" }
+  }
+}

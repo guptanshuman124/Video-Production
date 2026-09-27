@@ -5,7 +5,7 @@ These templates are coded from the Prepzy **PPT Biology.pdf** template (16 pages
 - **References:** each template folder keeps the page it reproduces as `reference.png`, plus `reference.json`, the placeholder data that recreates that page for pixel comparison.
 - **Measurements:** geometry, colours and font sizes were taken from the PDF's own vector and text layers.
 
-Address a template by its **page number alias** (`bio-05`) or its folder id (`bio-05-comparison-table`):
+The templates live in the `biology` pack (`templates/biology/<slide>/`). Address one by its pack id (`biology/comparison`), its **page number alias** (`bio-05`) or its original folder id (`bio-05-comparison-table`):
 
 ```jsonc
 { "template": "bio-05", "data": { … } }
@@ -186,8 +186,8 @@ Up to 6 cards, filled row by row: 1 2 / 3 4 / 5 6.
 ## Checking a template against its page
 
 ```bash
-node src/cli.js template bio-12 --snap out/cmp/bio-12.png --data templates/bio-12-mcq/reference.json
-# compare out/cmp/bio-12.png with templates/bio-12-mcq/reference.png
+node src/cli.js template bio-12 --snap out/cmp/bio-12.png --data templates/biology/mcq/reference.json
+# compare out/cmp/bio-12.png with templates/biology/mcq/reference.png
 ```
 
 `projects/biology-demo.json` runs every template in sequence with its example data.

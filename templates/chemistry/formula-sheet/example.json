@@ -1,0 +1,15 @@
+{
+  "lecture": "Current Electricity",
+  "title": "Formula sheet",
+  "items": [
+    { "formula": "I = \\frac{Q}{t}", "label": "Electric current" },
+    { "formula": "V = IR", "label": "Ohm’s law" },
+    { "formula": "R = \\rho \\frac{l}{A}", "label": "Resistance of a wire" },
+    { "formula": "P = VI", "label": "Electric power" },
+    { "formula": "R_s = R_1 + R_2", "label": "Resistors in series" },
+    { "formula": "\\frac{1}{R_p} = \\frac{1}{R_1} + \\frac{1}{R_2}", "label": "Resistors in parallel" },
+    { "formula": "H = I^2 R t", "label": "Joule heating" },
+    { "formula": "\\varepsilon = V + Ir", "label": "EMF of a cell" }
+  ],
+  "symbols": ["I – current (A)", "Q – charge (C)", "V – potential difference (V)", "R – resistance (Ω)", "ρ – resistivity (Ω m)", "P – power (W)"]
+}

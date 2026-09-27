@@ -1,0 +1,12 @@
+{
+  "lecture": "Work, Energy and Power",
+  "title": "Kinetic Energy",
+  "definition": "Kinetic energy is the energy a body possesses because of its motion.",
+  "points": ["Scalar quantity, never negative", "SI unit: joule (J)"],
+  "columns": ["Object", "Mass", "Speed"],
+  "rows": [["Ball", "0.5 kg", "10 m/s"], ["Car", "1000 kg", "20 m/s"]],
+  "formulaFor": "kinetic energy",
+  "formula": "K = \\frac{1}{2}\\, m v^{2}",
+  "symbols": "K – kinetic energy (J) · m – mass (kg) · v – speed (m/s)",
+  "caption": "A moving body can do work"
+}

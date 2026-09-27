@@ -1,7 +1,8 @@
 // Template registry.
 //
 // Every folder in templates/ (except those starting with "_") is one slide
-// template, and its folder name is its id:
+// template, and its folder name is its id — or a pack of templates, whose ids
+// are "<pack>/<folder>" (see templateDirs):
 //
 //   templates/<id>/template.jsx   required — meta, schema, default render fn
 //   templates/<id>/style.css      optional — auto-scoped to [data-template="<id>"]
@@ -27,13 +28,45 @@ const ASSET_LOADERS = {
   '.svg': 'dataurl', '.woff2': 'dataurl', '.woff': 'dataurl', '.ttf': 'dataurl', '.otf': 'dataurl',
 };
 
+const visibleDirs = (dir) => fs.readdirSync(dir, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
+  .map((d) => d.name);
+const isTemplate = (id) => fs.existsSync(path.join(TEMPLATES_DIR, id, 'template.jsx'));
+
+// A folder with a template.jsx is a template ("bio-02-definition-table"). A
+// folder without one is a pack (templates/biology/pack.json) whose subfolders
+// are its templates, addressed as "<pack>/<slide>" ("biology/definition").
 export function templateDirs() {
   if (!fs.existsSync(TEMPLATES_DIR)) return [];
-  return fs.readdirSync(TEMPLATES_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
-    .map((d) => d.name)
-    .filter((id) => fs.existsSync(path.join(TEMPLATES_DIR, id, 'template.jsx')))
-    .sort();
+  const ids = [];
+  for (const name of visibleDirs(TEMPLATES_DIR)) {
+    if (isTemplate(name)) { ids.push(name); continue; }
+    for (const sub of visibleDirs(path.join(TEMPLATES_DIR, name))) {
+      if (isTemplate(`${name}/${sub}`)) ids.push(`${name}/${sub}`);
+    }
+  }
+  return ids.sort();
+}
+
+// Pack manifests (templates/<pack>/pack.json): slide-choice rules, per-type
+// counts and image-free fallbacks used by the generation layer.
+export function loadPacks() {
+  const packs = {};
+  if (!fs.existsSync(TEMPLATES_DIR)) return packs;
+  for (const name of visibleDirs(TEMPLATES_DIR)) {
+    const f = path.join(TEMPLATES_DIR, name, 'pack.json');
+    if (!isTemplate(name) && fs.existsSync(f)) packs[name] = { id: name, ...JSON.parse(fs.readFileSync(f, 'utf8')) };
+  }
+  return packs;
+}
+
+// A template may reuse another pack's template by re-exporting it
+// (`export { default } from '../../biology/mcq/template.jsx'`). With no
+// style.css of its own, it then gets that template's styles, scoped to itself.
+const BASE_RE = /from\s+['"]\.\.\/\.\.\/([\w-]+\/[\w-]+)\/template\.jsx['"]/;
+export function baseTemplateOf(id) {
+  const src = fs.readFileSync(path.join(TEMPLATES_DIR, id, 'template.jsx'), 'utf8');
+  return BASE_RE.exec(src)?.[1] ?? null;
 }
 
 function entrySource(ids) {
@@ -45,6 +78,12 @@ function entrySource(ids) {
     const q = (f) => JSON.stringify(`./${id}/${f}`);
     if (has('global.css')) lines.push(`import ${q('global.css')};`);
     if (has('style.css')) lines.push(`import ${q('style.css')};`);
+    else {
+      const base = baseTemplateOf(id);
+      if (base && fs.existsSync(path.join(TEMPLATES_DIR, base, 'style.css'))) {
+        lines.push(`import ${JSON.stringify(`./${base}/style.css?scope=${encodeURIComponent(id)}`)};`);
+      }
+    }
     lines.push(`import * as t${i} from ${q('template.jsx')};`);
     if (has('example.json')) lines.push(`import e${i} from ${q('example.json')};`);
     rows.push(`  ${JSON.stringify(id)}: { id: ${JSON.stringify(id)}, mod: t${i}, ` +
@@ -77,8 +116,20 @@ const plugin = {
         .replace(/,\s*url\([^)]+\.ttf\) format\("truetype"\)/g, '');
       return { contents: css, loader: 'css', resolveDir: path.dirname(args.path) };
     });
+    // A base template's style.css imported for a re-exporting template. The
+    // scope is part of the module path: esbuild keys modules by path, and two
+    // packs reusing one stylesheet must get two differently scoped copies.
+    b.onResolve({ filter: /style\.css\?scope=/ }, (args) => {
+      const [rel, query] = args.path.split('?scope=');
+      return { path: `${path.resolve(args.resolveDir, rel)}|${decodeURIComponent(query)}`, namespace: 'hvr-scoped-css' };
+    });
+    b.onLoad({ filter: /.*/, namespace: 'hvr-scoped-css' }, async (args) => {
+      const [file, scope] = args.path.split('|');
+      const css = await fs.promises.readFile(file, 'utf8');
+      return { contents: `[data-template="${scope}"] {\n${css}\n}\n`, loader: 'css', resolveDir: path.dirname(file) };
+    });
     b.onLoad({ filter: /[\\/]style\.css$/ }, async (args) => {
-      const id = path.basename(path.dirname(args.path));
+      const id = path.relative(TEMPLATES_DIR, path.dirname(args.path)).split(path.sep).join('/');
       const css = await fs.promises.readFile(args.path, 'utf8');
       return { contents: `[data-template="${id}"] {\n${css}\n}\n`, loader: 'css',
                resolveDir: path.dirname(args.path) };
@@ -211,7 +262,7 @@ export function validate(schema, data, { where = 'data', assetDir = null } = {})
         if (abs && !fs.existsSync(abs)) fail(p, `file not found: ${val}`);
         // Paths that leave the project folder ("../shared/x.png") can't ride
         // /__assets/ (the browser normalises "..") so they go by absolute path.
-        if (abs && path.relative(assetDir, abs).startsWith('..')) return `/__abs/${encodeURIComponent(abs)}`;
+        if (abs && (path.relative(assetDir, abs).startsWith('..') || path.isAbsolute(path.relative(assetDir, abs)))) return `/__abs/${encodeURIComponent(abs)}`;
         return `/__assets/${val}`;
       }
       case 'list': {

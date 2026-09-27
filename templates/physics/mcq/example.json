@@ -1,0 +1,16 @@
+{
+  "lecture": "Locomotion and Movement",
+  "question": "Which protein binds Ca²⁺ ions to start muscle contraction?",
+  "options": [
+    "Myosin",
+    "Troponin",
+    "Tropomyosin",
+    "Actin"
+  ],
+  "answer": "B",
+  "wrong": [
+    "C"
+  ],
+  "description": "Ca²⁺ binds troponin, which shifts tropomyosin and exposes the myosin-binding sites on actin.",
+  "caption": "The thin filament"
+}

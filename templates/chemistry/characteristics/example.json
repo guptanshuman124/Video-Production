@@ -1,0 +1,30 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Properties of Muscle",
+  "items": [
+    {
+      "title": "Excitability",
+      "text": "Responds to a nerve impulse or other stimulus"
+    },
+    {
+      "title": "Contractility",
+      "text": "Shortens actively to generate force"
+    },
+    {
+      "title": "Extensibility",
+      "text": "Can be stretched beyond its resting length"
+    },
+    {
+      "title": "Elasticity",
+      "text": "Returns to its original shape after stretching"
+    },
+    {
+      "title": "Conductivity",
+      "text": "Carries the impulse along the whole fibre"
+    },
+    {
+      "title": "Fatigue",
+      "text": "Repeated activity builds up lactic acid"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "data": {
+    "title": "Genes, Chromosomes and ATP",
+    "rows": [
+      {
+        "myth": "Genes and chromosomes are the same thing",
+        "mythDetail": null,
+        "fact": "A chromosome carries many genes along its length",
+        "factDetail": "A gene is one segment of the DNA in a chromosome"
+      },
+      {
+        "myth": "Mitochondria are the only site of ATP production",
+        "mythDetail": null,
+        "fact": "Glycolysis in the cytoplasm also makes ATP",
+        "factDetail": "Less ATP, but no mitochondrion involved"
+      }
+    ]
+  },
+  "narration": "Let's clear up two mix-ups that come up again and again in exams, one at a time. {{b1.1.1}} First — students often use the words gene and chromosome as if they mean the same thing. They don't, and examiners notice. {{b1.1.2}} A chromosome is a long thread of DNA carrying many genes, one after another, at fixed places. Think of the chromosome as a whole book, and each gene as one sentence inside it. So a mutation in a single gene damages one sentence, not the whole book. {{b1.2.1}} Second — many students believe mitochondria are the only place ATP is made. It's an easy belief to pick up, because mitochondria are called the powerhouse of the cell. {{b1.2.2}} But glycolysis happens right in the cytoplasm, and it makes a small amount of ATP with no mitochondrion involved at all. Only the later, bigger stages — the Krebs cycle and the electron transport chain — need the mitochondrion. Keep both distinctions sharp, because assertion–reason questions are built on exactly this kind of confusion.",
+  "narration_hinglish": "चलो दो mix-ups clear करते हैं जो exams में बार-बार आते हैं, एक-एक करके। {{b1.1.1}} पहला — students अक्सर gene और chromosome को ऐसे बोलते हैं जैसे दोनों एक ही चीज़ हों। ऐसा नहीं है, और examiner यह notice करते हैं। {{b1.1.2}} Chromosome DNA का एक लंबा thread है जिस पर बहुत सारे genes होते हैं, एक के बाद एक, fixed जगहों पर। Chromosome को पूरी किताब समझो, और हर gene को उस किताब के अंदर एक वाक्य। तो एक single gene में mutation एक वाक्य को नुकसान है, पूरी किताब को नहीं। {{b1.2.1}} दूसरा — बहुत सारे students मानते हैं कि ATP सिर्फ़ mitochondria में बनता है। यह belief आसानी से बन जाता है, क्योंकि mitochondria को cell का powerhouse कहा जाता है। {{b1.2.2}} पर glycolysis cytoplasm में ही होता है, और यह बिना किसी mitochondrion के थोड़ी ATP बना देता है। सिर्फ़ बाद के, बड़े stages — Krebs cycle और electron transport chain — को mitochondrion चाहिए। इन दोनों को साफ़ रखो, क्योंकि board exam में assertion-reason questions अक्सर इसी तरह के confusion पर बनते हैं।"
+}

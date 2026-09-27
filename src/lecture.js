@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { FFMPEG } from './tools.js';
 import { speechBounds, timeline, locate, findSequence } from './narration.js';
 
 // ---- scene pacing -----------------------------------------------------------
@@ -315,11 +316,11 @@ export async function buildLecture(lec, { lang = 'hinglish', pace = 0.9, outDir,
   const filter = clips.map((c, i) => `[${i}]adelay=${Math.round(c.at)}:all=1[a${i}]`).join(';') +
     `;${clips.map((_, i) => `[a${i}]`).join('')}amix=inputs=${clips.length}:normalize=0:duration=longest[out]`;
   args.push('-filter_complex', filter, '-map', '[out]', '-ar', '44100', '-ac', '1', track);
-  execFileSync('ffmpeg', args);
+  execFileSync(FFMPEG, args);
 
   const project = {
     title: name || `Lecture ${id}`,
-    video: { width: 1920, height: 1080, scale: 1, fps: 30 },
+    video: { width: 1920, height: 1080, scale: 1, fps: 25 },
     fadeIn: 500,
     fadeOut: 800,
     audio: path.relative(outDir, track),

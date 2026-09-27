@@ -1,5 +1,7 @@
 # html-video-renderer
 
+**CBSE lecture pipeline.** `hvr run chapter.json` turns one NCERT chapter into five validated Hinglish lecture videos. The steps are LLM plans → slides → narration → Hinglish → TTS → timed render → QA, and a code check follows every step. See **[docs/PIPELINE.md](docs/PIPELINE.md)**. Everything below documents the render engine it is built on.
+
 Render animated HTML layouts to video. Chromium draws the frames, ffmpeg encodes them.
 
 Slides are **static compositions** — the only motion is per-element entrance animation and the
@@ -74,7 +76,7 @@ the scale factor to 1.
 ```jsonc
 {
   "title": "...",
-  "video": { "width": 1920, "height": 1080, "scale": 1, "fps": 30 },
+  "video": { "width": 1920, "height": 1080, "scale": 1, "fps": 25 },
   "fadeIn": 600, "fadeOut": 800,        // fade from/to black
   "audio": "narration.m4a",             // optional; muxed only if the file exists
   "scenes": [
@@ -125,7 +127,7 @@ digit counting on the same deterministic clock as everything else instead of nee
 |---|---|---|
 | `--draft` | off | 1080p, crf 26, `veryfast`, jpeg capture |
 | `--capture` | `png` (`jpeg` in draft) | JPEG q100 measures ~66dB luma PSNR / 0.9998 SSIM against PNG and captures ~37% faster at 4K. Output is yuv420p either way. |
-| `--crf` / `--preset` | 18 / `slow` | x264 |
+| `--crf` / `--preset` / `--tune` | 18 / `slow` / none | x264; `video.preset` and `video.tune` in the project set the defaults. `--tune stillimage` suits long, mostly held lectures |
 | `--fps` / `--out` | from project | |
 | `--jobs N` | 1 | parallel workers; each renders a contiguous slice, joined with a stream copy |
 | `--all-frames` | off | disable the motion-window optimisation; shoot every frame |

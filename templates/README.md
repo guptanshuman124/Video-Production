@@ -4,6 +4,8 @@
 
 Every folder here is one reusable 1920×1080 slide. It's written in JSX and styled with scoped CSS, and a project fills it with JSON data. The folder name is the template id. Folders starting with `_` are not registered.
 
+A folder without a `template.jsx` is a **pack**: its subfolders are templates addressed as `<pack>/<slide>` (for example `biology/definition`), and its optional `pack.json` holds the slide-choice rules the generation layer uses.
+
 ```
 templates/
   _lib/index.js          JSX runtime + helpers (import from 'hvr')
@@ -158,3 +160,41 @@ Class names are safe to keep short: the built-in layout styles in `stage/theme.c
 ### Styling
 
 `style.css` is wrapped in `[data-template="<id>"] { … }`, which is the scene's 1920×1080 `<section>` itself. Declarations at the top level of the file style the frame, for example `background: #fff;`. Nested rules only reach this template. The frame has no padding and white background by default, so lay things out absolutely or with your own container.
+
+## Slide spec for the lecture pipeline (`meta.slide`)
+
+Templates inside a pack (`templates/<pack>/<slide>/`) also declare the slide type(s) they render, so the generation pipeline can plan, write, check and time them. One spec generates the LLM's output schema, the content checks, the narration markers, the cue times and the planner's catalog line (`src/slides.js`).
+
+```js
+export const meta = {
+  name: 'Definition + table + image', duration: 9000,
+  slide: {
+    type: 'definition',                       // slide_type the planner chooses
+    name: 'Definition',
+    use: 'a named concept, process or structure: …',   // one line for the planner
+    image: 'optional',                        // 'none' | 'optional' | 'required'
+    ratios: ['3:4', '1:1'],                   // image shapes the panel accepts (±20%)
+    fields: {                                 // what the LLM writes, with limits
+      definition: { required: true, words: 30 },
+      points: { items: [0, 4], words: 12 },
+      rows: { items: [0, 4], words: 8 },      // list of lists: limit per cell
+      caption: { words: 10 },
+    },
+    reveal: [                                 // spoken order; each entry = marker b<k>
+      { field: 'definition', cue: 'cues.definition' },           // {{b1}}
+      { field: 'points', each: true, cue: 'cues.points' },       // {{b2.1}} {{b2.2}} …
+      { field: 'rows', each: true, cue: 'cues.rows' },           // {{b3.1}} …
+    ],
+    derive: [{ cue: 'cues.table', from: 'cues.rows', index: 0, offset: -0.6 }],
+    narrationWords: [220, 320],               // English narration range for this type
+    question: false,                          // true: narration must pause before the first reveal
+    defaults: {},                             // fixed template fields (labels) set by code
+    rules: [],                                // named cross-field checks in src/slides.js RULES
+  },
+};
+```
+
+- Every `fields` key must exist in the template's `schema`. The schema's `max` (characters) and the spec's `words` limit are both enforced.
+- Fields without a reveal entry (title, question, image, problem statement) are on screen from the start of the slide.
+- `parts: ['myth', 'fact']` on an `each` entry gives two markers per item (`b1.1.1`, `b1.1.2`) and writes `[t1, t2]` per item.
+- A template can declare several slide types (`slide: [ {...}, {...} ]`) with different `defaults`. For example, `biology/solved-example` also serves `descriptive_answer`.

@@ -1,0 +1,19 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Sliding Filament Theory",
+  "caption": "Cross-bridge formation between actin and myosin",
+  "sections": [
+    {
+      "heading": "Mechanism / Concept used",
+      "text": "Muscle contracts when thin actin filaments slide over thick myosin filaments; the filaments themselves do not shorten."
+    },
+    {
+      "heading": "Key steps",
+      "points": [
+        "Ca²⁺ binds troponin and exposes actin sites",
+        "Myosin heads form cross-bridges",
+        "Power stroke pulls actin towards the M-line"
+      ]
+    }
+  ]
+}

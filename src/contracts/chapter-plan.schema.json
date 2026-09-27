@@ -1,0 +1,25 @@
+{
+  "$id": "chapter-plan",
+  "title": "L1 output: a chapter split into lectures (OpenAI strict-mode compatible)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lectures"],
+  "properties": {
+    "lectures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "title", "section_ids", "goals", "recap", "preview"],
+        "properties": {
+          "index": { "type": "integer" },
+          "title": { "type": "string" },
+          "section_ids": { "type": "array", "items": { "type": "string" } },
+          "goals": { "type": "array", "items": { "type": "string" } },
+          "recap": { "type": ["string", "null"], "description": "what the previous lecture covered; null for lecture 1" },
+          "preview": { "type": ["string", "null"], "description": "topics held back for the next lecture; null for the last" }
+        }
+      }
+    }
+  }
+}

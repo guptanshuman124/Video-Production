@@ -1,0 +1,11 @@
+{
+  "lecture": "Gravitation",
+  "title": "Escape Speed of the Moon",
+  "problem": "The Moon has mass $7.36 \\times 10^{22}$ kg and radius $1.74 \\times 10^{6}$ m. Find the escape speed from its surface. ($G = 6.67 \\times 10^{-11}$ N m² kg⁻²)",
+  "steps": [
+    "Use $v_e = \\sqrt{2GM/R}$",
+    "Substitute: $v_e = \\sqrt{2 \\times 6.67 \\times 10^{-11} \\times 7.36 \\times 10^{22} / 1.74 \\times 10^{6}}$",
+    "Simplify: $v_e \\approx 2.38 \\times 10^{3}$ m/s"
+  ],
+  "answer": "2.38 km/s"
+}

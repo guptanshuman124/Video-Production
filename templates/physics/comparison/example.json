@@ -1,0 +1,12 @@
+{
+  "lecture": "Locomotion and Movement",
+  "title": "Types of Muscle",
+  "columns": ["Basis", "Skeletal", "Visceral", "Cardiac"],
+  "rows": [
+    ["Location", "Attached to bones", "Walls of hollow organs", "Heart wall"],
+    ["Striations", "Present", "Absent", "Present"],
+    ["Nuclei", "Many, peripheral", "One, central", "One or two, central"],
+    ["Control", "Voluntary", "Involuntary", "Involuntary"],
+    ["Fatigue", "Fatigues quickly", "Does not fatigue", "Never fatigues"]
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "title": "Escape Speed of the Moon",
+    "problem": "The Moon has mass $7.36 \\times 10^{22}$ kg and radius $1.74 \\times 10^{6}$ m. Find the escape speed from its surface. ($G = 6.67 \\times 10^{-11}$ N m² kg⁻²)",
+    "steps": [
+      "Use $v_e = \\sqrt{2GM/R}$",
+      "Substitute the given values of G, M and R",
+      "Simplify: $v_e \\approx 2.38 \\times 10^{3}$ m/s"
+    ],
+    "answer": "2.38 km/s",
+    "caption": null
+  },
+  "narration_hinglish": "Question पढ़ो: Moon का mass और radius दिए हैं, और हमें उसकी surface से escape speed निकालनी है। G की value भी दी है। सोचो, कौन सा formula लगेगा? एक पल रुककर try करो। {{b1.1}} Escape speed का formula है v e equals square root of two G M by R। यह तभी काम करता है जब planet को हम perfect sphere मानें, जो यहाँ ठीक है। {{b1.2}} अब values डालो: G six point six seven into ten to the power minus eleven, M seven point three six into ten to the power twenty two kilogram, और R one point seven four into ten to the power six metre। Units ध्यान से check करो, सब SI में हैं, इसलिए कोई conversion नहीं चाहिए। {{b1.3}} Calculate करने पर v e लगभग two point three eight into ten to the power three metre per second आती है। {{b2}} यानी final answer two point three eight kilometre per second। Earth की escape speed eleven point two kilometre per second है, इसलिए Moon पर यह बहुत कम है — और यही कारण है कि Moon अपना atmosphere hold नहीं कर पाता।"
+}

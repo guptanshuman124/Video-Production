@@ -18,6 +18,8 @@ export function serveStage(assetDir = null, templates = { js: 'export const temp
   const virtual = { '__templates.js': [templates.js, MIME['.js']], '__templates.css': [templates.css, MIME['.css']] };
   const server = http.createServer((req, res) => {
     let rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
+    // Chrome asks for a favicon on every page; answer so it doesn't log a 404.
+    if (rel === 'favicon.ico') { res.writeHead(204).end(); return; }
     if (virtual[rel]) {
       res.writeHead(200, { 'content-type': virtual[rel][1], 'cache-control': 'no-store' });
       res.end(virtual[rel][0]);
@@ -51,12 +53,19 @@ export function serveStage(assetDir = null, templates = { js: 'export const temp
 // The bundled Chromium matching playwright-core isn't downloadable here, so
 // resolve whatever real browser this machine already has, newest-first.
 export function resolveBrowser({ headed = false } = {}) {
-  const home = process.env.HOME;
+  const home = process.env.HOME || process.env.USERPROFILE;
   const candidates = [
     process.env.HVR_CHROME,
     !headed && `${home}/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell`,
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     `${home}/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium`,
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    process.env.LOCALAPPDATA && `${process.env.LOCALAPPDATA}/Google/Chrome/Application/chrome.exe`,
+    'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
   ].filter(Boolean);
   for (const exe of candidates) if (fs.existsSync(exe)) return exe;
   throw new Error('No Chrome/Chromium found. Set HVR_CHROME to a browser executable.');

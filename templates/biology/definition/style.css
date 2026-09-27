@@ -1,0 +1,26 @@
+--brand-bg: var(--bg-white);
+
+.copy {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1012px;
+  font: 400 28px/1.21 var(--font-body); color: var(--brand-ink);
+  display: flex; flex-direction: column; gap: 13px;
+}
+.copy .bullets { gap: 13px; }
+
+/* Anchored to the bottom so the table grows upward with more rows. */
+.dtable {
+  position: absolute; left: var(--frame-left); bottom: 104px; width: 1012px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.drow { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; }
+.dcell {
+  min-height: 59px; padding: 8px 12px; border-radius: var(--radius-row);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: var(--brand-surface-alt);
+  font: 400 22px/1.2 var(--font-card); color: #000;
+}
+.head .dcell { background: var(--brand-surface-head); }
+.side { left: 1105px; top: 240px; width: 731px; height: 736px; }
+
+/* No image: no empty panel — text and table use the full width. */
+.wide .copy, .wide .dtable, .wide .stack { width: 1752px; }

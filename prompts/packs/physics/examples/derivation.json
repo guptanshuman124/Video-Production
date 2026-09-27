@@ -1,0 +1,13 @@
+{
+  "data": {
+    "title": "Third Equation of Motion",
+    "goal": "v^{2} = u^{2} + 2as",
+    "steps": [
+      { "text": "Displacement is the area under the v–t graph", "formula": "s = \\frac{(u + v)}{2}\\, t" },
+      { "text": "From the first equation, write time in terms of velocities", "formula": "t = \\frac{v - u}{a}" },
+      { "text": "Substitute t and simplify", "formula": "s = \\frac{(v + u)(v - u)}{2a} \\;\\Rightarrow\\; v^{2} = u^{2} + 2as" }
+    ],
+    "caption": "Velocity–time graph for uniform acceleration"
+  },
+  "narration_hinglish": "Goal box में जो equation है, v square equals u square plus two a s, उसी तक आज हमें पहुँचना है। इसकी खासियत यह है कि इसमें time t नहीं है, इसलिए जब question में time दिया ही न हो, तब यही equation काम आती है। तो शुरुआत कहाँ से करें? {{b1.1}} Velocity–time graph के नीचे का area displacement देता है। Uniform acceleration में यह area एक trapezium है, तो s equals u plus v by two, into t। यानी average velocity गुणा time। {{b1.2}} अब time को हटाना है। First equation, v equals u plus a t, से t निकालो: t equals v minus u, divided by a। यह step board answer में ज़रूर लिखना, examiner यही देखता है। {{b1.3}} अब इस t को पहली equation में substitute करो। Numerator में v plus u और v minus u आते हैं, जिनका product v square minus u square है। Rearrange करते ही मिलता है v square equals u square plus two a s — बिल्कुल वही जो goal box में था। Notice करो, पूरी derivation में हमने सिर्फ़ graph और first equation use किए।"
+}

@@ -1,0 +1,8 @@
+node_modules
+out
+jobs
+.git
+.env
+config/local.yaml
+**/.DS_Store
+projects/lectures/assets

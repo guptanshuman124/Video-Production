@@ -1,0 +1,15 @@
+{
+  "data": {
+    "title": "Why is BeF₂ Linear?",
+    "problem": "Explain why the BeF₂ molecule is linear while H₂O is bent. (3 marks)",
+    "reasoning": [
+      "Be has two bond pairs and no lone pair in its valence shell",
+      "Two electron pairs repel and settle 180° apart, so BeF₂ is linear",
+      "O in H₂O has two bond pairs and two lone pairs",
+      "Lone-pair repulsion squeezes the H–O–H angle to 104.5°, so H₂O is bent"
+    ],
+    "takeaway": "Shape follows the total electron pairs (VSEPR); lone pairs distort it.",
+    "caption": null
+  },
+  "narration_hinglish": "यह three marks का question है: BeF two linear क्यों है, जबकि H two O bent है? दोनों में central atom से दो bonds निकलते हैं, फिर shape अलग क्यों? Answer लिखने से पहले एक बार खुद सोचो। {{b1.1}} पहले Be को देखो। इसके valence shell में दो bond pairs हैं और कोई lone pair नहीं। {{b1.2}} VSEPR theory कहती है कि electron pairs एक-दूसरे को repel करते हैं और जितना हो सके उतना दूर जाते हैं। दो pairs के लिए सबसे दूर की position one eighty degree है, इसलिए BeF two linear है। {{b1.3}} अब H two O में oxygen को देखो। यहाँ दो bond pairs के साथ दो lone pairs भी हैं। {{b1.4}} Lone pairs ज़्यादा जगह लेते हैं और bond pairs को ज़्यादा ज़ोर से धकेलते हैं। इसलिए H O H angle घटकर one zero four point five degree हो जाता है, और molecule bent बनता है। {{b2}} तो key takeaway: shape कुल electron pairs से तय होती है, और lone pairs उसे distort करते हैं। Board में इसी order में points लिखोगे तो पूरे marks मिलेंगे।"
+}

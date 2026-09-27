@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildTemplates, validate, lookup } from './templates.js';
 
-const DEFAULTS = { width: 1920, height: 1080, scale: 1, fps: 30 };
+const DEFAULTS = { width: 1920, height: 1080, scale: 1, fps: 25 };
 const LAYOUTS = new Set(['title', 'bullets', 'stat', 'doc']);
 
 export async function loadProject(file) {

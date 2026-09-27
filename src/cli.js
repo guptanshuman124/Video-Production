@@ -5,9 +5,12 @@ import { loadProject, normalizeProject, timeline } from './project.js';
 import { buildTemplates, describeSchema, lookup, TEMPLATES_DIR } from './templates.js';
 import { buildLecture, loadLectures, lectureId } from './lecture.js';
 import { openStage } from './stage.js';
-import { planFrames, renderChunk, splitRanges } from './capture.js';
-import { startEncoder, ffprobe, hasAudio, concatChunks } from './encode.js';
+import { renderProject } from './render.js';
+import * as product from './commands.js';
 import os from 'node:os';
+
+// Secrets (OPENAI_API_KEY, SARVAM_API_KEY, …) may live in a local .env.
+try { process.loadEnvFile('.env'); } catch { /* no .env */ }
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -23,91 +26,33 @@ const bar = (p) => { const w = 26, f = Math.round(p * w); return '█'.repeat(f)
 
 async function render() {
   const project = await loadProject(file);
-  const draft = has('draft');
-  const fps = Number(flag('fps', project.video.fps));
-  const scale = draft ? 1 : Number(flag('scale', project.video.scale));
-  const out = path.resolve(String(flag('out', draft ? 'out/draft.mp4' : 'out/final.mp4')));
-  const jobs = Math.max(1, Number(flag('jobs', 1)));
-  fs.mkdirSync(path.dirname(out), { recursive: true });
-
-  // PNG is lossless; JPEG q100 measures ~66dB luma PSNR against it and is
-  // markedly faster to capture at 4K. The h264 output is yuv420p either way.
-  const capture = String(flag('capture', draft ? 'jpeg' : 'png'));
-  if (!['png', 'jpeg'].includes(capture)) throw new Error('--capture must be png or jpeg');
-  const shot = capture === 'jpeg' ? { type: 'jpeg', quality: 100 } : { type: 'png' };
-  const encOpts = {
-    crf: Number(flag('crf', draft ? 26 : 18)),
-    preset: String(flag('preset', draft ? 'veryfast' : 'slow')),
-    inputCodec: capture === 'jpeg' ? 'mjpeg' : 'png',
-  };
-  const audio = hasAudio(project.audio && path.resolve(project.dir, project.audio));
-
-  const tl = timeline(project);
-  const W = project.video.width * scale, H = project.video.height * scale;
   console.log(`\n  ${project.title || path.basename(file)}`);
-  console.log(`  ${project.scenes.length} scenes · ${fmt(tl.duration)} · ${W}×${H} @ ${fps}fps` +
-              `${draft ? ' (draft)' : ''} · ${capture}${jobs > 1 ? ` · ${jobs} workers` : ''}\n`);
-
-  // One short-lived stage just to read the timeline the runtime actually built.
-  const probeStage = await openStage(project, { scale: 1, fps });
-  const intervals = await probeStage.page.evaluate(() => window.__motionIntervals(0));
-  const duration = await probeStage.page.evaluate(() => window.__duration());
-  await probeStage.close();
-
-  const { plan, count, frameMs } = planFrames({ duration, fps, intervals, forceAll: has('all-frames') });
-  const shots = plan.filter(Boolean).length;
-  const motionMs = intervals.reduce((a, [s, e]) => a + (e - s), 0);
-  console.log(`  motion ${fmt(motionMs)} of ${fmt(duration)} · capturing ${shots}/${count} frames ` +
-              `(${Math.round((1 - shots / count) * 100)}% held)\n`);
-
-  const ranges = jobs > 1 ? splitRanges(count, jobs) : [[0, count]];
-  const t0 = Date.now();
-  let done = 0, capturedTotal = 0;
-  const tick = () => {
-    done++;
-    if (done % 10 && done !== count) return;
-    const el = (Date.now() - t0) / 1000;
-    const eta = done > 8 ? ((el / done) * (count - done)).toFixed(0) : '–';
-    process.stdout.write(`\r  ${bar(done / count)} ${String(Math.round(done / count * 100)).padStart(3)}%  ` +
-                         `frame ${done}/${count}  shot ${capturedTotal}  eta ${eta}s   `);
-  };
-
-  const chunkFile = (i) => path.join(path.dirname(out), `.chunk${String(i).padStart(3, '0')}.mp4`);
-  const results = await Promise.all(ranges.map(async ([from, to], i) => {
-    const target = ranges.length > 1 ? chunkFile(i) : out;
-    const stage = await openStage(project, { scale, fps });
-    // Audio is muxed once at the end, never into an individual chunk.
-    const encoder = startEncoder({ out: target, fps, ...encOpts,
-                                   audio: ranges.length > 1 ? null : audio });
-    try {
-      const r = await renderChunk({ page: stage.page, encoder, plan, from, to, frameMs, shot,
-                                    onFrame: () => { tick(); } });
-      capturedTotal += r.captured;
-      await encoder.finish();
-      return r;
-    } finally {
-      await stage.close();
-    }
-  }));
+  const r = await renderProject(project, {
+    draft: has('draft'),
+    out: flag('out', undefined),
+    fps: flag('fps', undefined),
+    scale: flag('scale', undefined),
+    jobs: flag('jobs', 1),
+    capture: flag('capture', undefined),
+    crf: flag('crf', undefined),
+    preset: flag('preset', undefined),
+    tune: flag('tune', undefined),
+    allFrames: has('all-frames'),
+    log: (line) => console.log(`  ${line}\n`),
+    onFrame: (done, count, shot) => {
+      if (done % 10 && done !== count) return;
+      process.stdout.write(`\r  ${bar(done / count)} ${String(Math.round(done / count * 100)).padStart(3)}%  ` +
+                           `frame ${done}/${count}  shot ${shot}   `);
+    },
+  });
   process.stdout.write('\n');
-
-  if (ranges.length > 1) {
-    const files = ranges.map((_, i) => chunkFile(i));
-    await concatChunks({ files, out, audio });
-    for (const f of files) fs.rmSync(f, { force: true });
-  }
-
-  const captured = results.reduce((a, r) => a + r.captured, 0);
-  const held = results.reduce((a, r) => a + r.held, 0);
-  const probe = await ffprobe(out);
-  const v = probe.streams[0];
-  const secs = (Date.now() - t0) / 1000;
-  console.log(`\n  ✓ ${path.relative(process.cwd(), out)}`);
+  const v = r.probe.streams[0];
+  console.log(`\n  ✓ ${path.relative(process.cwd(), r.out)}`);
   console.log(`    ${v.width}×${v.height} ${v.codec_name} ${v.r_frame_rate} · ` +
-              `${Number(probe.format.duration).toFixed(2)}s · ` +
-              `${(probe.format.size / 1048576).toFixed(1)} MB`);
-  console.log(`    ${captured} shot, ${held} held · ${secs.toFixed(1)}s ` +
-              `(${(secs / count * 1000).toFixed(0)}ms/frame, ${(count / secs).toFixed(1)} fps)\n`);
+              `${Number(r.probe.format.duration).toFixed(2)}s · ` +
+              `${(r.probe.format.size / 1048576).toFixed(1)} MB`);
+  console.log(`    ${r.captured} shot, ${r.held} held · ${r.seconds.toFixed(1)}s ` +
+              `(${(r.seconds / r.count * 1000).toFixed(0)}ms/frame, ${(r.count / r.seconds).toFixed(1)} fps)\n`);
 }
 
 // Headed browser with a scrub bar — iterate on layouts without rendering.
@@ -242,7 +187,7 @@ async function showTemplate(name) {
       scenes: [{ template: id, data, transition: { name: 'cut', duration: 0 } }],
     }, dir, dataFile ? path.relative(process.cwd(), dataFile) : `templates/${id}/example.json`);
     const snapArg = flag('snap', true);
-    const out = path.resolve(typeof snapArg === 'string' ? snapArg : `out/template-${id}.png`);
+    const out = path.resolve(typeof snapArg === 'string' ? snapArg : `out/template-${id.replaceAll('/', '-')}.png`);
     console.log();
     await snapScenes(project, 0, parseAts(), out);
     return;
@@ -257,7 +202,9 @@ async function showTemplate(name) {
 }
 
 function newTemplate(id) {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new Error('template id must be kebab-case: a-z, 0-9, -');
+  if (!/^[a-z0-9][a-z0-9-]*(\/[a-z0-9][a-z0-9-]*)?$/.test(id)) {
+    throw new Error('template id must be kebab-case (a-z, 0-9, -), optionally as <pack>/<slide>');
+  }
   const dest = path.join(TEMPLATES_DIR, id);
   if (fs.existsSync(dest)) throw new Error(`templates/${id} already exists`);
   const src = path.join(TEMPLATES_DIR, '_starter');
@@ -303,8 +250,29 @@ async function lecture() {
 }
 
 const usage = `
-  hvr render    <project.json> [--draft] [--out f.mp4] [--fps 30] [--crf 18]
-                               [--capture png|jpeg] [--preset slow] [--all-frames]
+  TEXTBOOK LECTURES (tutorai.textbook_raw: one row = one video)
+  hvr lectures  --source <export.jsonl | db> [--course 58] [--module 338] [--lecture 1717]
+                [--as "class=12,subject=Biology,pack=biology"] [--shard 2/8] [run flags below]
+  hvr source audit  --source <export.jsonl | db> [--course …]   parse every row, G0 precheck, hours
+  hvr source courses --catalog <db | catalog.jsonl> --source <db | export.jsonl>   -> config/courses.yaml
+  hvr source export --out f.jsonl [--catalog-out c.jsonl] [--course …]   TEXTBOOK_DB_URL -> JSONL
+
+  PIPELINE (chapter JSON -> 5 validated lecture videos)
+  hvr run       <chapter.json> [--lecture 1,2] [--from <stage>] [--to <stage>] [--skip review]
+                               [--mock | --mock-llm | --mock-tts] [--config f.yaml] [--offline]
+                               [--draft] [--jobs N] [--no-reveal-check]
+                stages: prepare chapter-plan slide-plan slide-write narrate hinglish review
+                        assemble voice build render qa
+  hvr generate  <chapter.json> [same flags]        run up to Content JSON (no audio/video)
+  hvr batch     <folder> [--shard 2/8] [same flags] every chapter JSON in a folder (resumable)
+  hvr status    <chapter_id>                     stage results + review queue
+  hvr packs                                      template packs and their slide types
+  hvr prompt    <layer> [--pack biology] [--class 11] [--schema --type mcq]
+                layers: chapter-plan slide-plan slide-write narrate hinglish review
+
+  RENDERER
+  hvr render    <project.json> [--draft] [--out f.mp4] [--fps 25] [--crf 18]
+                               [--capture png|jpeg] [--preset slow] [--tune stillimage] [--all-frames]
                                [--jobs N]   parallel workers (default 1)
   hvr preview   <project.json> [--scene N]
   hvr probe     <project.json>
@@ -327,10 +295,18 @@ const COMMANDS = {
   template: () => showTemplate(file),
   'new-template': () => newTemplate(file),
   lecture,
+  run: () => product.run(file, flag, has),
+  generate: () => product.run(file, flag, has, { to: 'assemble' }),
+  batch: () => product.batch(file, flag, has),
+  lectures: () => product.lectures(flag, has),
+  source: () => (file === 'audit' ? product.sourceAudit(flag, has) : file === 'export' ? product.sourceExport(flag) : file === 'courses' ? product.sourceCourses(flag) : Promise.reject(new Error('hvr source audit | courses | export'))),
+  status: () => product.status(file, flag, has),
+  packs: () => product.packs(),
+  prompt: () => product.prompt(file, flag, has),
 };
 
 try {
-  const needsArg = cmd !== 'templates';
+  const needsArg = !['templates', 'packs', 'lectures'].includes(cmd);
   if (!COMMANDS[cmd] || (needsArg && !file)) { console.log(usage); process.exit(1); }
   await COMMANDS[cmd]();
 } catch (e) {

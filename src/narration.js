@@ -16,6 +16,7 @@
 // error 0.42s, 90th percentile 1.2s (plain words/min: 0.69s / 1.9s).
 
 import { execFileSync } from 'node:child_process';
+import { FFMPEG, FFPROBE } from './tools.js';
 
 export const BASE_WPM = 196;                   // Bulbul v3 at pace 1.0 (measured)
 const PAUSE = { sentence: 2.5, clause: 1.2 };
@@ -32,7 +33,7 @@ const SENTENCE_END = /[.?!।॥]["'”’)]*$/;
 const CLAUSE_END = /[,;:—–]["'”’)]*$/;
 
 export function audioDuration(file) {
-  return Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration',
+  return Number(execFileSync(FFPROBE, ['-v', 'error', '-show_entries', 'format=duration',
     '-of', 'csv=p=0', file]).toString().trim());
 }
 
@@ -40,7 +41,7 @@ export function audioDuration(file) {
 export function speechBounds(file) {
   const out = (() => {
     try {
-      return execFileSync('ffmpeg', ['-i', file, '-af', 'silencedetect=n=-40dB:d=0.2', '-f', 'null', '-'],
+      return execFileSync(FFMPEG, ['-i', file, '-af', 'silencedetect=n=-40dB:d=0.2', '-f', 'null', '-'],
         { stdio: ['ignore', 'pipe', 'pipe'] }).toString();
     } catch (e) { return String(e.stderr || ''); }
   })();

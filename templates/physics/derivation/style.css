@@ -1,0 +1,46 @@
+--brand-bg: var(--bg-white);
+
+/* PDF: step cards 1012×257 at x=84 from y=235 with a 45px arrow between;
+   goal box 716×132 and image panel 716×616 at x=1120. */
+.layout {
+  position: absolute; left: var(--frame-left); top: 235px; width: 1752px; height: 771px;
+  display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 20px;
+  &.with-image { grid-template-columns: 1012px 716px; grid-template-rows: 1fr; column-gap: 24px; }
+}
+.layout:not(.with-image) .right { grid-row: 1; }
+.layout:not(.with-image) .steps { grid-row: 2; }
+
+.steps { display: flex; flex-direction: column; min-height: 0; }
+.step {
+  position: relative; flex: 1 1 0; max-height: 257px; min-height: 0;
+  padding: 24px 33px 18px; border-radius: var(--radius-card);
+  background: var(--brand-surface-alt);
+  display: flex; flex-direction: column;
+}
+.stext { font: 400 26.7px/1.25 var(--font-body); color: #000; }
+.seq {
+  flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+  font-size: calc(40px - var(--n) * 2px); color: var(--brand-navy);
+}
+.seq .katex-display { margin: 0; }
+.slabel { position: absolute; right: 24px; bottom: 14px; font: 400 24.9px/1 var(--font-body); color: var(--brand-navy); }
+
+.arrow { flex: 0 0 43px; display: flex; justify-content: center; align-items: center; }
+.arrow i {
+  position: relative; display: block; width: 6px; height: 30px; background: var(--brand-muted); border-radius: 3px;
+  &::after {
+    content: ''; position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%);
+    border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 13px solid var(--brand-muted);
+  }
+}
+
+.right { display: flex; flex-direction: column; gap: 23px; min-height: 0; }
+.goal {
+  flex: 0 0 auto; min-height: 132px; padding: 8px 18px 12px;
+  border-radius: var(--radius-card); background: var(--brand-cream);
+}
+.glabel { font: 700 21.3px/1.2 var(--font-card); color: var(--brand-navy); }
+.geq { display: flex; justify-content: center; font-size: 30px; color: var(--brand-navy); }
+.geq .katex-display { margin: 4px 0 0; }
+.right .side { position: relative; left: auto; top: auto; flex: 1 1 auto; width: 100%; height: auto; }
+.right .side .panel-caption { padding-bottom: 15px; }

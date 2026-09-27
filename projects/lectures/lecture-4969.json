@@ -8,7 +8,7 @@
   },
   "fadeIn": 500,
   "fadeOut": 800,
-  "audio": "assets/narration_4969_hinglish_track.wav",
+  "audio": "assets\\narration_4969_hinglish_track.wav",
   "_generated": "hvr lecture — language hinglish, pace 0.9; edit the source JSON and regenerate rather than hand-editing cues",
   "shared": {
     "lecture": "Cell: The Unit of Life"
@@ -30,7 +30,7 @@
           "Basic functional unit of life.",
           "Seen in both unicellular and multicellular organisms."
         ],
-        "image": "assets/img_4969_1_b3.webp",
+        "image": "assets\\img_4969_1_b3.webp",
         "caption": "A cell as the basic unit of life",
         "cues": {
           "points": [
@@ -58,7 +58,7 @@
           "Elephant is an example of multicellular life.",
           "Cellular organisation stays common in both."
         ],
-        "image": "assets/img_4969_2_b3.webp",
+        "image": "assets\\img_4969_2_b3.webp",
         "caption": "One cell versus many cells",
         "cues": {
           "points": [
@@ -86,7 +86,7 @@
           "Links structure with function.",
           "Raises a question about cell continuity."
         ],
-        "image": "assets/img_4969_3_b3.webp",
+        "image": "assets\\img_4969_3_b3.webp",
         "caption": "The core ideas of cell theory",
         "cues": {
           "points": [
@@ -114,7 +114,7 @@
           "Leeuwenhoek saw free-living cells.",
           "Brown discovered the nucleus."
         ],
-        "image": "assets/img_4969_4_b3.webp",
+        "image": "assets\\img_4969_4_b3.webp",
         "caption": "Early observations that shaped cell study",
         "cues": {
           "points": [
@@ -142,7 +142,7 @@
           "Electron microscope later expanded detail.",
           "Microscopy changed biology itself."
         ],
-        "image": "assets/img_4969_5_b3.webp",
+        "image": "assets\\img_4969_5_b3.webp",
         "caption": "Microscopy opened the cell to detailed study",
         "cues": {
           "points": [

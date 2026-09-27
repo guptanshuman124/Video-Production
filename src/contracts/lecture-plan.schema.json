@@ -1,0 +1,60 @@
+{
+  "$id": "lecture-plan",
+  "title": "L2 output: the slide list for one lecture (OpenAI strict-mode compatible). slide_type gets an enum of the pack's types at runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lecture_title",
+    "slides"
+  ],
+  "properties": {
+    "lecture_title": {
+      "type": "string",
+      "description": "clean on-screen title for this lecture (the source headings can be garbled), at most 8 words"
+    },
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slide_type",
+          "title",
+          "purpose",
+          "key_points",
+          "source_refs",
+          "image_id"
+        ],
+        "properties": {
+          "slide_type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "key_points": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

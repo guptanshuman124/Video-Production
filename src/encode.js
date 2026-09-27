@@ -1,13 +1,16 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
+import { FFMPEG, FFPROBE } from './tools.js';
 
 // A single ffmpeg pass fed raw PNGs on stdin. Duplicate (held) frames are just
 // the same buffer written again — x264 encodes those almost for free.
-export function startEncoder({ out, fps, crf = 18, preset = 'slow', audio = null, inputCodec = 'png' }) {
+// `tune: 'stillimage'` suits long lectures that are mostly held slides.
+export function startEncoder({ out, fps, crf = 18, preset = 'slow', tune = null, audio = null, inputCodec = 'png' }) {
   const args = ['-y', '-f', 'image2pipe', '-c:v', inputCodec, '-framerate', String(fps), '-i', 'pipe:0'];
   if (audio) args.push('-i', audio);
+  args.push('-c:v', 'libx264', '-preset', preset, ...(tune ? ['-tune', tune] : []));
   args.push(
-    '-c:v', 'libx264', '-preset', preset, '-crf', String(crf),
+    '-crf', String(crf),
     '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-r', String(fps),
     '-movflags', '+faststart',
   );
@@ -16,7 +19,7 @@ export function startEncoder({ out, fps, crf = 18, preset = 'slow', audio = null
   if (audio) args.push('-af', 'apad', '-c:a', 'aac', '-b:a', '192k', '-shortest');
   args.push(out);
 
-  const proc = spawn('ffmpeg', args, { stdio: ['pipe', 'ignore', 'pipe'] });
+  const proc = spawn(FFMPEG, args, { stdio: ['pipe', 'ignore', 'pipe'] });
   let log = '';
   proc.stderr.on('data', (d) => { log += d; if (log.length > 40000) log = log.slice(-20000); });
 
@@ -27,10 +30,17 @@ export function startEncoder({ out, fps, crf = 18, preset = 'slow', audio = null
     args,
     write(buf) {
       if (broken) throw new Error(`ffmpeg stdin closed early:\n${log.slice(-1500)}`);
+      if (proc.stdin.write(buf)) return Promise.resolve();
+      // Backpressure: wait for drain. Listeners are removed either way so a
+      // long render (tens of thousands of frames) never accumulates them.
       return new Promise((res, rej) => {
-        if (proc.stdin.write(buf)) res();
-        else proc.stdin.once('drain', res);
-        proc.stdin.once('error', rej);
+        const done = (err) => {
+          proc.stdin.off('drain', done);
+          proc.stdin.off('error', done);
+          err ? rej(err) : res();
+        };
+        proc.stdin.on('drain', done);
+        proc.stdin.on('error', done);
       });
     },
     finish() {
@@ -45,7 +55,7 @@ export function startEncoder({ out, fps, crf = 18, preset = 'slow', audio = null
 }
 
 export function ffprobe(file) {
-  const r = spawn('ffprobe', ['-v', 'error',
+  const r = spawn(FFPROBE, ['-v', 'error',
     '-select_streams', 'v:0',
     '-show_entries', 'stream=width,height,r_frame_rate,nb_frames,codec_name',
     '-show_entries', 'format=duration,size',
@@ -72,7 +82,7 @@ export function concatChunks({ files, out, audio = null }) {
   if (audio) args.push('-af', 'apad', '-c:a', 'aac', '-b:a', '192k', '-shortest');
   args.push(out);
 
-  const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+  const proc = spawn(FFMPEG, args, { stdio: ['ignore', 'ignore', 'pipe'] });
   let log = '';
   proc.stderr.on('data', (d) => { log += d; });
   return new Promise((res, rej) => {

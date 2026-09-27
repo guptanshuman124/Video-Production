@@ -8,7 +8,7 @@
   },
   "fadeIn": 500,
   "fadeOut": 800,
-  "audio": "assets/narration_4971_hinglish_track.wav",
+  "audio": "assets\\narration_4971_hinglish_track.wav",
   "_generated": "hvr lecture — language hinglish, pace 0.9; edit the source JSON and regenerate rather than hand-editing cues",
   "shared": {
     "lecture": "Cell: The Unit of Life"
@@ -30,7 +30,7 @@
           "It links structure with function.",
           "It also makes cell division central."
         ],
-        "image": "assets/img_4971_1_b3.webp",
+        "image": "assets\\img_4971_1_b3.webp",
         "caption": "The central idea of cell theory",
         "cues": {
           "points": [
@@ -80,7 +80,7 @@
             "Omnis cellula e cellula"
           ]
         ],
-        "image": "assets/img_4971_2_b4.webp",
+        "image": "assets\\img_4971_2_b4.webp",
         "caption": "Three scientists completed the idea of cell theory",
         "cues": {
           "points": [
