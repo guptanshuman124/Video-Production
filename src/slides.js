@@ -33,6 +33,7 @@
 
 import { validate } from './templates.js';
 import katex from 'katex';
+import { wrapBareMath, mathOutside } from './validators/math.js';
 import 'katex/contrib/mhchem';
 
 const words = (s) => String(s ?? '').trim().split(/\s+/).filter(Boolean).length;
@@ -200,6 +201,19 @@ function texIssues(s, path) {
   return out;
 }
 
+// Names of spec fields that hold bare LaTeX (`latex: true`), including nested item fields.
+function latexFields(fields = {}) {
+  return Object.entries(fields).flatMap(([k, f]) => [...(f?.latex ? [k] : []), ...latexFields(f?.fields)]);
+}
+
+// Copy of v with every string replaced by fn(string, path).
+function mapStrings(v, path, fn) {
+  if (typeof v === 'string') return fn(v, path);
+  if (Array.isArray(v)) return v.map((x, i) => mapStrings(x, `${path}[${i}]`, fn));
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, mapStrings(x, `${path}.${k}`, fn)]));
+  return v;
+}
+
 function walkStrings(v, path, fn) {
   if (typeof v === 'string') fn(v, path);
   else if (Array.isArray(v)) v.forEach((x, i) => walkStrings(x, `${path}[${i}]`, fn));
@@ -208,9 +222,27 @@ function walkStrings(v, path, fn) {
 
 // Validates the LLM's `data` for one slide; returns { data, issues }. `data`
 // is normalized (nulls stripped, spec defaults applied) and ready for build.
-export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula'] } = {}) {
+// formulaFields hold bare LaTeX (no $…$); every other string is text in which
+// maths must sit inside $…$ — LaTeX left outside is wrapped here (LATEX_WRAPPED)
+// when KaTeX can render it, otherwise it is an error the writer must fix.
+export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula', 'symbol'] } = {}) {
   const issues = [];
-  const data = { ...st.spec.defaults, ...stripNulls(raw || {}) };
+  // Plus every field the template marks `latex: true` (e.g. derivation `goal`), at any depth.
+  const keys = [...formulaFields, ...latexFields(st.spec.fields)];
+  const isFormula = (p) => keys.some((f) => p.endsWith(`.${f}`) || new RegExp(`\\.${f}\\[\\d+\\]$`).test(p));
+  const data = mapStrings({ ...st.spec.defaults, ...stripNulls(raw || {}) }, where, (s, p) => {
+    if (isFormula(p)) {
+      // Bare LaTeX by design: drop stray $ delimiters (a literal \$ stays).
+      const bare = s.replace(/(?<!\\)\$/g, '').trim();
+      if (bare !== s) issues.push({ code: 'LATEX_UNWRAPPED', severity: 'warning', path: p, message: `${p}: $ delimiters removed from a maths field`, autoFixed: true });
+      return bare;
+    }
+    const r = wrapBareMath(s);
+    if (r.changed) issues.push({ code: 'LATEX_WRAPPED', severity: 'warning', path: p, message: `${p}: maths put inside $…$: "${r.text.slice(0, 80)}"`, autoFixed: true });
+    const bare = mathOutside(r.text);
+    if (bare.length) issues.push({ code: 'LATEX_OUTSIDE_MATH', severity: 'error', path: p, message: `${p}: LaTeX outside $…$ shows as raw text on screen (${bare.slice(0, 3).join(' ')}) — write maths as $…$, e.g. "$\\omega$ – angular speed (rad $s^{-1}$)"` });
+    return r.text;
+  });
   for (const k of Object.keys(data)) {
     if (k !== 'title' && !(k in st.spec.fields) && !(k in st.spec.defaults)) {
       issues.push({ code: 'UNKNOWN_FIELD', severity: 'error', path: `${where}.${k}`, message: `${where}: "${k}" is not a field of ${st.type}` });
@@ -232,7 +264,7 @@ export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['for
   }
   walkStrings(data, where, (s, p) => {
     issues.push(...texIssues(s, p));
-    if (formulaFields.some((f) => p.endsWith(`.${f}`))) {
+    if (isFormula(p)) {
       try { katex.renderToString(s, { throwOnError: true }); } catch (e) {
         issues.push({ code: 'BAD_LATEX', severity: 'error', path: p, message: `${p}: ${e.message.split('\n')[0]}` });
       }
@@ -266,7 +298,7 @@ export function markerGuide(spec, data) {
     const v = data[r.field];
     if (isEmpty(v)) return;
     const id = `b${k + 1}`;
-    const brief = (x) => (typeof x === 'string' ? x : Array.isArray(x) ? x.join(' | ') : Object.values(x).filter((y) => typeof y === 'string').join(' — '));
+    const brief = (x) => (typeof x === 'string' ? x : Array.isArray(x) ? x.map(brief).join(' | ') : Object.values(x).filter((y) => typeof y === 'string').join(' — '));
     if (!r.each) { out.push({ id, what: `${r.field}: ${brief(v)}${r.hint ? ` — ${r.hint}` : ''}` }); return; }
     v.forEach((item, i) => {
       if (r.parts) r.parts.forEach((part, p) => out.push({ id: `${id}.${i + 1}.${p + 1}`, what: `${r.field}[${i + 1}].${part}: ${item[part] ?? ''}` }));

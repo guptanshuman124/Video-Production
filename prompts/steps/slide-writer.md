@@ -8,7 +8,11 @@ On-slide text is a **summary a student would copy into notes**, not prose:
 - No block repeats what another block on the same slide already says.
 - Question slides: a clear stem, four plausible options, exactly one correct answer, and one genuinely tempting trap option (the mistake students really make). Write option text without its letter ("Magnesium and oxygen", not "A. Magnesium and oxygen") — the slide draws the letters.
 - Use only facts from the slide's key points and cited source text. Keep numbers exactly as NCERT gives them.
-- Formulas: only genuine ones from the source. Inline maths in text as `$…$` LaTeX; chemical equations as `\ce{…}`. A `formula` field holds bare LaTeX without `$`.
+- Formulas: only genuine ones from the source. A `formula` or `symbol` field holds bare LaTeX without `$` (it is always rendered as maths).
+- **Every other field is plain text: any maths in it must be inside `$…$`** — symbols, Greek letters, subscripts, powers and units with powers. Otherwise it shows on screen as raw code.
+  - Right: `angular speed (rad $s^{-1}$)`, `where $a_c$ is the centripetal acceleration`, `$\Delta\theta$ in radians`, `$\ce{H2O}$`.
+  - Wrong: `\omega – angular speed (rad s^{-1})`, `a_c`, `\Delta\theta`.
+- Symbol keys are separate entries: `symbol` = the LaTeX symbol (`\omega`), `meaning` = what it is with its SI unit (`angular speed (rad $s^{-1}$)`).
 - `caption` (when the slide has an image): one short line naming what the student is looking at.
 - Optional fields you do not need: set them to null.
 

@@ -23,7 +23,10 @@ export const meta = {
       rows: { items: [0, 3], words: 8 },
       formulaFor: { words: 6, note: 'what the formula gives, e.g. "kinetic energy" (shown as "Formula for …")' },
       formula: { note: 'LaTeX without $…$, e.g. "K = \\frac{1}{2} m v^2" — only a genuine NCERT formula' },
-      symbols: { words: 18, note: 'symbol key, e.g. "m – mass (kg) · v – speed (m/s)"' },
+      symbols: { items: [0, 5], fields: {
+        symbol: { required: true, note: String.raw`bare LaTeX without $…$, e.g. "m", "v_0", "\lambda"` },
+        meaning: { required: true, words: 5, note: 'what it is + SI unit, e.g. "speed (m $s^{-1}$)"' },
+      } },
       caption: { words: 10 },
     },
     reveal: [
@@ -46,7 +49,10 @@ export const schema = {
   rows: { type: 'list', max: 4, of: { type: 'list', of: { type: 'text', max: 40 } } },
   formulaFor: { type: 'text', max: 50 },
   formula: { type: 'text', max: 200, description: 'LaTeX, rendered as a display equation' },
-  symbols: { type: 'text', max: 160 },
+  symbols: { type: 'list', max: 5, of: {
+    symbol: { type: 'text', required: true, max: 30, description: 'LaTeX, rendered as maths' },
+    meaning: { type: 'text', required: true, max: 50 },
+  } },
   image: 'image',
   caption: { type: 'text', max: 60 },
   fit: { type: 'enum', values: ['contain', 'cover'], default: 'contain' },
@@ -60,7 +66,7 @@ export function check(d) {
   const errs = [];
   if (d.rows.length && !d.columns.length) errs.push('rows given without columns');
   d.rows.forEach((r, i) => { if (r.length !== d.columns.length) errs.push(`rows[${i}] has ${r.length} cells but there are ${d.columns.length} columns`); });
-  if ((d.formulaFor || d.symbols) && !d.formula) errs.push('formulaFor/symbols given without a formula');
+  if ((d.formulaFor || d.symbols.length) && !d.formula) errs.push('formulaFor/symbols given without a formula');
   return errs;
 }
 
@@ -93,7 +99,13 @@ export default function DefinitionFormula(d) {
           <section className="fbox" anim="riseIn" delay={1100} at={sec(c.formula)} exit="riseOut">
             <div className="flabel">Formula for{d.formulaFor ? <> <Rich text={d.formulaFor} /></> : ''}</div>
             <div className="feq">{tex(d.formula, { display: true })}</div>
-            {d.symbols && <div className="fsym"><Rich text={d.symbols} /></div>}
+            {d.symbols.length > 0 && (
+              <div className="fsym">
+                {d.symbols.map((s, i) => (
+                  <span className="fsym-item">{i > 0 && <span className="fsym-sep">·</span>}<span className="fsym-s">{tex(s.symbol)}</span> – <Rich text={s.meaning} /></span>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </div>

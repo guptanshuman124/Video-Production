@@ -28,9 +28,14 @@
   display: flex; flex-direction: column; align-items: center;
 }
 .shead { font: 600 26.7px/1.2 var(--font-body); color: #000; }
+/* Symbol key: symbol (maths) · dash · meaning, aligned in columns. */
 .symbols ul {
   margin: 18px 0 0; padding: 0; list-style: none; width: 100%;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px;
   font: 400 22px/1.3 var(--font-body); color: var(--brand-ink);
 }
 .l-wide .symbols ul { grid-template-columns: 1fr; }
+.symbols li { display: grid; grid-template-columns: minmax(56px, max-content) auto 1fr; column-gap: 12px; align-items: baseline; }
+.ssym { justify-self: end; font-size: 1.12em; color: var(--brand-navy); white-space: nowrap; }
+.sdash { color: var(--brand-muted); }
+.smean { min-width: 0; }

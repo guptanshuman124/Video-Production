@@ -31,7 +31,10 @@
 .flabel { font: 400 24px/1.2 var(--font-body); color: #000; }
 .feq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-size: 38px; color: var(--brand-navy); }
 .feq .katex-display { margin: 0; }
-.fsym { font: 400 21.3px/1.3 var(--font-body); color: var(--brand-muted); }
+.fsym { font: 400 21.3px/1.5 var(--font-body); color: var(--brand-muted); display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 0; }
+.fsym-item { white-space: nowrap; }
+.fsym-sep { margin: 0 14px; }
+.fsym-s { color: var(--brand-navy); font-size: 1.1em; }
 
 .side { left: 1105px; top: 240px; width: 731px; height: 736px; }
 

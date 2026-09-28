@@ -2,12 +2,28 @@
   "data": {
     "title": "Molarity",
     "definition": "Molarity is the number of moles of solute dissolved in one litre of solution.",
-    "points": ["Unit: mol L⁻¹ (written M)", "Changes with temperature, as volume changes"],
+    "points": [
+      "Unit: mol L⁻¹ (written M)",
+      "Changes with temperature, as volume changes"
+    ],
     "columns": null,
     "rows": null,
     "formulaFor": "molarity",
     "formula": "M = \\frac{n_{solute}}{V_{solution}\\,(\\text{L})}",
-    "symbols": "M – molarity · n – moles of solute · V – volume of solution in litres",
+    "symbols": [
+      {
+        "symbol": "M",
+        "meaning": "molarity"
+      },
+      {
+        "symbol": "n",
+        "meaning": "moles of solute"
+      },
+      {
+        "symbol": "V",
+        "meaning": "volume of solution in litres"
+      }
+    ],
     "caption": null
   },
   "narration_hinglish": "Lab में जब भी कोई solution बनाते हैं, सबसे पहला सवाल होता है: यह कितना concentrated है? इसे बताने का सबसे common तरीका है molarity। {{b1}} Molarity मतलब एक litre solution में घुले solute के moles। ध्यान दो, litre solution का है, solvent का नहीं — यह board में बहुत बार पूछा जाता है। {{b2.1}} इसकी unit mole per litre है, जिसे short में capital M लिखते हैं। तो one M solution का मतलब है हर litre में एक mole solute। {{b2.2}} एक important बात: temperature बढ़ने पर liquid फैलता है, volume बढ़ता है, और molarity थोड़ी घट जाती है। इसीलिए precise काम में molality use होती है, जो temperature पर depend नहीं करती। {{b4}} Formula सीधा है: M equals moles of solute divided by volume of solution in litres। Numerical में volume अगर millilitre में दिया हो, तो पहले उसे litre में बदलना मत भूलना।"

@@ -115,9 +115,13 @@ export function cx(...args) {
 //   *emphasis*   -> <span class="accent">      **strong** -> <strong>
 //   $x^2$        -> KaTeX formula               $\ce{H2O}$ -> chemistry (mhchem)
 // Everything else stays plain text, so content can never inject HTML.
+// A maths field is bare LaTeX; stray $…$ delimiters in it ("$a_c$ = $\frac{v^2}{R}$")
+// would otherwise break the whole equation into red raw text. \$ (a literal dollar) is kept.
+export const unwrapDollars = (src) => String(src ?? '').replace(/(?<!\\)\$/g, '').trim();
+
 export function tex(src, { display = false } = {}) {
   const span = document.createElement('span');
-  span.innerHTML = katex.renderToString(src, { throwOnError: false, displayMode: display, output: 'html' });
+  span.innerHTML = katex.renderToString(unwrapDollars(src), { throwOnError: false, displayMode: display, output: 'html' });
   return span.firstChild;
 }
 

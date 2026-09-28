@@ -24,7 +24,10 @@ export const meta = {
         formula: { required: true, note: 'LaTeX without $…$' },
         label: { required: true, words: 5, note: 'what the formula is, e.g. "Ohm’s law"' },
       } },
-      symbols: { items: [0, 8], words: 8, note: 'one symbol per line, e.g. "R – resistance (Ω)"' },
+      symbols: { items: [0, 8], fields: {
+        symbol: { required: true, note: String.raw`bare LaTeX without $…$, e.g. "\omega", "a_c", "\Delta\theta"` },
+        meaning: { required: true, words: 7, note: 'what it is + SI unit in brackets; a unit with a power as $…$, e.g. "angular speed (rad $s^{-1}$)"' },
+      } },
     },
     reveal: [
       { field: 'items', each: true, cue: 'cues.items' },
@@ -42,7 +45,10 @@ export const schema = {
     label: { type: 'text', max: 40 },
   } },
   symbolsLabel: { type: 'text', default: 'Symbols', max: 24 },
-  symbols: { type: 'list', max: 8, of: { type: 'text', max: 60 } },
+  symbols: { type: 'list', max: 8, of: {
+    symbol: { type: 'text', required: true, max: 40, description: 'LaTeX, rendered as maths' },
+    meaning: { type: 'text', required: true, max: 70 },
+  } },
   cues: { type: 'object', fields: { items: { type: 'list', of: 'number' }, symbols: 'number' } },
 };
 
@@ -86,7 +92,9 @@ export default function FormulaSheet(d) {
           <section className="symbols" style={layout === 'wide' ? { gridColumn: '2', gridRow: '1 / 3' } : { gridColumn: '3 / 5', gridRow: '1 / 3' }}
                    anim="riseIn" delay={400} at={sec(c.symbols)} exit="riseOut">
             <div className="shead">{d.symbolsLabel}</div>
-            <ul>{d.symbols.map((s) => <li><Rich text={s} /></li>)}</ul>
+            <ul>{d.symbols.map((s) => (
+              <li><span className="ssym">{tex(s.symbol)}</span><span className="sdash">–</span><span className="smean"><Rich text={s.meaning} /></span></li>
+            ))}</ul>
           </section>
         )}
       </div>
