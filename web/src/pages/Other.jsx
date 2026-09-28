@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Pause, Play, ChevronsUp, XCircle, RotateCcw, AlertTriangle, Film, Search, Server, Minus, Plus, Database, RefreshCw, FolderOpen, CheckCircle2, Layers } from 'lucide-react';
+import { Pause, Play, ChevronsUp, XCircle, RotateCcw, AlertTriangle, Film, Search, Server, Minus, Plus, Database, RefreshCw, FolderOpen, CheckCircle2, Layers, Cloud, CloudUpload, ExternalLink } from 'lucide-react';
 import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Card, Empty, Progress, StageDots, StatusChip, fmtAgo, fmtBytes, fmtDur, fmtElapsed, fmtMin, useAction, useToast } from '../components/ui.jsx';
-import { LectureButtons, useApp, useLectureActions } from '../components/lecture.jsx';
+import { LectureButtons, useApp, useLectureActions, StorageBadge } from '../components/lecture.jsx';
 import { WorkerCard, RecentVideo } from './Overview.jsx';
 
 // ---- Queue ----------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ export function LibraryPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <div><h1>Library</h1><p className="muted">{vids.length} videos · {fmtMin(total / 60)} · {fmtBytes(bytes)} · stored in <span className="mono">{s.library}</span></p></div>
+        <div><h1>Library</h1><p className="muted">{vids.length} videos · {fmtMin(total / 60)} · {fmtBytes(bytes)} · {s.storage?.provider === 'onedrive' ? <>stored on OneDrive: <span className="mono">{s.storage.site} › {s.storage.library} › {s.storage.root}</span>{s.storage.rootUrl && <> · <a href={s.storage.rootUrl} target="_blank" rel="noreferrer">open</a></>}</> : <>stored in <span className="mono">{s.library}</span></>}</p></div>
         <div className="head-actions">
           <div className="search"><Search size={15} /><input placeholder="Search videos" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <select className="select" value={cls} onChange={(e) => setCls(e.target.value)}>
@@ -182,7 +182,7 @@ export function LibraryPage() {
                 <tbody>
                   {items.map(({ v, l }) => (
                     <tr key={l.lecture_id} className="clickable" onClick={() => play(l.lecture_id)}>
-                      <td style={{ width: 60 }}>L{l.lecture_no}</td><td className="cell-title">{l.lecture_title}</td><td className="small muted">{fmtDur(v.duration_s)}</td><td className="small muted">{fmtBytes(v.bytes)}</td><td className="small muted">{fmtAgo(v.created_at)}</td>
+                      <td style={{ width: 60 }}>L{l.lecture_no}</td><td className="cell-title">{l.lecture_title}</td><td><StorageBadge v={v} provider={s.storage?.provider} /></td><td className="small muted">{fmtDur(v.duration_s)}</td><td className="small muted">{fmtBytes(v.bytes)}</td><td className="small muted">{fmtAgo(v.created_at)}</td>
                       <td onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => openLecture(l.lecture_id)}>Details</Btn></td>
                     </tr>
                   ))}
@@ -226,6 +226,42 @@ export function WorkersPage() {
   );
 }
 
+// ---- Storage (OneDrive / SharePoint) -------------------------------------------------------------
+
+function StorageCard() {
+  const s = useStore();
+  const [run, busy] = useAction();
+  const st = s.storage || {};
+  const vids = Object.values(s.videos);
+  const n = (x) => vids.filter((v) => (v.storage || 'local') === x).length;
+  const onedrive = st.provider === 'onedrive';
+  return (
+    <Card title={<>{onedrive ? <Cloud size={16} /> : <FolderOpen size={16} />} Video storage</>}>
+      {onedrive ? (
+        <>
+          <p className="muted small">Every validated video is uploaded to OneDrive / SharePoint in the class → subject → chapter → lecture folders, then its local copy is removed{st.keepLocal ? ' (kept here: LIBRARY_KEEP_LOCAL)' : ''}. The Library plays straight from OneDrive.</p>
+          {st.ok === false
+            ? <div className="alert alert-red"><AlertTriangle size={16} /><div>OneDrive is not reachable: {st.error}</div></div>
+            : <dl className="kv">
+                <dt>Location</dt><dd>{st.site} › {st.library} › {st.root}{st.rootUrl && <> · <a href={st.rootUrl} target="_blank" rel="noreferrer">open <ExternalLink size={12} /></a></>}</dd>
+                <dt>On OneDrive</dt><dd>{n('onedrive')}</dd>
+                <dt>Uploading / waiting</dt><dd>{n('uploading') + n('local')}</dd>
+                <dt>Upload failed</dt><dd className={n('failed') ? 't-red' : ''}>{n('failed')}</dd>
+              </dl>}
+          <pre className="path">{st.root || 'CBSE Lectures'}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Lecture 3 - Types of Chemical Reactions.mp4</pre>
+          <Btn Icon={CloudUpload} disabled={!n('failed') && !n('local')} busy={busy === 'up'} onClick={() => run('up', () => api('POST', '/api/uploads/retry'), (r) => `Uploading ${r.queued} video(s)`)}>Retry failed uploads</Btn>
+        </>
+      ) : (
+        <>
+          <p className="muted small">OneDrive is not configured (MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, SHAREPOINT_SITE_URL in .env, then <span className="mono">npm run factory -- deploy</span>). Videos are saved on this PC as</p>
+          <pre className="path">{s.library}\Class 10\Science\Chapter 1 - Chemical Reactions and Equations\Lecture 3 - Types of Chemical Reactions.mp4</pre>
+        </>
+      )}
+      <p className="muted small">Subjects with more than one book (e.g. Physics Part I / Part II) get a book folder between subject and chapter, because chapter numbers restart in each book.</p>
+    </Card>
+  );
+}
+
 // ---- Source + settings ----------------------------------------------------------------------------
 
 export function SourcePage() {
@@ -255,11 +291,7 @@ export function SourcePage() {
             if (await ask({ title: 'Copy the source database again?', body: 'Reads classes, courses, modules, lectures and textbook_raw from the prepzy-mysql container on this PC. Production keeps running.', ok: 'Copy now' })) run('sync', () => api('POST', '/api/sync'), 'Copy started');
           }}>Copy from prepzy-mysql</Btn>
         </Card>
-        <Card title={<><FolderOpen size={16} /> Library folder</>}>
-          <p className="muted small">Validated videos are saved on this PC, outside the code base, as</p>
-          <pre className="path">{s.library}\Class 10\Science\Chapter 1 - Chemical Reactions and Equations\Lecture 3 - Types of Chemical Reactions.mp4</pre>
-          <p className="muted small">Subjects with more than one book (e.g. Physics Part I / Part II) get a book folder between subject and chapter, because chapter numbers restart in each book.</p>
-        </Card>
+        <StorageCard />
       </div>
       <Card title={<><Layers size={16} /> Template packs</>} pad={false}>
         <table className="table">

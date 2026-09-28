@@ -25,7 +25,7 @@ Then open **http://localhost:8080**.
 1. Open a class and press **Start**. Its lectures are queued in course order (subject → chapter → lecture), and the 4 workers make 4 lectures at a time.
 2. Follow each worker live: stage, progress, gate results. Pause or resume a class queue, press **Run next** on a lecture, stop or remove one.
 3. Lectures that fail a validation gate (after automatic repair) land in **Needs attention**. Retry them from the failed stage, from a stage you choose, or from scratch.
-4. Finished videos pass a final check in the central (ffprobe, 1080p, audio, duration versus the worker's QA). They're saved to `C:\Users\<you>\Videos\Prepzy Lectures\Class 10\Science\Chapter 1 - …\Lecture 3 - ….mp4` and recorded in the `videos` table, and play in the **Library**. The worker then deletes that lecture's images, audio and frames.
+4. Finished videos pass a final check in the central (ffprobe, 1080p, audio, duration versus the worker's QA). They're uploaded to **OneDrive / SharePoint** (site VideoArchive, library Documents) as `CBSE Lectures/Class 10/Science/Chapter 1 - …/Lecture 3 - ….mp4`, and recorded in the `videos` table. The Library plays them straight from there. The local copy in `Videos\Prepzy Lectures` is only a staging area and is deleted once the upload succeeds (`LIBRARY_KEEP_LOCAL=true` keeps it). The worker deletes that lecture's images, audio and frames as soon as the central has the video.
 
 ```bash
 npm run factory -- deploy    # after code or template changes: rebuild the image, restart central + workers
@@ -34,7 +34,8 @@ npm run factory -- logs central     # or: logs worker, logs db
 npm run factory -- down      # delete the cluster (videos stay on disk)
 ```
 
-- **Secrets** come from `.env`: `OPENAI_API_KEY`, `SARVAM_API_KEY` and `TEXTBOOK_DB_URL`, which is the prepzy-mysql URL on this PC. The cluster reaches it through `host.docker.internal`.
+- **Secrets** come from `.env`: `OPENAI_API_KEY`, `SARVAM_API_KEY` and `TEXTBOOK_DB_URL`, which is the prepzy-mysql URL on this PC. The cluster reaches it through `host.docker.internal`. OneDrive needs `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` and `SHAREPOINT_SITE_URL` (optionally `SHAREPOINT_ROOT`); without them videos stay local. After changing `.env`, run `npm run factory -- deploy`.
+- **Uploads:** 2 at a time, 3 tries each. A failed upload keeps the local file; retry it from the lecture's details or from **Source & settings**. Uploads that were pending when the central restarted resume on start.
 - **Source data:** on first start the central copies the tutorai tables from prepzy-mysql into the cluster database (about 7 s). Copy them again from **Source & settings** after the course tables change.
 - **Scale:** change **Parallel lectures** on the Workers page (or `replicas` in `deploy/k8s/factory.yaml`). Each worker renders with 2 Chromium workers and sends 2 Sarvam requests at a time. Docker Desktop gives Kubernetes 8 GB by default, which fits about 4 parallel lectures.
 - **Library folder:** `FACTORY_LIBRARY` overrides it when the cluster is created. A subject with more than one book (Physics Part I / II) gets a book folder between subject and chapter.

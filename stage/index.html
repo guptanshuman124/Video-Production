@@ -30,6 +30,20 @@
         im.classList.add('fitted');
       }
     }
+    // Slide header (lecture name, left of the logo): a name too long for one
+    // line is shrunk 1px at a time down to 16px; if it still does not fit it
+    // wraps onto two lines at 16px (the CSS clamp adds "…" beyond that).
+    function fitHeaderText() {
+      for (const el of document.querySelectorAll('.brand-lecture')) {
+        if (!el.textContent.trim() || el.scrollWidth <= el.clientWidth) continue;
+        let size = parseFloat(getComputedStyle(el).fontSize);
+        while (el.scrollWidth > el.clientWidth && size > 16) {
+          size = Math.max(16, size - 1);
+          el.style.fontSize = `${size}px`;
+        }
+        if (el.scrollWidth > el.clientWidth) el.classList.add('wrap');
+      }
+    }
     // The renderer injects the project + options, then drives everything
     // through these globals. No autoplay, ever.
     window.__prepare = async (project, opts) => {
@@ -45,6 +59,7 @@
           im.onload = im.onerror = r;
         })));
       fitPanelImages();
+      fitHeaderText();
       seek(0);
       return info;
     };

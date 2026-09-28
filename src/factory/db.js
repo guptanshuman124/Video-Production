@@ -4,7 +4,8 @@
 //   jobs          one row per lecture that was ever queued — its queue state,
 //                 current stage, gate results and last error. Retrying resets it.
 //   job_events    the lecture's activity log (stages, gates, worker messages)
-//   videos        finished, validated videos and where they are in the library
+//   videos        finished, validated videos: library path, and where they are stored
+//                 (storage: local → uploading → onedrive | failed; remote_id / remote_url on OneDrive)
 //   workers       worker pods seen by the central (heartbeats)
 //   class_queues  per-class queue switch: running | paused
 //   settings      small key/value store (desired worker count, last sync, …)
@@ -67,7 +68,23 @@ export async function openDb(url) {
   await admin.end();
   const pool = mysql.createPool({ uri: url, charset: 'utf8mb4', connectionLimit: 8, dateStrings: false, timezone: 'Z' });
   for (const sql of SCHEMA) await pool.query(sql);
+  // Columns added after the first release (MySQL has no ADD COLUMN IF NOT EXISTS).
+  await addColumns(pool, name, 'videos', {
+    storage: "VARCHAR(20) NOT NULL DEFAULT 'local'",
+    remote_id: 'VARCHAR(200) NULL',
+    remote_url: 'VARCHAR(1000) NULL',
+    remote_error: 'TEXT NULL',
+    uploaded_at: 'DATETIME(3) NULL',
+  });
   return pool;
+}
+
+async function addColumns(pool, dbName, table, cols) {
+  const [have] = await pool.query('SELECT column_name AS c FROM information_schema.columns WHERE table_schema = ? AND table_name = ?', [dbName, table]);
+  const existing = new Set(have.map((r) => r.c.toLowerCase()));
+  for (const [col, def] of Object.entries(cols)) {
+    if (!existing.has(col)) await pool.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${col}\` ${def}`);
+  }
 }
 
 // Waits for MySQL to accept connections (it starts slower than the central pod).

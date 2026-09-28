@@ -31,7 +31,7 @@ const state = {
   ready: false, error: null, connected: false,
   catalog: null,          // { classes, lectures: {id: lecture} }
   jobs: {}, videos: {}, queues: {}, workers: { workers: [], scale: null, k8s: false },
-  sync: {}, library: '', activity: [], version: 0,
+  sync: {}, library: '', storage: { provider: 'local' }, activity: [], version: 0,
 };
 const listeners = new Set();
 let snapshot = { ...state };
@@ -51,6 +51,7 @@ async function loadState() {
   state.workers = s.workers;
   state.sync = s.sync;
   state.library = s.library;
+  state.storage = s.storage || { provider: 'local' };
 }
 async function loadActivity() {
   state.activity = await api('GET', '/api/activity');
@@ -84,6 +85,11 @@ function start() {
       if (v.deleted) delete state.videos[v.lecture_id]; else state.videos[v.lecture_id] = v;
       state.videos = { ...state.videos };
       emitSoon();
+    });
+    es.addEventListener('upload', (e) => {
+      const u = JSON.parse(e.data);
+      const v = state.videos[u.lecture_id];
+      if (v) { state.videos = { ...state.videos, [u.lecture_id]: { ...v, storage: 'uploading', upload: { done: u.done, total: u.total } } }; emitSoon(); }
     });
     es.addEventListener('workers', (e) => { state.workers = JSON.parse(e.data); emitSoon(); });
     es.addEventListener('queue', (e) => { const q = JSON.parse(e.data); state.queues = { ...state.queues, [q.class_no]: q.state }; emitSoon(); });

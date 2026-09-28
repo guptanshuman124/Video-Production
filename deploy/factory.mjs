@@ -9,7 +9,9 @@
 //
 // Needs Docker Desktop. kind (Kubernetes in Docker) is downloaded to ~/bin if missing.
 // Secrets come from .env: OPENAI_API_KEY, SARVAM_API_KEY, TEXTBOOK_DB_URL (the prepzy-mysql
-// URL on this PC; the cluster reaches it through host.docker.internal).
+// URL on this PC; the cluster reaches it through host.docker.internal), and for video storage on
+// OneDrive / SharePoint MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, SHAREPOINT_SITE_URL.
+// After changing .env run `npm run factory -- deploy`.
 // FACTORY_LIBRARY overrides where videos are saved (default: <home>\Videos\Prepzy Lectures).
 
 import fs from 'node:fs';
@@ -51,6 +53,9 @@ function kindBin() {
   return local;
 }
 
+// Copied from .env into the cluster Secret (OneDrive ones are optional: without them videos stay local).
+const SECRET_KEYS = ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'MS_TENANT_ID', 'MS_CLIENT_ID', 'MS_CLIENT_SECRET', 'SHAREPOINT_SITE_URL', 'SHAREPOINT_ROOT', 'LIBRARY_KEEP_LOCAL'];
+
 function readEnv() {
   const f = path.join(ROOT, '.env');
   const env = {};
@@ -60,7 +65,7 @@ function readEnv() {
       if (m) env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
     }
   }
-  return { ...env, ...Object.fromEntries(Object.entries(process.env).filter(([k]) => ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'TEXTBOOK_DB_URL', 'SOURCE_DB_URL'].includes(k))) };
+  return { ...env, ...Object.fromEntries(Object.entries(process.env).filter(([k]) => [...SECRET_KEYS, 'TEXTBOOK_DB_URL', 'SOURCE_DB_URL'].includes(k))) };
 }
 
 function clusterExists(kind) {
@@ -108,7 +113,7 @@ function applySecrets() {
   const existing = out('kubectl', ['--context', CONTEXT, '-n', NS, 'get', 'secret', 'factory-secrets', '-o', 'jsonpath={.data.MYSQL_ROOT_PASSWORD}']);
   const pw = existing ? Buffer.from(existing, 'base64').toString('utf8') : crypto.randomBytes(18).toString('base64url');
   const data = {
-    OPENAI_API_KEY: env.OPENAI_API_KEY, SARVAM_API_KEY: env.SARVAM_API_KEY,
+    ...Object.fromEntries(SECRET_KEYS.filter((k) => env[k]).map((k) => [k, env[k]])),
     MYSQL_ROOT_PASSWORD: pw,
     FACTORY_DB_URL: `mysql://root:${encodeURIComponent(pw)}@factory-db:3306/factory`,
     TEXTBOOK_DB_URL: `mysql://root:${encodeURIComponent(pw)}@factory-db:3306/tutorai`,

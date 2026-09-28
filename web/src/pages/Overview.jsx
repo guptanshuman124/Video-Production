@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Film, Timer, Cpu, ListOrdered, AlertTriangle, Wallet, Play, Pause, PlayCircle, ChevronRight, Server, Radio } from 'lucide-react';
 import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Card, Empty, Progress, StackBar, StageDots, Stat, fmtAgo, fmtElapsed, fmtMin, fmtUsd, pct, useAction } from '../components/ui.jsx';
-import { useApp } from '../components/lecture.jsx';
+import { useApp, StorageBadge } from '../components/lecture.jsx';
 
 export function WorkerCard({ w }) {
   const s = useStore();
@@ -168,11 +168,13 @@ export default function Overview() {
 
 function RecentVideo({ l, v }) {
   const { play } = useApp();
+  const s = useStore();
   return (
     <button className="vcard" onClick={() => play(l.lecture_id)}>
       <div className="vthumb"><span className="vplay"><Play size={18} /></span><span className="vdur">{Math.round(v.duration_s / 60)} min</span><span className="vclass">Class {l.class_no}</span></div>
       <div className="vtitle">{l.lecture_title}</div>
       <div className="muted small">{l.subject} · Ch {l.chapter_no} · L{l.lecture_no} · {fmtAgo(v.created_at)}</div>
+      <div className="vstore"><StorageBadge v={v} provider={s.storage?.provider} /></div>
     </button>
   );
 }

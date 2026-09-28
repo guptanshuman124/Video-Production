@@ -6,7 +6,8 @@
 //   - hands lectures to worker pods (claim), follows their progress (events,
 //     heartbeats), requeues a lecture if its worker disappears
 //   - final validation of every uploaded video, then stores it in the library
-//     (LIBRARY_DIR/Class N/Subject/[Book/]Chapter K - …/Lecture M - ….mp4) and
+//     (LIBRARY_DIR/Class N/Subject/[Book/]Chapter K - …/Lecture M - ….mp4), uploads it to
+//     OneDrive / SharePoint in the same folders (onedrive.js), and
 //     records it in the `videos` table; the worker then deletes its files
 //   - serves the dashboard (web/dist) and live updates (Server-Sent Events)
 //
@@ -22,6 +23,7 @@ import { loadCatalog, inputFor } from './catalog.js';
 import { syncSource } from './sync.js';
 import { probeAll } from '../qa.js';
 import * as k8s from './k8s.js';
+import * as onedrive from './onedrive.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const PORT = Number(process.env.PORT || 8080);
@@ -286,13 +288,18 @@ async function receiveVideo(req, id, worker) {
   const rel = lecture.library_path;
   const dest = path.join(LIBRARY, ...rel.split('/'));
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  const [[old]] = await db.query('SELECT path FROM videos WHERE lecture_id = ?', [id]);
-  if (old && old.path !== rel) removeFromLibrary(old.path);
+  const [[old]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [id]);
+  if (old && old.path !== rel) {
+    removeFromLibrary(old.path);
+    // The old OneDrive copy sits at the old path (the title changed): remove it.
+    if (old.remote_id && onedrive.configured()) onedrive.remove(old.remote_id).catch((e) => log(`old OneDrive copy of ${id}: ${e.message}`));
+  }
   fs.rmSync(dest, { force: true });
   fs.renameSync(tmp, dest);
-  await db.query(`INSERT INTO videos (lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, qa, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE path=VALUES(path), bytes=VALUES(bytes), duration_s=VALUES(duration_s),
-    width=VALUES(width), height=VALUES(height), slides=VALUES(slides), cost_usd=VALUES(cost_usd), qa=VALUES(qa), created_at=VALUES(created_at)`,
+  await db.query(`INSERT INTO videos (lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, qa, created_at, storage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local') ON DUPLICATE KEY UPDATE path=VALUES(path), bytes=VALUES(bytes), duration_s=VALUES(duration_s),
+    width=VALUES(width), height=VALUES(height), slides=VALUES(slides), cost_usd=VALUES(cost_usd), qa=VALUES(qa), created_at=VALUES(created_at),
+    storage='local', remote_error=NULL`,
   [id, lecture.course_id, lecture.module_id, lecture.class_no, rel, got, check.duration, check.width, check.height, meta.slides ?? null, meta.cost_usd ?? 0, json(meta.qa), now()]);
   await db.query("UPDATE jobs SET status='done', stage='qa', progress=100, finished_at=?, cost_usd=?, stages=? WHERE lecture_id=?",
     [now(), meta.cost_usd || 0, json(mergeStages(parse(r.stages), meta.stages)), id]);
@@ -301,7 +308,81 @@ async function receiveVideo(req, id, worker) {
   await pushJob(id); pushWorkers(true);
   broadcast('video', await videoRow(id));
   log(`stored lecture ${id} → ${rel}`);
+  queueUpload(id);
   return { status: 200, body: { ok: true, path: rel } };
+}
+
+// ---- OneDrive ---------------------------------------------------------------------------
+// Every validated video is uploaded to OneDrive / SharePoint (src/factory/onedrive.js) in
+// the same folder structure. Once it is there the local copy is deleted (LIBRARY_KEEP_LOCAL=true
+// keeps it) and the player streams from OneDrive. Two uploads at a time, 3 tries each; a
+// failed upload keeps the local file and can be retried from the dashboard.
+const KEEP_LOCAL = /^(1|true|yes)$/i.test(process.env.LIBRARY_KEEP_LOCAL || '');
+const uploadQueue = [];
+const uploading = new Map();     // lecture_id -> { done, total }
+const UPLOADS_AT_ONCE = 2;
+
+function queueUpload(id) {
+  if (!onedrive.configured() || uploading.has(id) || uploadQueue.includes(id)) return;
+  uploadQueue.push(id);
+  pumpUploads();
+}
+function pumpUploads() {
+  while (uploading.size < UPLOADS_AT_ONCE && uploadQueue.length) {
+    const id = uploadQueue.shift();
+    uploading.set(id, { done: 0, total: 0 });
+    uploadOne(id).catch((e) => log(`upload ${id}: ${e.message}`)).finally(() => { uploading.delete(id); pumpUploads(); });
+  }
+}
+
+async function uploadOne(id) {
+  const v = await videoRow(id);
+  if (!v) return;
+  const file = path.join(LIBRARY, ...v.path.split('/'));
+  if (!fs.existsSync(file)) {
+    if (v.storage !== 'onedrive') await setStorage(id, 'failed', { remote_error: 'the local file is missing — regenerate this lecture' });
+    return;
+  }
+  await setStorage(id, 'uploading');
+  let lastPush = 0;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const item = await onedrive.upload(file, v.path, {
+        onProgress: (done, total) => {
+          uploading.set(id, { done, total });
+          if (Date.now() - lastPush > 1000 || done === total) { lastPush = Date.now(); broadcast('upload', { lecture_id: id, done, total }); }
+        },
+      });
+      await db.query("UPDATE videos SET storage='onedrive', remote_id=?, remote_url=?, remote_error=NULL, uploaded_at=? WHERE lecture_id=?", [item.id, item.webUrl, now(), id]);
+      if (!KEEP_LOCAL) removeFromLibrary(v.path);
+      await event(id, 'info', 'qa', `uploaded to OneDrive: ${onedrive.remotePath(v.path)}${KEEP_LOCAL ? '' : ' (local copy removed)'}`);
+      broadcast('video', await videoRow(id));
+      log(`uploaded lecture ${id} → OneDrive`);
+      return;
+    } catch (e) {
+      if (attempt < 3) { await new Promise((r) => setTimeout(r, 15000 * attempt)); continue; }
+      await setStorage(id, 'failed', { remote_error: e.message.slice(0, 2000) });
+      await event(id, 'error', 'qa', `OneDrive upload failed: ${e.message.slice(0, 600)}`);
+      return;
+    }
+  }
+}
+
+async function setStorage(id, storage, { remote_error = null } = {}) {
+  await db.query('UPDATE videos SET storage=?, remote_error=? WHERE lecture_id=?', [storage, remote_error, id]);
+  broadcast('video', await videoRow(id));
+}
+
+let storageInfo = { provider: 'local' };
+async function loadStorageInfo() {
+  if (!onedrive.configured()) { storageInfo = { provider: 'local', keepLocal: true }; return; }
+  try {
+    const d = await onedrive.drive();
+    storageInfo = { provider: 'onedrive', site: d.siteName, library: d.driveName, root: onedrive.remotePath('').replace(/\/$/, ''), rootUrl: await onedrive.rootUrl(), keepLocal: KEEP_LOCAL, ok: true };
+  } catch (e) {
+    storageInfo = { provider: 'onedrive', ok: false, error: e.message, keepLocal: KEEP_LOCAL };
+    log(`OneDrive: ${e.message}`);
+  }
 }
 
 // status.json from the worker ('lecture/<stage>': {status,…}) folded into the dashboard's stage map.
@@ -415,9 +496,11 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+const VIDEO_COLS = 'lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at';
+const withUpload = (v) => (uploading.has(v.lecture_id) ? { ...v, upload: uploading.get(v.lecture_id) } : v);
 async function videoRow(id) {
-  const [[v]] = await db.query('SELECT lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at FROM videos WHERE lecture_id = ?', [id]);
-  return v || null;
+  const [[v]] = await db.query(`SELECT ${VIDEO_COLS} FROM videos WHERE lecture_id = ?`, [id]);
+  return v ? withUpload(v) : null;
 }
 
 function streamFile(req, res, file, type) {
@@ -453,11 +536,11 @@ const route = (method, pattern, fn) => routes.push({ method, re: new RegExp(`^${
 route('GET', '/api/catalog', async () => ({ classes: catalog.classes, at: catalog.at, lectures: Object.fromEntries(catalog.lectures) }));
 route('GET', '/api/state', async () => {
   const [jobs] = await db.query(`SELECT ${JOB_COLS} FROM jobs`);
-  const [videos] = await db.query('SELECT lecture_id, path, bytes, duration_s, slides, cost_usd, created_at FROM videos');
+  const [videos] = (await db.query(`SELECT ${VIDEO_COLS} FROM videos`)).map((x, i) => (i === 0 ? x.map(withUpload) : x));
   const [queues] = await db.query('SELECT class_no, state FROM class_queues');
   return {
     jobs: jobs.map(compact), videos, queues, workers: await workersState(),
-    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT,
+    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT, storage: storageInfo,
   };
 });
 route('GET', '/api/jobs/:id', async ({ id }) => {
@@ -529,8 +612,9 @@ function removeFromLibrary(rel) {
 }
 
 route('DELETE', '/api/videos/:id', async ({ id }) => {
-  const v = await videoRow(Number(id));
+  const [[v]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [Number(id)]);
   if (v) removeFromLibrary(v.path);
+  if (v?.remote_id && onedrive.configured()) await onedrive.remove(v.remote_id);
   await db.query('DELETE FROM videos WHERE lecture_id = ?', [Number(id)]);
   await db.query("DELETE FROM jobs WHERE lecture_id = ? AND status IN ('done','failed')", [Number(id)]);
   broadcast('video', { lecture_id: Number(id), deleted: true });
@@ -541,6 +625,12 @@ route('DELETE', '/api/videos/:id', async ({ id }) => {
 // Workers + source
 route('POST', '/api/workers/scale', async (_, body) => { const s = await k8s.setWorkerScale(body.replicas); scaleCache = { at: Date.now(), v: s }; pushWorkers(true); return s; });
 route('POST', '/api/sync', async () => { runSync(); return { started: true }; });
+route('POST', '/api/videos/:id/upload', async ({ id }) => { queueUpload(Number(id)); return { queued: true }; });
+route('POST', '/api/uploads/retry', async () => {
+  const [rows] = await db.query("SELECT lecture_id FROM videos WHERE storage IN ('failed','local')");
+  rows.forEach((r) => queueUpload(r.lecture_id));
+  return { queued: rows.length };
+});
 
 // Worker API
 route('POST', '/api/worker/claim', async (_, __, { worker }) => { await seen(worker, null); const job = await claim(worker); return job || null; });
@@ -573,10 +663,16 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/healthz') return send(res, 200, { ok: true });
     let m = /^\/api\/videos\/(\d+)\/file$/.exec(url.pathname);
     if (m && req.method === 'GET') {
-      const v = await videoRow(Number(m[1]));
+      // Local copy while it exists (before / without the OneDrive upload); otherwise a
+      // redirect to OneDrive's short-lived download URL (the player follows it, seeking works).
+      const [[v]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [Number(m[1])]);
       const file = v && path.join(LIBRARY, ...v.path.split('/'));
-      if (!file || !fs.existsSync(file)) return send(res, 404, { error: 'video not found' });
-      return streamFile(req, res, file, 'video/mp4');
+      if (file && fs.existsSync(file)) return streamFile(req, res, file, 'video/mp4');
+      if (v?.remote_id && onedrive.configured()) {
+        res.writeHead(302, { location: await onedrive.downloadUrl(v.remote_id), 'cache-control': 'no-store' });
+        return res.end();
+      }
+      return send(res, 404, { error: 'video not found' });
     }
     m = /^\/api\/worker\/video\/(\d+)$/.exec(url.pathname);
     if (m && req.method === 'PUT') {
@@ -614,7 +710,11 @@ export async function runCentral() {
   }
   sync.last = await getSetting(db, 'last_sync');
   setInterval(() => sweep().catch((e) => log(`sweep: ${e.message}`)), 20000);
-  server.listen(PORT, () => log(`central listening on :${PORT} · library ${LIBRARY}`));
+  await loadStorageInfo();
+  // Videos stored while OneDrive was unreachable (or the central restarted mid-upload) go up now.
+  const [pending] = await db.query("SELECT lecture_id FROM videos WHERE storage IN ('local','uploading')");
+  for (const p of pending) queueUpload(p.lecture_id);
+  server.listen(PORT, () => log(`central listening on :${PORT} · library ${LIBRARY} · storage ${storageInfo.provider}${storageInfo.ok === false ? ' (unreachable)' : ''}`));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runCentral();

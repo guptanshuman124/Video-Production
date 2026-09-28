@@ -68,7 +68,8 @@ export const sec = (v) => (typeof v === 'number' ? v * 1000 : null);
 
 // Schema fragments reused by every biology template.
 export const common = {
-  lecture: { type: 'text', default: '', max: 60, description: 'header left; usually set once in project "shared"' },
+  // Course-table lecture names can be long; stage/index.html shrinks / wraps the header to fit.
+  lecture: { type: 'text', default: '', max: 160, description: 'header left; usually set once in project "shared"' },
   logo: { type: 'image', description: 'overrides templates/_shared/assets/logo.*' },
 };
 export const cueList = (what) => ({

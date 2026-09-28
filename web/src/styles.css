@@ -268,6 +268,9 @@ h3 { font-size: 15px; font-weight: 600; }
 .drawer-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .drawer-status { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; font-size: 13px; }
 .drawer-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+.video-meta-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.video-meta-top .link { display: inline-flex; gap: 4px; align-items: center; }
+.vstore { margin-top: 6px; }
 .video-meta { display: flex; gap: 10px; align-items: flex-start; background: var(--surface-2); border: 1px solid var(--line); padding: 10px 12px; border-radius: 9px; color: var(--text-2); word-break: break-all; }
 .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 4px; }
 .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }

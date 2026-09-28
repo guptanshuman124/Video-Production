@@ -1,11 +1,24 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Play, RotateCcw, RefreshCw, XCircle, ChevronsUp, PlusCircle, Trash2, FolderOpen, AlertTriangle, CheckCircle2, CircleDot, Loader2, Circle, Download } from 'lucide-react';
+import { Play, RotateCcw, RefreshCw, XCircle, ChevronsUp, PlusCircle, Trash2, FolderOpen, AlertTriangle, CheckCircle2, CircleDot, Loader2, Circle, Download, Cloud, CloudUpload, CloudOff, HardDrive, ExternalLink } from 'lucide-react';
 import { api, STAGES, lectureStatus, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Drawer, Modal, Progress, StatusChip, fmtAgo, fmtDur, fmtBytes, fmtElapsed, fmtUsd, useAction, useToast } from './ui.jsx';
 
 // The library path as it looks on this PC (Windows paths use backslashes).
 const BS = String.fromCharCode(92);
 export const hostPath = (root, rel) => (root?.includes(BS) ? `${root}${BS}${rel.replaceAll('/', BS)}` : `${root}/${rel}`);
+
+// Where a finished video is: OneDrive, uploading (with progress), local only, or upload failed.
+export function StorageBadge({ v, provider }) {
+  if (!v) return null;
+  const st = v.storage || 'local';
+  if (st === 'onedrive') return <span className="chip chip-sm tone-green"><Cloud size={12} />OneDrive</span>;
+  if (st === 'uploading') {
+    const p = v.upload?.total ? Math.round((v.upload.done / v.upload.total) * 100) : 0;
+    return <span className="chip chip-sm tone-blue"><CloudUpload size={12} />Uploading{p ? ` ${p}%` : '…'}</span>;
+  }
+  if (st === 'failed') return <span className="chip chip-sm tone-red" title={v.remote_error || ''}><CloudOff size={12} />Upload failed</span>;
+  return <span className="chip chip-sm tone-gray"><HardDrive size={12} />{provider === 'onedrive' ? 'Local · upload pending' : 'Local'}</span>;
+}
 
 // Open the lecture drawer / the player from anywhere.
 export const AppCtx = createContext({ openLecture: () => {}, play: () => {} });
@@ -131,8 +144,19 @@ export function LectureDrawer({ id, onClose }) {
 
       {video && (
         <div className="video-meta">
-          <FolderOpen size={15} />
-          <div><div className="mono small">{hostPath(s.library, video.path)}</div><div className="muted small">{fmtDur(video.duration_s)} · {fmtBytes(video.bytes)} · {video.slides ?? '—'} slides · made {fmtAgo(video.created_at)}</div></div>
+          {video.storage === 'onedrive' ? <Cloud size={15} /> : <FolderOpen size={15} />}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="video-meta-top">
+              <StorageBadge v={video} provider={s.storage?.provider} />
+              {video.remote_url && <a className="link small" href={video.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={12} /> Open in SharePoint</a>}
+              {video.storage === 'failed' && <Btn size="sm" Icon={CloudUpload} onClick={() => api('POST', `/api/videos/${id}/upload`)}>Retry upload</Btn>}
+            </div>
+            <div className="mono small">{video.storage === 'onedrive'
+              ? `${s.storage?.site || 'SharePoint'} › ${s.storage?.library || 'Documents'} › ${s.storage?.root || 'CBSE Lectures'}/${video.path}`
+              : hostPath(s.library, video.path)}</div>
+            {video.storage === 'failed' && video.remote_error && <div className="t-red small">{video.remote_error}</div>}
+            <div className="muted small">{fmtDur(video.duration_s)} · {fmtBytes(video.bytes)} · {video.slides ?? '—'} slides · made {fmtAgo(video.created_at)}{video.uploaded_at ? ` · uploaded ${fmtAgo(video.uploaded_at)}` : ''}</div>
+          </div>
         </div>
       )}
 
@@ -202,6 +226,8 @@ export function PlayerModal({ id, onClose }) {
             <div className="muted small">{fmtDur(v.duration_s)} · {fmtBytes(v.bytes)} · <span className="mono">{v.path}</span></div>
           </div>
           <div className="row-actions">
+            <StorageBadge v={v} provider={s.storage?.provider} />
+            {v.remote_url && <a className="btn btn-default" href={v.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={15} /><span>SharePoint</span></a>}
             <a className="btn btn-default" href={`/api/videos/${id}/file`} download={`${v.path.split('/').pop()}`}><Download size={15} /><span>Download</span></a>
             <Btn onClick={() => { onClose(); openLecture(id); }}>Details</Btn>
           </div>

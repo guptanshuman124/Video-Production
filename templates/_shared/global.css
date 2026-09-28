@@ -89,9 +89,17 @@
   padding: 0 108px 0 var(--frame-left);
   border-bottom: 1px solid var(--brand-rule);
 }
+/* Uses only the space left of the logo; long names are shrunk (down to 16px)
+   and then wrapped onto two lines by fitHeaderText() in stage/index.html. */
 :where(.scene.tpl) .brand-lecture {
   font: 700 21.3px/1.2 var(--font-body);
   text-transform: uppercase; color: var(--brand-navy);
+  flex: 1 1 auto; min-width: 0; margin-right: 48px;
+  white-space: nowrap; overflow: hidden;
+}
+:where(.scene.tpl) .brand-lecture.wrap {
+  white-space: normal;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 :where(.scene.tpl) .brand-logo { height: 49px; width: auto; display: block; margin-top: 3px; }
 :where(.scene.tpl) .brand-wordmark {
