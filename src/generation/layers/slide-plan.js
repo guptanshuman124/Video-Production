@@ -37,7 +37,7 @@ export async function planLecture(G) {
     ...sections.map((s) => `## ${s.id} — ${s.heading}\n${s.text}`),
     '',
     '# IMAGE CATALOG (id · shape · size · description) — prefer sharp images; low-res ones look soft when shown large',
-    images.length ? images.map((im) => `- ${im.id} · ${im.ratio} · ${im.width}×${im.height}px${im.lowRes ? ' (low-res)' : ''} · ${im.description}`).join('\n') : '(no images available — plan only types that work without one)',
+    images.length ? images.map((im) => `- ${im.id} · ${im.ratio} · ${im.width}×${im.height}px${im.lowRes ? ' (low-res)' : ''} · ${im.description || '(no description — use it only where the [Figure] line in the text shows what it is)'}`).join('\n') : '(no images available — plan only types that work without one)',
   ].join('\n');
 
   const typeHints = Object.fromEntries(Object.entries(types).map(([k, st]) => [k, {

@@ -1,0 +1,17 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p5: statement 1738×286 at (91,228) lavender; given and to-prove
+   1738×177 cream cards below, 24px apart. */
+.cards {
+  position: absolute; left: 91px; top: 228px; width: 1738px; height: 760px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.card { border-radius: var(--radius-card); padding: 20px 26px 22px; }
+.statement { flex: 0 0 auto; min-height: 286px; background: var(--brand-surface-head); display: flex; flex-direction: column; }
+.cards.only .statement { flex: 1 1 auto; max-height: 560px; justify-content: flex-start; }
+.given, .prove { flex: 0 0 auto; min-height: 177px; background: var(--brand-cream); }
+.label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; }
+.text { margin-top: 10px; padding-left: 12px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
+.eq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; margin-top: 8px; font-size: 42px; color: var(--brand-navy); }
+.cards.only .eq { font-size: 52px; }
+.eq .katex-display { margin: 0; }

@@ -4,6 +4,11 @@ import { checkContract } from '../contracts/index.js';
 import { requiredMarkers } from '../slides.js';
 import { lectureTitleOf } from './openers.js';
 
+// Source images often have no description; older prepared data carries the
+// placeholder text. Neither is a caption.
+const PLACEHOLDER_CAPTION = /^\s*(no (description|caption)( available)?|not available|n\/?a|none|image|figure|photo|picture|null|undefined)?\s*\.?\s*$/i;
+export const realCaption = (s) => (typeof s === 'string' && !PLACEHOLDER_CAPTION.test(s) ? s.trim() : null);
+
 export function assembleLecture(G, { plan, slides, english, hinglish, gates, promptHashes }) {
   const { prepared, lecture, types } = G;
   const catalog = new Map(prepared.images.map((im) => [im.id, im]));
@@ -25,13 +30,18 @@ export function assembleLecture(G, { plan, slides, english, hinglish, gates, pro
       const p = plan.slides[i];
       const st = types[s.slide_type];
       const img = p.image_id ? catalog.get(p.image_id) : null;
+      // A caption is shown only when there is a real one — the writer's, else the
+      // image's description — never an empty or "no description" placeholder.
+      const caption = realCaption(s.data.caption) || (img ? realCaption(img.description?.slice(0, 60)) : null);
+      const data = s.data.caption && !realCaption(s.data.caption) ? { ...s.data, caption: null } : s.data;
       return {
         slide_number: i + 1,
         slide_type: s.slide_type,
         template: st.templateId,
         title: s.data.title || p.title,
-        data: s.data,
-        image: img ? { id: img.id, url: img.url, caption: s.data.caption || img.description.slice(0, 60) } : null,
+        data,
+        // No caption → no `caption` key (Content JSON v1: optional string, never null).
+        image: img ? { id: img.id, url: img.url, ...(caption ? { caption } : {}) } : null,
         narration: { english: english ? english[i] : null, hinglish: hinglish[i] },
         markers: requiredMarkers(st.spec, s.data),
         source_refs: p.source_refs,

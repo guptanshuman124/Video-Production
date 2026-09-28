@@ -80,6 +80,8 @@ export function flowRules(pack) {
   if (f.everyLecture?.endsWithAnyOf) lines.push(`- Every lecture ends with ${f.everyLecture.endsWithAnyOf.join(' / ')}.`);
   if (f.lastLecture?.minTrailingQuestions) lines.push(`- The last lecture ends with at least ${f.lastLecture.minTrailingQuestions} question slides in a row.`);
   if (f.maxConsecutiveSameType) lines.push(`- Never more than ${f.maxConsecutiveSameType} slides of the same type in a row.`);
+  for (const [t, before] of Object.entries(f.mustFollow || {})) lines.push(`- A ${t} slide comes right after a ${before.join(' or ')} slide.`);
+  if (f.firstLecture?.opening?.length > 1) lines.push(`- Lecture 1 of a chapter opens: ${f.firstLecture.opening.join(' → ')}. Other lectures open with ${(f.everyLecture?.opening || ['intro']).join(' → ')}.`);
   return `# FLOW RULES (checked by code)\n\n${lines.join('\n')}`;
 }
 

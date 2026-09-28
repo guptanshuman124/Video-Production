@@ -1,0 +1,30 @@
+--brand-bg: var(--bg-lavender);
+
+/* PDF p7: problem 1160×200 at (84,220), reasoning 1160×374 at (84,434),
+   key takeaway 1160×155 at (84,821); image 578×756 at (1257,220).
+   p8: the same stack at 1736 wide. */
+.cards {
+  position: absolute; left: var(--frame-left); top: 220px; width: 1736px; height: 756px;
+  display: flex; flex-direction: column; gap: 14px;
+  &.with-image { width: 1160px; }
+}
+.card { border-radius: var(--radius-card); padding: 16px 24px 18px; }
+.problem { flex: 0 0 auto; min-height: 150px; background: var(--brand-surface-alt); }
+.solution { flex: 1 1 auto; min-height: 0; background: var(--brand-cream); overflow: hidden; }
+.answer { flex: 0 0 auto; min-height: 130px; background: var(--brand-cream); }
+.label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; }
+.text { margin-top: 8px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
+.text.strong { font-weight: 600; color: var(--brand-navy); }
+.steps {
+  margin: 10px 0 0; padding-left: 36px; display: flex; flex-direction: column;
+  gap: calc(20px - var(--n) * 2px);
+  font: 400 calc(29px - var(--n) * 0.8px)/1.35 var(--font-body); color: var(--brand-ink);
+}
+.steps li::marker { color: var(--brand-navy); font-weight: 700; }
+.steps li { padding-left: 6px; }
+.stext { margin-right: 18px; }
+.seq { color: var(--brand-navy); font-size: 1.12em; white-space: nowrap; }
+.tip { margin-top: 10px; font: 400 23px/1.35 var(--font-body); color: var(--brand-body); }
+.tip b { color: #b45309; font-weight: 700; }
+.side { left: 1257px; top: 220px; width: 579px; height: 756px; }
+.side .panel-caption { padding-bottom: 15px; }

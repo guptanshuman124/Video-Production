@@ -1,0 +1,12 @@
+{
+  "lecture": "Arithmetic Progressions",
+  "title": "Sum of the First 22 Terms",
+  "problem": "Find the sum of the first 22 terms of the AP: 8, 3, −2, …",
+  "steps": [
+    { "text": "Identify the first term and the common difference", "formula": "a = 8,\\; d = 3 - 8 = -5,\\; n = 22" },
+    { "text": "Use the sum formula", "formula": "S_n = \\frac{n}{2}[2a + (n-1)d]" },
+    { "text": "Substitute the values", "formula": "S_{22} = 11[16 + 21(-5)] = 11(-89)" }
+  ],
+  "answer": "$S_{22} = -979$",
+  "tip": "$d$ is second term minus first ($3 - 8$), not the other way round."
+}

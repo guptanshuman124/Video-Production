@@ -230,7 +230,8 @@ export function sectionsFromBlocks(blocks, lectureId, { maxWords = 700, minWords
     if (!cur) open('Introduction');
     if (b.kind === 'image') {
       const id = `img_${lectureId}_${images.length + 1}`;
-      images.push({ id, url: b.src, description: b.description ? firstWords(b.description, 60) : 'No description available', textLike: isTextLike(b.description) });
+      // No description in the source: keep it empty (never a placeholder that could end up as an on-screen caption).
+      images.push({ id, url: b.src, description: b.description ? firstWords(b.description, 60) : '', textLike: isTextLike(b.description) });
       cur.lines.push(`[Figure ${id}: ${b.description ? firstWords(b.description, 18) : 'figure'}]`);
       continue;
     }

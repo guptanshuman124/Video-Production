@@ -1,0 +1,7 @@
+{
+  "lecture": "Resources and Development",
+  "title": "List Your Resources",
+  "prompt": "Look around your classroom and make a list of ten things you use every day.",
+  "steps": ["Write where each one comes from", "Mark the ones that can be replaced quickly"],
+  "think": "Which of these could run out in your lifetime?"
+}

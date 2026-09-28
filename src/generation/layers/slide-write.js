@@ -39,7 +39,7 @@ export async function writeSlides(G, plan, opts = {}) {
         `Title: ${p.title}`,
         `Purpose: ${p.purpose}`,
         `Key points:\n${p.key_points.map((k) => `- ${k}`).join('\n')}`,
-        img ? `Image shown on this slide: ${img.description}` : 'No image on this slide.',
+        img ? (img.description ? `Image shown on this slide: ${img.description}` : 'An image is shown on this slide, but it has no description: set `caption` to null.') : 'No image on this slide.',
         `Source (${p.source_refs.join(', ') || 'lecture overview'}):\n${p.source_refs.map((r) => sectionText[r]).join('\n\n') || lecture.goals.join('; ')}`,
       ].join('\n');
     }).join('\n\n') + batchRepairText(repair, batch);

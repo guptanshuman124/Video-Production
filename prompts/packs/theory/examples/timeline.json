@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "Road to Independence",
+    "events": [
+      { "date": "1915", "title": "Gandhiji returns to India", "text": "brings satyagraha from South Africa" },
+      { "date": "1919", "title": "Rowlatt Act and Jallianwala Bagh", "text": "nationwide anger against repression" },
+      { "date": "1920", "title": "Non-Cooperation Movement", "text": "boycott of foreign goods and institutions" },
+      { "date": "1930", "title": "Salt March to Dandi", "text": "Civil Disobedience begins" }
+    ]
+  },
+  "narration_hinglish": "अब इन events को एक timeline पर रखकर देखते हैं, ताकि पूरी कहानी एक साथ समझ आए। {{b1.1}} Nineteen fifteen में Gandhiji South Africa से India लौटे, और अपने साथ satyagraha का तरीका लाए — truth और non-violence की ताकत। {{b1.2}} Nineteen nineteen में Rowlatt Act आया, और फिर Jallianwala Bagh की घटना हुई। पूरे देश में British repression के खिलाफ गुस्सा फैल गया। {{b1.3}} इसी गुस्से से nineteen twenty में Non-Cooperation Movement शुरू हुआ — लोगों ने foreign goods, schools और courts का boycott किया। {{b1.4}} और nineteen thirty में Gandhiji ने Dandi तक Salt March किया, जिससे Civil Disobedience Movement की शुरुआत हुई। Exam में ये चारों dates और उनका order ज़रूर याद रखना।"
+}

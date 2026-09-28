@@ -1,0 +1,15 @@
+{
+  "data": {
+    "title": "Proof of the BPT",
+    "toProve": "$\\dfrac{AD}{DB} = \\dfrac{AE}{EC}$",
+    "given": "$DE \\parallel BC$ in $\\triangle ABC$",
+    "steps": [
+      { "text": "Triangles ADE and BDE have the same height", "formula": "\\dfrac{ar(ADE)}{ar(BDE)} = \\dfrac{AD}{DB}" },
+      { "text": "In the same way for bases AE and EC", "formula": "\\dfrac{ar(ADE)}{ar(DEC)} = \\dfrac{AE}{EC}" },
+      { "text": "Same base DE, between the same parallels", "formula": "ar(BDE) = ar(DEC)" },
+      { "text": "So the two ratios are equal", "formula": "\\dfrac{AD}{DB} = \\dfrac{AE}{EC}" }
+    ],
+    "caption": null
+  },
+  "narration_hinglish": "अब इस theorem को prove करते हैं। हमें दिखाना है कि AD by DB बराबर है AE by EC, जब DE, BC के parallel है। {{b1.1}} पहला step: triangle ADE और triangle BDE की height same है, इसलिए उनके areas का ratio उनके bases के ratio जैसा होगा — AD by DB। {{b1.2}} इसी तरह triangle ADE और triangle DEC के areas का ratio होगा AE by EC। {{b1.3}} अब ध्यान दो: triangle BDE और DEC एक ही base DE पर हैं और same parallels DE और BC के बीच हैं, तो उनके areas बराबर हैं। {{b1.4}} Denominators बराबर हैं, इसलिए दोनों ratios भी बराबर — AD by DB बराबर AE by EC। यही Basic Proportionality Theorem है।"
+}

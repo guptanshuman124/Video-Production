@@ -1,0 +1,18 @@
+--brand-bg: var(--bg-teal);
+
+/* PDF p13: attribution 1160×73 at (84,220); context 1160×373 at (84,310);
+   significance 1160×278 at (84,699); image 578×756 at (1257,220). */
+.cards {
+  position: absolute; left: var(--frame-left); top: 220px; width: 1736px; height: 758px;
+  display: flex; flex-direction: column; gap: 17px;
+  &.with-image { width: 1160px; }
+}
+.card { border-radius: var(--radius-card); padding: 18px 24px 20px; }
+.attribution { flex: 0 0 auto; background: var(--brand-surface-alt); font: 500 27px/1.3 var(--font-body); color: var(--brand-ink); }
+.extract { flex: 0 1 auto; min-height: 250px; background: var(--brand-cream); }
+.significance { flex: 0 0 auto; min-height: 200px; background: var(--brand-cream); }
+.label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); }
+.quote { margin: 12px 0 0; font: italic 400 34px/1.45 var(--font-body); color: var(--brand-ink); }
+.text { margin-top: 10px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
+.side { left: 1257px; top: 220px; width: 579px; height: 756px; }
+.side .panel-caption { padding-bottom: 15px; }

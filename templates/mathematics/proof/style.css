@@ -1,0 +1,45 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p6: to-prove 1007×130 at (84,235) and given 715×130 at (1121,235), cream;
+   step cards 1010×255 at x=84 from y=390 joined by 45px arrows; image panel
+   715×615 at (1121,390). Without an image the steps use the full width. */
+.layout {
+  position: absolute; left: var(--frame-left); top: 235px; width: 1752px; height: 790px;
+  display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr; row-gap: 24px;
+  &.with-image { grid-template-columns: 1008px 715px; column-gap: 29px; }
+}
+.top { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 29px; }
+.top.two { grid-template-columns: 1fr 1fr; }
+.layout.with-image .top.two { grid-template-columns: 1008px 715px; }
+.card { border-radius: var(--radius-card); padding: 14px 20px 16px; background: var(--brand-cream); min-height: 110px; }
+.label { font: 700 21.3px/1.2 var(--font-card); color: var(--brand-navy); text-transform: uppercase; }
+.text { margin-top: 8px; padding-left: 6px; font: 400 27px/1.35 var(--font-body); color: var(--brand-ink); }
+
+.steps { display: flex; flex-direction: column; min-height: 0; }
+.step {
+  position: relative; flex: 1 1 0; max-height: 255px; min-height: 0;
+  padding: 18px 30px 14px; border-radius: var(--radius-card);
+  background: var(--brand-surface-alt); border: 1px solid var(--brand-panel-line);
+  display: flex; flex-direction: column;
+}
+.stext { font: 400 26.7px/1.25 var(--font-body); color: #000; }
+.seq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-size: calc(40px - var(--n) * 2px); color: var(--brand-navy); }
+.seq .katex-display { margin: 0; }
+.slabel { position: absolute; right: 18px; bottom: 10px; font: 400 24px/1 var(--font-body); color: var(--brand-navy); }
+.arrow { flex: 0 0 38px; display: flex; justify-content: center; align-items: center; }
+.arrow i {
+  position: relative; display: block; width: 5px; height: 22px; background: var(--brand-muted); border-radius: 3px;
+  &::after {
+    content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
+    border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 11px solid var(--brand-muted);
+  }
+}
+/* 4–6 steps: compact rows, reason left and equation right. */
+.dense .step { flex-direction: row; align-items: center; gap: 24px; padding: 10px 70px 10px 24px; }
+.dense .stext { flex: 1 1 50%; font-size: 23px; }
+.dense .seq { flex: 1 1 50%; justify-content: flex-end; font-size: 27px; }
+.dense .slabel { top: 50%; bottom: auto; transform: translateY(-50%); font-size: 21px; }
+.dense .arrow { flex-basis: 26px; }
+.dense .arrow i { height: 12px; }
+.side { position: relative; left: auto; top: auto; grid-column: 2; grid-row: 2; width: 100%; height: 100%; }
+.side .panel-caption { padding-bottom: 15px; }

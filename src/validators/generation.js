@@ -137,6 +137,13 @@ function openingSlide(type, ctx) {
     return { slide_type: 'chapter_index', title: ctx.chapterTitle || 'Chapter overview', purpose: 'roadmap of the lectures in this chapter',
              key_points: (ctx.chapterLectures || []).slice(0, 10), source_refs: [], image_id: null };
   }
+  // Chapter opener (theory / maths, lecture 1): the writer turns the chapter's opening section into a real-world hook.
+  if (type === 'hook') {
+    return { slide_type: 'hook', title: ctx.chapterTitle || ctx.lectureTitle || 'Why This Chapter Matters',
+             purpose: 'a real-world scenario, question or puzzle that shows why this chapter matters — no formal term, date or formula yet',
+             key_points: [`why ${ctx.chapterTitle || 'this chapter'} matters in everyday life`, ...(ctx.sectionHeadings || []).slice(0, 1)],
+             source_refs: (ctx.sectionIds || []).slice(0, 1), image_id: null };
+  }
   return null;
 }
 
@@ -144,7 +151,7 @@ const OPENERS = new Set(['intro', 'chapter_index']);
 // Image slide types that can stand in for each other when a figure's shape
 // does not fit the planned one (first fitting type wins).
 const IMAGE_SWAP = ['labeled_diagram', 'image_points', 'definition', 'mechanism'];
-const NO_SOURCE_OK = new Set(['intro', 'chapter_index', 'quick_revision', 'formula_sheet']);
+const NO_SOURCE_OK = new Set(['intro', 'chapter_index', 'hook', 'quick_revision', 'formula_sheet']);
 
 // ctx: { lecture (1-based), lectures, sectionIds, images (usable figures),
 // types (pack slide types), pack (pack.json), budget, lectureTitle,
@@ -298,6 +305,12 @@ export function gateLecturePlan(plan, ctx) {
     if (flow.maxConsecutiveSameType && run > flow.maxConsecutiveSameType) {
       issues.push(issue('FLOW_REPEAT', 'error', at(i), `${run} × ${types[i]} in a row (max ${flow.maxConsecutiveSameType})`));
     }
+  }
+  // mustFollow: { proof: ['theorem', 'proof'] } — a proof comes right after its theorem (or its first part).
+  for (const [t, before] of Object.entries(flow.mustFollow || {})) {
+    types.forEach((x, i) => {
+      if (x === t && !before.includes(types[i - 1])) issues.push(issue('FLOW_ORDER', 'error', at(i), `slide ${i + 1}: a ${t} slide must come right after a ${before.join(' or ')} slide`));
+    });
   }
   if (flow.questionAfterDefinitions) {
     let defs = 0;

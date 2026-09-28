@@ -1,0 +1,16 @@
+{
+  "data": {
+    "title": "Sum of the First 22 Terms",
+    "problem": "Find the sum of the first 22 terms of the AP: 8, 3, −2, …",
+    "steps": [
+      { "text": "Identify the first term and the common difference", "formula": "a = 8,\\; d = 3 - 8 = -5,\\; n = 22" },
+      { "text": "Use the sum formula", "formula": "S_n = \\dfrac{n}{2}[2a + (n-1)d]" },
+      { "text": "Substitute the values", "formula": "S_{22} = 11[16 + 21(-5)] = 11(-89)" }
+    ],
+    "answer": "$S_{22} = -979$",
+    "tip": "$d$ is second term minus first ($3 - 8$), not the other way round.",
+    "caption": null
+  },
+  "narration": "Here is the problem: find the sum of the first twenty-two terms of the AP eight, three, minus two, and so on. Can you tell which formula we need before I start? {{b1.1}} First, read the AP: a is eight, and d is three minus eight, which is minus five. n is twenty-two. {{b1.2}} We want a sum, so we use S n equals n by two into two a plus n minus one into d. {{b1.3}} Put the values in: eleven into sixteen plus twenty-one into minus five, which is eleven into minus eighty-nine. {{b2}} So S twenty-two is minus nine hundred seventy-nine. Careful — d is the second term minus the first, not the other way round.",
+  "narration_hinglish": "Problem देखो: AP आठ, तीन, माइनस दो… के पहले बाईस terms का sum निकालना है। शुरू करने से पहले सोचो — कौन-सा formula लगेगा? {{b1.1}} सबसे पहले AP पढ़ते हैं: first term a है आठ, और common difference d है तीन माइनस आठ, यानी माइनस पाँच। n है बाईस। {{b1.2}} हमें sum चाहिए, तो formula लगेगा: S n बराबर n by two into two a प्लस n माइनस one into d। {{b1.3}} अब values रखो: eleven into सोलह प्लस इक्कीस into माइनस पाँच, यानी eleven into माइनस नवासी। {{b2}} तो S twenty-two बराबर है माइनस नौ सौ उन्यासी। ध्यान रहे — d हमेशा second term माइनस first term होता है, उल्टा नहीं।"
+}

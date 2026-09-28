@@ -1,0 +1,11 @@
+{
+  "lecture": "Nationalism in India",
+  "title": "Road to Independence",
+  "events": [
+    { "date": "1915", "title": "Gandhiji returns to India", "text": "brings the method of satyagraha from South Africa" },
+    { "date": "1919", "title": "Rowlatt Act and Jallianwala Bagh", "text": "nationwide anger against British repression" },
+    { "date": "1920", "title": "Non-Cooperation Movement", "text": "boycott of foreign goods, schools and courts" },
+    { "date": "1930", "title": "Salt March to Dandi", "text": "Civil Disobedience begins" },
+    { "date": "1942", "title": "Quit India Movement", "text": "\"Do or die\" — the final mass struggle" }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "lecture": "Triangles",
+  "title": "Basic Proportionality Theorem",
+  "statement": "If a line is drawn parallel to one side of a triangle to intersect the other two sides in distinct points, the other two sides are divided in the same ratio.",
+  "formula": "\\frac{AD}{DB} = \\frac{AE}{EC}",
+  "given": "In $\\triangle ABC$, a line $DE \\parallel BC$ meets $AB$ at $D$ and $AC$ at $E$.",
+  "toProve": "$\\frac{AD}{DB} = \\frac{AE}{EC}$"
+}

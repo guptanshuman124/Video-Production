@@ -1,0 +1,111 @@
+{
+  "name": "Theory",
+  "subjects": [
+    "Social Science",
+    "History",
+    "Geography",
+    "Political Science",
+    "Economics",
+    "Sociology",
+    "English",
+    "Hindi",
+    "Civics",
+    "Psychology"
+  ],
+  "variants": [],
+  "types": {
+    "intro": {
+      "min": 1,
+      "max": 1
+    },
+    "hook": {
+      "max": 1
+    },
+    "concept_intro": {
+      "max": 3
+    },
+    "definition": {
+      "max": 5
+    },
+    "timeline": {
+      "max": 2
+    },
+    "cause_effect": {
+      "max": 3
+    },
+    "labeled_diagram": {
+      "max": 3
+    },
+    "person": {
+      "max": 2
+    },
+    "comparison": {
+      "max": 2
+    },
+    "try_this": {
+      "max": 2
+    },
+    "practice_problem": {
+      "max": 2
+    },
+    "misconception": {
+      "max": 1
+    },
+    "source_extract": {
+      "max": 2
+    },
+    "mcq": {
+      "min": 1,
+      "max": 4
+    },
+    "assertion_reason": {
+      "max": 1
+    },
+    "quick_revision": {
+      "max": 1
+    }
+  },
+  "questionTypes": [
+    "mcq",
+    "assertion_reason",
+    "practice_problem"
+  ],
+  "flow": {
+    "firstLecture": {
+      "opening": [
+        "intro",
+        "hook"
+      ]
+    },
+    "otherLectures": {
+      "notAt": {
+        "hook": "any"
+      }
+    },
+    "everyLecture": {
+      "opening": [
+        "intro"
+      ],
+      "endsWithAnyOf": [
+        "mcq",
+        "assertion_reason",
+        "practice_problem"
+      ],
+      "includesAnyOf": [
+        "quick_revision"
+      ]
+    },
+    "lastLecture": {
+      "minTrailingQuestions": 2
+    },
+    "maxConsecutiveSameType": 2,
+    "questionAfterDefinitions": 3
+  },
+  "fallbacks": {
+    "labeled_diagram": "concept_intro"
+  },
+  "images": {
+    "minUsed": 1,
+    "note": "lectures with usable figures must show at least this many; unfilled image slots are auto-filled by description match"
+  }
+}

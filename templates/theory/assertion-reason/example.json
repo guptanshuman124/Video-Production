@@ -1,0 +1,10 @@
+{
+  "lecture": "Locomotion and Movement",
+  "assertion": "Skeletal muscle fibres are multinucleate.",
+  "reason": "Each skeletal muscle fibre forms by the fusion of many myoblasts during development.",
+  "answer": "A",
+  "wrong": [
+    "B"
+  ],
+  "explanation": "Both statements are true, and the fusion of myoblasts is exactly why a single fibre carries many nuclei."
+}

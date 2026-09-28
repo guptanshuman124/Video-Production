@@ -1,0 +1,20 @@
+{
+  "lecture": "Locomotion and Movement",
+  "rows": [
+    {
+      "myth": "Muscle fibres get shorter because actin and myosin shrink",
+      "fact": "The filaments keep their length",
+      "factDetail": "Actin slides over myosin; only the I-band and H-zone shorten."
+    },
+    {
+      "myth": "Muscles can push as well as pull",
+      "fact": "Muscles only pull",
+      "factDetail": "Movement in both directions needs antagonistic pairs, e.g. biceps and triceps."
+    },
+    {
+      "myth": "Cardiac muscle is under voluntary control",
+      "fact": "Cardiac muscle is involuntary",
+      "factDetail": "It contracts rhythmically on its own, set by the SA node."
+    }
+  ]
+}

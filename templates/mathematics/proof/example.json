@@ -1,0 +1,12 @@
+{
+  "lecture": "Triangles",
+  "title": "Proof of the BPT",
+  "toProve": "$\\frac{AD}{DB} = \\frac{AE}{EC}$",
+  "given": "$DE \\parallel BC$ in $\\triangle ABC$",
+  "steps": [
+    { "text": "Areas of triangles with the same height", "formula": "\\frac{ar(ADE)}{ar(BDE)} = \\frac{AD}{DB}" },
+    { "text": "In the same way, with base AE and EC", "formula": "\\frac{ar(ADE)}{ar(DEC)} = \\frac{AE}{EC}" },
+    { "text": "Same base DE, between the same parallels", "formula": "ar(BDE) = ar(DEC)" },
+    { "text": "So the two ratios are equal", "formula": "\\frac{AD}{DB} = \\frac{AE}{EC}" }
+  ]
+}

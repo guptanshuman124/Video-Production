@@ -206,6 +206,26 @@ The Physics and Chemistry decks use the biology design system, so slides that lo
 
 Chemistry re-exports the Physics implementations (with chemistry-specific planner hints, e.g. `\ce{}` equations in the formula box). Physics re-exports the Chemistry board answer. Chemistry variants (organic / inorganic / physical) add `prompts/packs/chemistry/variants/<variant>/notation.md`. Every lecture must include a recap, either `quick_revision` or `formula_sheet` (`pack.json` `includesAnyOf`).
 
+## Installed packs: mathematics, theory
+
+These come from `PPT-maths.pdf` and `PPT Theory.pdf`. Theory covers Social Science, History, Geography, Political Science, Economics, Sociology, English and Hindi; Hindi courses get Devanagari slides. Slides that match an existing design are wrappers, the same as above: intro, definition, labeled diagram, comparison / table, MCQ, assertion–reason, misconception and quick revision. New templates:
+
+| slide type | template | PDF page |
+|---|---|---|
+| `hook` | `theory/hook` (maths wraps it): chapter opener, a real-world hook plus optional puzzle, image panel. **Lecture 1 only, slide 2**: if the planner forgets it, G2 adds it (`OPENING_FIXED`) | Maths 1, Theory 1 |
+| `concept_intro` | `theory/concept-intro`: 1–3 plain-language paragraphs before a term is formalised | Maths 2, Theory 2 |
+| `timeline` | `theory/timeline`: axis with 3–6 dated events alternating above / below | Theory 4 |
+| `cause_effect` | `theory/cause-effect`: 3–5 linked statements joined by arrows (cause → effect, or process steps) | Theory 5 |
+| `person` / `historical_note` | `theory/person`: image, name, role, about and significance points (maths calls it a historical note) | Theory 7, Maths 13 |
+| `try_this` | `theory/try-this`: activity or discussion prompt, steps, "think" question, no answer | Maths 11, Theory 9 |
+| `practice_problem` | `theory/practice`: 1–3 PROBLEM cards, answers withheld | Maths 12, Theory 10 |
+| `source_extract` | `theory/extract`: attribution, the quoted extract, its significance | Theory 13 |
+| `theorem` | `mathematics/theorem`: STATEMENT (+ formula), GIVEN, TO PROVE | Maths 5 |
+| `proof` | `mathematics/proof`: to prove / given, 2–6 steps (compact rows from 4), figure. Must come right after a `theorem` (`pack.json` `flow.mustFollow`, G2 `FLOW_ORDER`) | Maths 6 |
+| `solved_example` | `mathematics/worked-example`: PROBLEM, SOLUTION steps (+ display equations), ANSWER, "watch out" tip | Maths 7–8 |
+
+Every prompt example in every pack is checked against its slide type, including marker order, by `test/packs.test.js`. Only **commerce** (Accountancy, Business Studies) is still waiting for its template pack.
+
 ## Models and voice (config/default.yaml)
 
 - **LLM:** `gpt-6-luna` writes everything and `gpt-6-sol` reviews (`llm.models.review`). This was chosen by a bake-off on real lectures:
@@ -217,7 +237,7 @@ Chemistry re-exports the Physics implementations (with chemistry-specific planne
 - **Review → fix:** reviewer findings on specific slides trigger a rewrite of those slides and a second review (`llm.review_repair_rounds`). Only what still fails reaches the review queue.
 - **TTS:** Sarvam `bulbul:v3`, speaker `shubh`, pace 0.9, 2,400 characters per request (the API limit is 2,500). Keys live in `.env`.
 
-## Adding a pack (mathematics, commerce, theory)
+## Adding a pack (commerce next)
 
 1. **Templates:** `templates/<pack>/<slide>/template.jsx + style.css + example.json` (see `templates/README.md`). Each template's `meta.slide` declares its slide type, fields and limits, image rule and reveal order.
 2. **`templates/<pack>/pack.json`:** per-type min/max per lecture, flow rules and image-free fallbacks (copy `templates/biology/pack.json`).

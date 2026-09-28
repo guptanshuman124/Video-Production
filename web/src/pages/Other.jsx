@@ -219,7 +219,7 @@ export function WorkersPage() {
           </div>
         )}
       </div>
-      {k8s && desired > 4 && <div className="alert alert-amber"><AlertTriangle size={16} /><div>More than 4 parallel renders may exceed the memory Docker Desktop gives Kubernetes (8 GB by default). Watch for workers restarting.</div></div>}
+      {k8s && desired > 2 && <div className="alert alert-amber"><AlertTriangle size={16} /><div>More than 2 parallel lectures can use more memory than Docker Desktop has (8 GB) and freeze the PC while they render. Raise this only when the PC has free RAM.</div></div>}
       <div className="workers">{workers.map((w) => <WorkerCard key={w.name} w={w} />)}</div>
       {!workers.length && <Card><Empty Icon={Server} title="No workers connected">Worker pods register when they start. Run <span className="mono">kubectl get pods</span> to see them.</Empty></Card>}
     </div>

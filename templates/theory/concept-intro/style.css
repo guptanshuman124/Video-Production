@@ -1,0 +1,12 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p2: body at (108,225); image panel 856×833 at (960,157). */
+.body {
+  position: absolute; left: 108px; top: 235px; width: 1600px;
+  display: flex; flex-direction: column; gap: 30px;
+  &.with-image { width: 800px; }
+}
+.body p { margin: 0; font: 400 32px/1.4 var(--font-body); color: var(--brand-ink); }
+.body.with-image p { font-size: 30px; }
+.side { left: 960px; top: 157px; width: 856px; height: 833px; }
+.side .panel-caption { padding-bottom: 15px; }

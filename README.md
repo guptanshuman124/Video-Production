@@ -22,7 +22,7 @@ npm run factory -- up        # first time: creates the cluster, builds the image
 
 Then open **http://localhost:8080**.
 
-1. Open a class and press **Start**. Its lectures are queued in course order (subject → chapter → lecture), and the 4 workers make 4 lectures at a time.
+1. Open a class and press **Start**. Its lectures are queued in course order (subject → chapter → lecture), and the workers make 2 lectures at a time (more from the Workers page if the PC has RAM to spare).
 2. Follow each worker live: stage, progress, gate results. Pause or resume a class queue, press **Run next** on a lecture, stop or remove one.
 3. Lectures that fail a validation gate (after automatic repair) land in **Needs attention**. Retry them from the failed stage, from a stage you choose, or from scratch.
 4. Finished videos pass a final check in the central (ffprobe, 1080p, audio, duration versus the worker's QA). They're uploaded to **OneDrive / SharePoint** (site VideoArchive, library Documents) as `CBSE Lectures/Class 10/Science/Chapter 1 - …/Lecture 3 - ….mp4`, and recorded in the `videos` table. The Library plays them straight from there. The local copy in `Videos\Prepzy Lectures` is only a staging area and is deleted once the upload succeeds (`LIBRARY_KEEP_LOCAL=true` keeps it). The worker deletes that lecture's images, audio and frames as soon as the central has the video.
@@ -37,9 +37,9 @@ npm run factory -- down      # delete the cluster (videos stay on disk)
 - **Secrets** come from `.env`: `OPENAI_API_KEY`, `SARVAM_API_KEY` and `TEXTBOOK_DB_URL`, which is the prepzy-mysql URL on this PC. The cluster reaches it through `host.docker.internal`. OneDrive needs `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` and `SHAREPOINT_SITE_URL` (optionally `SHAREPOINT_ROOT`); without them videos stay local. After changing `.env`, run `npm run factory -- deploy`.
 - **Uploads:** 2 at a time, 3 tries each. A failed upload keeps the local file; retry it from the lecture's details or from **Source & settings**. Uploads that were pending when the central restarted resume on start.
 - **Source data:** on first start the central copies the tutorai tables from prepzy-mysql into the cluster database (about 7 s). Copy them again from **Source & settings** after the course tables change.
-- **Scale:** change **Parallel lectures** on the Workers page (or `replicas` in `deploy/k8s/factory.yaml`). Each worker renders with 2 Chromium workers and sends 2 Sarvam requests at a time. Docker Desktop gives Kubernetes 8 GB by default, which fits about 4 parallel lectures.
+- **Scale:** change **Parallel lectures** on the Workers page (or `replicas` in `deploy/k8s/factory.yaml`). Each worker renders with 2 Chromium workers and sends 2 Sarvam requests at a time. Docker Desktop gives Kubernetes 8 GB by default, which fits 2 parallel lectures safely.
 - **Library folder:** `FACTORY_LIBRARY` overrides it when the cluster is created. A subject with more than one book (Physics Part I / II) gets a book folder between subject and chapter.
-- **Templates:** today Science (Classes 6–10), Physics, Chemistry and Biology (1,031 lectures) can be produced. Other subjects are listed on the dashboard and become available when their template pack is installed (`templates/<pack>/`).
+- **Templates:** Science, Physics, Chemistry, Biology, Mathematics and all theory subjects (Social Science, History, Geography, Political Science, Economics, Sociology, English, Hindi) can be produced: 3,675 lectures. Accountancy and Business Studies (409) wait for the commerce pack.
 
 Code layout: `src/factory/` (central, worker, job runner, catalog, source sync, DB), `web/` (dashboard, React + Vite), `deploy/` (Kubernetes manifests + setup script). The generation pipeline is documented in **[docs/PIPELINE.md](docs/PIPELINE.md)**.
 

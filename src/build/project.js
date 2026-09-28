@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyCues, requiredMarkers } from '../slides.js';
 import { buildTrack } from '../sound/track.js';
+import { realCaption } from '../generation/assemble.js';
 
 const r2 = (x) => Math.round(x * 100) / 100;
 
@@ -53,7 +54,9 @@ export async function buildProject(content, voice, types, cfg, { dir, fetchImage
       const rel = `assets/${s.image.id.replace(/[^\w.-]/g, '_')}.${extOf(s.image.url)}`;
       await fetchImage(s.image.url, path.join(dir, rel));
       data = { ...data, image: rel };
-      if (st.schema.caption && !data.caption) data.caption = s.image.caption;
+      // Lectures assembled before placeholder captions were filtered may still carry one.
+      if (!realCaption(data.caption)) delete data.caption;
+      if (st.schema.caption && !data.caption && realCaption(s.image.caption)) data.caption = realCaption(s.image.caption);
     }
     scenes.push({
       template: st.templateId,

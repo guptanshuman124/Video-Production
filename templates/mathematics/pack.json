@@ -1,0 +1,112 @@
+{
+  "name": "Mathematics",
+  "subjects": [
+    "Mathematics",
+    "Applied Mathematics"
+  ],
+  "variants": [],
+  "types": {
+    "intro": {
+      "min": 1,
+      "max": 1
+    },
+    "hook": {
+      "max": 1
+    },
+    "concept_intro": {
+      "max": 3
+    },
+    "definition": {
+      "max": 5
+    },
+    "theorem": {
+      "max": 2
+    },
+    "proof": {
+      "max": 3
+    },
+    "solved_example": {
+      "min": 1,
+      "max": 4
+    },
+    "labeled_diagram": {
+      "max": 2
+    },
+    "comparison": {
+      "max": 2
+    },
+    "try_this": {
+      "max": 2
+    },
+    "practice_problem": {
+      "max": 2
+    },
+    "misconception": {
+      "max": 1
+    },
+    "historical_note": {
+      "max": 1
+    },
+    "mcq": {
+      "min": 2,
+      "max": 5
+    },
+    "assertion_reason": {
+      "max": 1
+    },
+    "quick_revision": {
+      "max": 1
+    }
+  },
+  "questionTypes": [
+    "mcq",
+    "assertion_reason",
+    "solved_example",
+    "practice_problem"
+  ],
+  "flow": {
+    "firstLecture": {
+      "opening": [
+        "intro",
+        "hook"
+      ]
+    },
+    "otherLectures": {
+      "notAt": {
+        "hook": "any"
+      }
+    },
+    "everyLecture": {
+      "opening": [
+        "intro"
+      ],
+      "endsWithAnyOf": [
+        "mcq",
+        "assertion_reason",
+        "practice_problem",
+        "solved_example"
+      ],
+      "includesAnyOf": [
+        "quick_revision"
+      ]
+    },
+    "lastLecture": {
+      "minTrailingQuestions": 3
+    },
+    "mustFollow": {
+      "proof": [
+        "theorem",
+        "proof"
+      ]
+    },
+    "maxConsecutiveSameType": 2,
+    "questionAfterDefinitions": 3
+  },
+  "fallbacks": {
+    "labeled_diagram": "concept_intro"
+  },
+  "images": {
+    "minUsed": 1,
+    "note": "lectures with usable figures must show at least this many; unfilled image slots are auto-filled by description match"
+  }
+}

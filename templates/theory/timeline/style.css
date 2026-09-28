@@ -1,0 +1,26 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p4: axis at y=600 from the left edge to an arrow head at x=1836; ticks
+   62px above / below it; event text centred on its tick with a rule between
+   title and description. */
+.axis { position: absolute; left: 0; top: 598px; width: 1836px; height: 4px; }
+.axis i {
+  position: absolute; inset: 0; background: var(--brand-muted); border-radius: 2px;
+  &::after {
+    content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
+    border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 18px solid var(--brand-muted);
+  }
+}
+.event { position: absolute; inset: 0; pointer-events: none; }
+.tick { position: absolute; width: 4px; height: 62px; background: var(--brand-muted); border-radius: 2px; }
+.below .tick { top: 602px; }
+.above .tick { top: 536px; }
+.card { position: absolute; text-align: center; }
+.below .card { top: 676px; }
+.above .card { bottom: calc(1080px - 524px); }
+.date { font: 700 32px/1.15 var(--font-display); color: var(--brand-navy); }
+.etitle {
+  margin-top: 4px; padding-bottom: 8px; border-bottom: 2px solid var(--brand-panel-line);
+  font: 600 26px/1.25 var(--font-body); color: var(--brand-ink);
+}
+.etext { margin-top: 8px; font: 400 22px/1.3 var(--font-body); color: var(--brand-body); }

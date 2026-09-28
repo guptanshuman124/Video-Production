@@ -56,19 +56,23 @@ function lecturePlan({ lecture, lectures, sections, images, types, budget }) {
     if (im) usedImg.add(im.id);
     return im?.id ?? null;
   };
-  const head = first && has('chapter_index') ? ['chapter_index'] : [];
-  const tail = last ? ['quick_revision', 'mcq', 'descriptive_answer', 'mcq'] : ['quick_revision', 'mcq'];
-  const body = ['definition', 'characteristics', 'mcq', 'definition', 'labeled_diagram', 'descriptive_answer',
-                'comparison', 'definition', 'misconception', 'characteristics', 'assertion_reason', 'definition', 'image_points', 'solved_example'];
+  const head = first && has('hook') ? ['hook'] : first && has('chapter_index') ? ['chapter_index'] : [];
+  // Closing slides the pack has (theory / maths have practice_problem instead of descriptive_answer).
+  const answer = has('descriptive_answer') ? 'descriptive_answer' : 'practice_problem';
+  const tail = (last ? ['quick_revision', 'mcq', answer, 'mcq'] : ['quick_revision', 'mcq']).filter(has);
+  const body = ['concept_intro', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
+                'labeled_diagram', 'cause_effect', 'descriptive_answer', 'comparison', 'person', 'definition', 'misconception', 'try_this',
+                'characteristics', 'assertion_reason', 'source_extract', 'definition', 'image_points', 'practice_problem', 'solved_example'];
   const want = Math.max(budget.min, Math.min(budget.max, head.length + tail.length + 8));
   const picked = [];
   const count = (t) => [...head, ...picked, ...tail].filter((x) => x === t).length;
-  const caps = { definition: 4, characteristics: 2, mcq: last ? 3 : 4, descriptive_answer: last ? 0 : 2 };
+  const caps = { definition: 4, characteristics: 2, mcq: last ? 3 : 4, descriptive_answer: last ? 0 : 2, practice_problem: last ? 0 : 1, solved_example: 2 };
   for (let k = 0; picked.length < want - head.length - tail.length && k < body.length * 3; k++) {
     const t = body[k % body.length];
     if (!has(t) || count(t) >= (caps[t] ?? 1)) continue;
     if (types[t].needsImage && !images.some((x) => types[t].fits(x))) continue;
     if (picked.at(-1) === t) continue;
+    if (t === 'proof' && picked.at(-1) !== 'theorem') continue;   // pack flow: a proof comes right after its theorem
     picked.push(t);
   }
   const list = [...head, ...picked, ...tail];

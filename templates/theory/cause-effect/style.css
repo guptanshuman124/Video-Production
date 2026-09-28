@@ -1,0 +1,29 @@
+--brand-bg: var(--bg-lavender);
+
+/* PDF p5: links at x=87, 862 wide, each text over a rule with a down arrow
+   under it; image panel 861×733 at (962,237). Without an image: 1600 wide. */
+.chain {
+  position: absolute; left: 87px; top: 235px; width: 1600px;
+  display: flex; flex-direction: column;
+  &.with-image { width: 862px; }
+}
+.ltext {
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 6px 4px 12px; border-bottom: 2px solid var(--brand-muted);
+  font: 400 29px/1.3 var(--font-body); color: var(--brand-ink);
+}
+.num {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--brand-orange); color: #fff; font: 700 21px/1 var(--font-body);
+  transform: translateY(-2px);
+}
+.arrow { height: 58px; display: flex; justify-content: center; align-items: center; }
+.arrow i {
+  position: relative; display: block; width: 4px; height: 30px; background: var(--brand-muted); border-radius: 2px;
+  &::after {
+    content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
+    border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 11px solid var(--brand-muted);
+  }
+}
+.side { left: 962px; top: 237px; width: 861px; height: 733px; }
+.side .panel-caption { padding-bottom: 15px; }
