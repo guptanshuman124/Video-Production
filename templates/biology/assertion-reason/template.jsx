@@ -24,8 +24,9 @@ export const meta = {
       explanation: { required: true, words: 40 },
     },
     reveal: [
-      { field: 'answer', cue: 'cues.answer' },
-      { field: 'explanation', cue: 'cues.explanation' },
+      { field: 'wrong', cue: 'cues.wrong', hint: 'the tempting wrong verdict turns red — place it where you name it and say why it is wrong (before the answer)' },
+      { field: 'answer', cue: 'cues.answer', hint: 'the correct verdict turns green — place it where you confirm it (after the trap)' },
+      { field: 'explanation', cue: 'cues.explanation', hint: 'the explanation card appears' },
     ],
     question: true,
     rules: ['assertion'],
@@ -52,14 +53,16 @@ export const schema = {
   explanation: { type: 'text', max: 360 },
   cues: { type: 'object', fields: {
     assertion: 'number', reason: 'number', options: { type: 'list', of: 'number' },
-    answer: 'number', explanation: 'number',
+    answer: 'number', wrong: 'number', explanation: 'number',
   } },
 };
 
 export default function AssertionReason(d) {
   const c = d.cues || {};
   const answerAt = sec(c.answer);
-  const answerDelay = 1500 + 4 * 150 + 2600;
+  const answerDelay = 1500 + 4 * 150 + 4400;
+  // The trap (if any) is marked before the answer: without its own cue, 1.8 s earlier.
+  const wrongAt = sec(c.wrong) ?? (answerAt != null ? Math.max(0, answerAt - 1800) : null);
   const timing = (ms, fallback) => (ms != null ? { at: ms } : { delay: fallback });
   return (
     <>
@@ -79,7 +82,8 @@ export default function AssertionReason(d) {
           const state = d.answer === L ? 'correct' : d.wrong.includes(L) ? 'wrong' : null;
           return (
             <div className="opt-wrap" anim="riseIn" at={cue(c.options, i)} exit="riseOut">
-              <div className="opt" anim={state ? stateAnim(state) : null} {...(state ? timing(answerAt, answerDelay) : {})}>
+              <div className="opt" anim={state ? stateAnim(state) : null}
+                   {...(state === 'wrong' ? timing(wrongAt, answerDelay - 1800) : state ? timing(answerAt, answerDelay) : {})}>
                 <span className="letter">{L}</span>
                 <span className="otext"><Rich text={o} /></span>
               </div>

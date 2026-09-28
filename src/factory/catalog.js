@@ -23,7 +23,7 @@ const SELECT = `SELECT t.lecture_id, t.course_id, t.module_id, CHAR_LENGTH(t.con
 const SUBJECT_ORDER = ['Science', 'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Accountancy', 'Business Studies', 'Economics',
   'Social Science', 'History', 'Geography', 'Political Science', 'Sociology', 'English', 'Hindi'];
 const subjectRank = (s) => { const i = SUBJECT_ORDER.indexOf(s); return i < 0 ? 99 : i; };
-const PACK_NAMES = { theory: 'Theory subjects', mathematics: 'Mathematics', commerce: 'Commerce', science: 'Science' };
+const PACK_NAMES = { theory: 'Theory', mathematics: 'Mathematics', commerce: 'Commerce', science: 'Science' };
 
 const byOrder = (a, b) => (Number(a.lecture_order ?? 1e9) - Number(b.lecture_order ?? 1e9)) || (Number(a.lecture_id) - Number(b.lecture_id));
 
@@ -73,7 +73,7 @@ export function buildCatalog(rows, { meta = courseLookup(), packs = loadPacks() 
         title: m.chapters?.[moduleId] || titleCase(rowsOf[0].module_title) || `Chapter ${k + 1}`,
         pack, pack_review: !!mod?.review,
         supported: !!pack && installed.has(pack),
-        why: !pack ? 'no template pack chosen for this chapter' : installed.has(pack) ? null : `${PACK_NAMES[pack] || pack} templates are not built yet`,
+        why: !pack ? 'no template pack chosen for this chapter' : installed.has(pack) ? null : `waiting for the ${PACK_NAMES[pack] || pack} template pack`,
         lectures: [],
       };
       rowsOf.forEach((r, i) => {

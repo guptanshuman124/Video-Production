@@ -65,7 +65,7 @@ export function ClassDetail({ classNo }) {
         <div>
           <div className="crumbs"><a href="#/classes">Classes</a> / {cls.name}</div>
           <h1>{cls.name}</h1>
-          <p className="muted">{counts.done} of {counts.supported} lectures ready · {fmtMin(counts.minutes)} of video{counts.total > counts.supported ? ` · ${counts.total - counts.supported} lectures wait for their subject templates` : ''}</p>
+          <p className="muted">{counts.done} of {counts.supported} lectures ready · {fmtMin(counts.minutes)} of video{counts.total > counts.supported ? ` · ${counts.total - counts.supported} lectures wait for the Maths / Theory / Commerce template packs` : ''}</p>
         </div>
         <div className="head-actions">
           <Btn variant="primary" Icon={PlayCircle} disabled={!counts.idle} busy={busy === 'start'} onClick={() => run('start', () => api('POST', '/api/queue', { scope, start: true }), (r) => `Queued ${r.queued} lecture(s) of ${cls.name}`)}>Start {cls.name}</Btn>

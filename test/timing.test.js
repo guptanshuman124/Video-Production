@@ -69,7 +69,7 @@ test('build: cues sit exactly reveal_lead before speech and pass the sync gate',
   fs.writeFileSync(path.join(dir, 'voice/s02.wav'), clip);
   const voice = { provider: 'mock', slides: [
     { slide_number: 1, clip: 'voice/s01.wav', duration: 20, markers: { b1: 2, 'b2.1': 8, 'b2.2': 14 } },
-    { slide_number: 2, clip: 'voice/s02.wav', duration: 20, markers: { b1: 10, b2: 15 } },
+    { slide_number: 2, clip: 'voice/s02.wav', duration: 20, markers: { b1: 8, b2: 11, b3: 15 } },   // trap, answer, description
   ] };
   const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex');
   const fetchImage = async (url, file) => { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, png); };
@@ -77,7 +77,9 @@ test('build: cues sit exactly reveal_lead before speech and pass the sync gate',
   const lead = cfg.timing.reveal_lead / 1000;
   for (const c of cues) assert.ok(Math.abs(c.audioAt - c.cueAt - lead) < 0.006, `${c.marker} drift`);
   assert.equal(project.scenes[0].data.cues.definition, cues[0].cueAt);
-  assert.equal(project.scenes[1].data.cues.answer, cues.find((c) => c.scene === 1 && c.marker === 'b1').cueAt);
+  assert.equal(project.scenes[1].data.cues.wrong, cues.find((c) => c.scene === 1 && c.marker === 'b1').cueAt, 'the trap is marked first');
+  assert.equal(project.scenes[1].data.cues.answer, cues.find((c) => c.scene === 1 && c.marker === 'b2').cueAt);
+  assert.ok(project.scenes[1].data.cues.wrong < project.scenes[1].data.cues.answer, 'trap before answer, never together');
   assert.equal(project.scenes[0].data.image, 'assets/img1.png');
   assert.deepEqual(gateSync(project, cues, required, cfg).filter((i) => i.severity === 'error'), []);
   // A cue moved half a second is caught.

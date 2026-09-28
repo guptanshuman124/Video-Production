@@ -34,7 +34,7 @@ export const STATUS = {
   queued: { label: 'Queued', tone: 'violet', Icon: Clock },
   failed: { label: 'Needs attention', tone: 'red', Icon: AlertTriangle },
   idle: { label: 'Not started', tone: 'gray', Icon: CircleDashed },
-  unsupported: { label: 'No templates yet', tone: 'muted', Icon: CircleSlash },
+  unsupported: { label: 'Template pack pending', tone: 'muted', Icon: CircleSlash },
   cancelled: { label: 'Cancelled', tone: 'gray', Icon: Ban },
 };
 export function StatusChip({ status, small }) {

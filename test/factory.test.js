@@ -31,7 +31,7 @@ test('catalog: course-table order, numbering and library folders', () => {
   const eng = c.lectures.get(31);
   assert.equal(eng.library_path, 'Class 12/English/Chapter 1 - Flamingo 1/Lecture 1 - The Last Lesson.mp4');
   assert.equal(eng.supported, false);
-  assert.match(eng.why, /not built yet/);
+  assert.match(eng.why, /waiting for the Theory template pack/);
   // Queue order: Physics before English, Part I before Part II, lecture order inside a chapter.
   const bySeq = [...c.lectures.values()].sort((a, b) => a.seq - b.seq).map((l) => l.lecture_id);
   assert.deepEqual(bySeq, [11, 12, 21, 31]);

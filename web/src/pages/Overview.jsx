@@ -38,7 +38,7 @@ export function WorkerCard({ w }) {
 export function ClassRow({ cls, counts, state }) {
   const [run, busy] = useAction();
   const running = state !== 'paused' && (counts.running || counts.queued);
-  const label = counts.supported === 0 ? 'No templates yet' : state === 'paused' ? 'Paused' : counts.running ? 'In production' : counts.queued ? 'Queued' : counts.done === counts.supported ? 'Complete' : counts.done ? 'Partly done' : 'Not started';
+  const label = counts.supported === 0 ? 'Template pack pending' : state === 'paused' ? 'Paused' : counts.running ? 'In production' : counts.queued ? 'Queued' : counts.done === counts.supported ? 'Complete' : counts.done ? 'Partly done' : 'Not started';
   return (
     <div className="classrow">
       <a className="classrow-name" href={`#/classes/${cls.class_no}`}>
@@ -55,7 +55,7 @@ export function ClassRow({ cls, counts, state }) {
           {counts.running > 0 && <span className="t-blue">{counts.running} running</span>}
           {counts.queued > 0 && <span className="t-violet">{counts.queued} queued</span>}
           {counts.failed > 0 && <span className="t-red">{counts.failed} need attention</span>}
-          {counts.total > counts.supported && <span className="muted">{counts.total - counts.supported} awaiting templates</span>}
+          {counts.total > counts.supported && <span className="muted" title="Maths, Theory (Social Science, English, Hindi…) and Commerce lectures: made once their template packs are added">{counts.total - counts.supported} waiting for Maths / Theory / Commerce templates</span>}
         </div>
       </div>
       <div className="classrow-state"><span className={`pill ${state === 'paused' ? 'pill-amber' : running ? 'pill-blue' : 'pill-gray'}`}>{label}</span></div>

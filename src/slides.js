@@ -267,7 +267,7 @@ export function markerGuide(spec, data) {
     if (isEmpty(v)) return;
     const id = `b${k + 1}`;
     const brief = (x) => (typeof x === 'string' ? x : Array.isArray(x) ? x.join(' | ') : Object.values(x).filter((y) => typeof y === 'string').join(' — '));
-    if (!r.each) { out.push({ id, what: `${r.field}: ${brief(v)}` }); return; }
+    if (!r.each) { out.push({ id, what: `${r.field}: ${brief(v)}${r.hint ? ` — ${r.hint}` : ''}` }); return; }
     v.forEach((item, i) => {
       if (r.parts) r.parts.forEach((part, p) => out.push({ id: `${id}.${i + 1}.${p + 1}`, what: `${r.field}[${i + 1}].${part}: ${item[part] ?? ''}` }));
       else out.push({ id: `${id}.${i + 1}`, what: `${r.field}[${i + 1}]: ${brief(item)}` });

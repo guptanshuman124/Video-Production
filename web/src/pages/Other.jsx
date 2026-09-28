@@ -265,7 +265,7 @@ export function SourcePage() {
         <table className="table">
           <thead><tr><th>Pack</th><th>Lectures</th><th>Status</th></tr></thead>
           <tbody>{Object.entries(packs).sort((a, b) => b[1].total - a[1].total).map(([k, p]) => (
-            <tr key={k}><td className="cell-title">{k === 'none' ? 'Not assigned' : k}</td><td>{p.total}</td><td>{p.supported ? <span className="pill pill-green">Ready</span> : <span className="pill pill-gray">Templates not built yet</span>}</td></tr>
+            <tr key={k}><td className="cell-title">{k === 'none' ? 'Not assigned' : k}</td><td>{p.total}</td><td>{p.supported ? <span className="pill pill-green">Ready</span> : <span className="pill pill-gray">Pack not added yet</span>}</td></tr>
           ))}</tbody>
         </table>
       </Card>

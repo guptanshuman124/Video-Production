@@ -5,6 +5,9 @@ import { Header, SlideTitle, Panel, common, cue, sec, stateAnim } from 'hvr/shar
 // a cream description/explanation box and an optional image panel. On the
 // answer cue the correct option turns green (PDF page 16 colours) and any
 // listed distractors turn red; the description then rises in.
+// Spoken order (markers): the trap turns red when the narration names it and
+// says why it is wrong, then the correct option turns green, then the
+// description — never trap and answer at the same moment.
 // Reference: reference.png
 
 export const meta = {
@@ -26,8 +29,9 @@ export const meta = {
       caption: { words: 10 },
     },
     reveal: [
-      { field: 'answer', cue: 'cues.answer' },
-      { field: 'description', cue: 'cues.description' },
+      { field: 'wrong', cue: 'cues.wrong', hint: 'the trap option turns red — place it where you name the trap and say why it is tempting but wrong (before the answer)' },
+      { field: 'answer', cue: 'cues.answer', hint: 'the correct option turns green — place it where you confirm the right answer (after the trap)' },
+      { field: 'description', cue: 'cues.description', hint: 'the explanation box appears — place it where you explain why the answer is right' },
     ],
     question: true,
     rules: ['mcq'],
@@ -36,6 +40,8 @@ export const meta = {
 };
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+// The letter is drawn by the template; drop one the writer typed into the text ("A. …", "(b) …").
+export const stripLetter = (s) => String(s ?? '').replace(/^\s*\(?[A-Ea-e][.):]\s+/, '');
 
 export const schema = {
   ...common,
@@ -69,11 +75,12 @@ export default function Mcq(d) {
   const c = d.cues || {};
   // Without cues: options stagger in, then the answer lands ~2.4s later.
   const answerAt = sec(c.answer);
-  const answerDelay = 700 + d.options.length * 160 + 2400;
-  const wrongAt = sec(c.wrong) ?? answerAt;
+  const answerDelay = 700 + d.options.length * 160 + 4200;
+  // The trap is marked before the answer: without its own cue, 1.8 s earlier.
+  const wrongAt = sec(c.wrong) ?? (answerAt != null ? Math.max(0, answerAt - 1800) : null);
   const stateTiming = (state) => {
     const at = state === 'wrong' ? wrongAt : answerAt;
-    return at != null ? { at } : { delay: answerDelay };
+    return at != null ? { at } : { delay: state === 'wrong' ? answerDelay - 1800 : answerDelay };
   };
   return (
     <>
@@ -92,7 +99,7 @@ export default function Mcq(d) {
               <div className="opt-wrap" anim="riseIn" at={cue(c.options, i)} exit="riseOut">
                 <div className="opt" anim={state ? stateAnim(state) : null} {...(state ? stateTiming(state) : {})}>
                   <span className="letter">{L}</span>
-                  <span className="otext"><Rich text={o} /></span>
+                  <span className="otext"><Rich text={stripLetter(o)} /></span>
                 </div>
               </div>
             );
