@@ -50,7 +50,9 @@ const slide = (slide_type, extra = {}) => ({ slide_type, title: 't', purpose: 'p
 test('G2: an image-required slide without an image falls back to its image-free type', () => {
   const plan = { lecture_title: 'Transport in Plants', slides: [slide('definition'), slide('labeled_diagram'), slide('quick_revision', { source_refs: [] }), slide('mcq'), slide('definition'), slide('mcq')] };
   const r = gateLecturePlan(plan, ctx());
-  assert.equal(r.plan.slides[1].slide_type, 'characteristics');
+  const types = r.plan.slides.map((x) => x.slide_type);
+  assert.equal(types[0], 'intro', 'the intro is put in front by code');
+  assert.ok(types.includes('characteristics') && !types.includes('labeled_diagram'));
   assert.ok(r.issues.some((i) => i.code === 'IMAGE_FALLBACK' && i.autoFixed));
 });
 
@@ -66,9 +68,12 @@ test('G2: invented image ids and wrong ratios are cleared, not trusted', () => {
 test('G2: flow and count rules from pack.json', () => {
   const r = gateLecturePlan({ lecture_title: 'Transport in Plants', slides: [slide('chapter_index'), slide('definition'), slide('definition'), slide('definition'), slide('comparison', { source_refs: ['s99'] })] }, ctx());
   const c = codes(r.issues);
-  for (const code of ['FLOW_NOT_HERE', 'FLOW_END', 'FLOW_MISSING', 'FLOW_REPEAT', 'TYPE_MIN', 'REF_OUTSIDE_LECTURE']) assert.ok(c.includes(code), code);
+  for (const code of ['FLOW_NOT_HERE', 'FLOW_MISSING', 'FLOW_REPEAT', 'REF_OUTSIDE_LECTURE']) assert.ok(c.includes(code), code);
+  assert.ok(r.issues.some((i) => i.code === 'MCQ_ADDED' && i.autoFixed), 'missing MCQs are appended when the budget has room');
   const first = gateLecturePlan({ lecture_title: 'Transport in Plants', slides: [slide('definition'), slide('quick_revision', { source_refs: [] }), slide('mcq'), slide('mcq')] }, ctx({ lecture: 1 }));
-  assert.ok(codes(first.issues).includes('FLOW_START'));
+  assert.equal(first.plan.slides[0].slide_type, 'intro', 'the intro is added by code');
+  assert.equal(first.plan.slides[1].slide_type, 'definition', 'then straight into the first topic — no roadmap slide');
+  assert.ok(first.issues.some((i) => i.code === 'OPENING_FIXED' && i.autoFixed));
 });
 
 // ---- G1 chapter plan --------------------------------------------------------------------
@@ -162,4 +167,57 @@ test('G2: the planner must give a clean, short lecture title (it sits in every s
   assert.ok(codes(gateLecturePlan({ lecture_title: '', slides }, ctx()).issues).includes('NO_LECTURE_TITLE'));
   const long = gateLecturePlan({ lecture_title: 'Transport of water minerals and food in plants and animals explained', slides }, ctx());
   assert.ok(codes(long.issues).includes('LECTURE_TITLE_LONG'));
+});
+
+// ---- images ------------------------------------------------------------------------------
+
+test('G2: empty image slots are filled with the figure whose description matches; unused figures fail the plan', () => {
+  const images = [
+    { id: 'img_ely', width: 1200, height: 1000, ratio: '1:1', kind: 'figure', description: 'This image shows an experimental setup for the electrolysis of water with two electrodes collecting gas' },
+    { id: 'img_other', width: 1000, height: 1000, ratio: '1:1', kind: 'figure', description: 'This image shows a plant leaf under sunlight' },
+  ];
+  const s = (slide_type, extra = {}) => ({ slide_type, title: 't', purpose: 'p', key_points: ['k'], source_refs: ['s04'], image_id: null, ...extra });
+  const plan = { lecture_title: 'Decomposition', slides: [
+    s('mechanism', { title: 'Electrolysis of Water', purpose: 'how electrolysis splits water', key_points: ['electrodes', 'hydrogen and oxygen gas collected'] }),
+    s('definition'), s('quick_revision', { source_refs: [] }), s('mcq'), s('mcq'),
+  ] };
+  const r = gateLecturePlan(plan, ctx({ images }));
+  const mech = r.plan.slides.find((x) => x.slide_type === 'mechanism');
+  assert.equal(mech.image_id, 'img_ely');
+  assert.ok(r.issues.some((i) => i.code === 'IMAGE_AUTOFILLED'));
+  assert.ok(!codes(r.issues).includes('IMAGES_UNUSED'));
+
+  const none = gateLecturePlan({ lecture_title: 'X', slides: [s('definition'), s('characteristics'), s('quick_revision', { source_refs: [] }), s('mcq'), s('mcq')] }, ctx({ images }));
+  assert.ok(codes(none.issues).includes('IMAGES_UNUSED'), 'figures exist but none is shown');
+});
+
+test('G2: a well-matched figure in the wrong shape keeps its slide — the type switches, figures are not swapped', () => {
+  // Lecture 2853: the planner put the wide rods figure on image_points and the
+  // tall electroscope on labeled_diagram. Clearing both let autofill swap them.
+  const images = [
+    { id: 'img_rods', width: 478, height: 199, ratio: '21:9', kind: 'figure', description: 'Rods: like charges repel and unlike charges attract' },
+    { id: 'img_scope', width: 275, height: 407, ratio: '2:3', kind: 'figure', description: 'A gold leaf electroscope with metal knob and leaves' },
+  ];
+  const plan = { lecture_title: 'Introduction', slides: [
+    slide('image_points', { title: 'Attraction and Repulsion', image_id: 'img_rods' }),
+    slide('labeled_diagram', { title: 'Gold-Leaf Electroscope', image_id: 'img_scope' }),
+    slide('quick_revision', { source_refs: [] }), slide('mcq'), slide('mcq'),
+  ] };
+  const r = gateLecturePlan(plan, ctx({ images }));
+  const byTitle = Object.fromEntries(r.plan.slides.map((x) => [x.title, x]));
+  assert.equal(byTitle['Attraction and Repulsion'].image_id, 'img_rods');
+  assert.equal(byTitle['Attraction and Repulsion'].slide_type, 'labeled_diagram');
+  assert.equal(byTitle['Gold-Leaf Electroscope'].image_id, 'img_scope');
+  assert.notEqual(byTitle['Gold-Leaf Electroscope'].slide_type, 'labeled_diagram');
+  assert.equal(r.issues.filter((i) => i.code === 'IMAGE_TYPE_SWITCHED').length, 2);
+  assert.ok(!r.issues.some((i) => i.code === 'IMAGE_AUTOFILLED'));
+});
+
+test('images: screenshots of problems, tables and equations are not figures', async () => {
+  const { isTextLike } = await import('../src/generation/prepare.js');
+  assert.ok(isTextLike('This image contains a chemistry example problem regarding the calculation of mole fraction'));
+  assert.ok(isTextLike('The image shows a table titled "Table 1.1: Types of Solutions"'));
+  assert.ok(isTextLike('This image shows a chemical equation representing a decomposition reaction'));
+  assert.ok(!isTextLike('This image shows an experimental setup for the electrolysis of water'));
+  assert.ok(!isTextLike('This image shows the correct way to heat a boiling tube'));
 });

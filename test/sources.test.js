@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { parseContent, normalizeMath } from '../src/sources/content.js';
-import { lectureInputs, isPlaceholderSummary } from '../src/sources/textbook.js';
+import { lectureInputs, isPlaceholderSummary, outlineOf } from '../src/sources/textbook.js';
 import { courseLookup, parseAs } from '../src/curriculum/courses.js';
 import { lectureMinutes, lectureBudget } from '../src/curriculum/index.js';
 import { sectionsFromBlocks } from '../src/generation/prepare.js';
@@ -54,7 +54,7 @@ test('content: HTML string and plain text rows', () => {
   assert.equal(normalizeMath('\\[ a^2 + b^2 \\]'), '$a^2 + b^2$');
 });
 
-test('lecture inputs: order, position, neighbour summaries as recap/preview, placeholders dropped', () => {
+test('lecture inputs: order, position, neighbour outlines as recap/preview, placeholders dropped', () => {
   const S = (x) => `A proper summary of lecture ${x} that is long enough to be used as a recap.`;
   const rows = [
     { course_id: 58, module_id: 338, lecture_id: 1719, content: doc(para(50)), mini_lecture: S(3), keywords: '""' },
@@ -64,11 +64,18 @@ test('lecture inputs: order, position, neighbour summaries as recap/preview, pla
   const ins = lectureInputs(rows, courseLookup({ courses: { 58: { class: 12, subject: 'Biology', pack: 'biology' } } }));
   assert.deepEqual(ins.map((i) => i.lecture_id), [1717, 1718, 1719]);
   assert.deepEqual(ins.map((i) => i.position), [{ index: 1, count: 3 }, { index: 2, count: 3 }, { index: 3, count: 3 }]);
-  assert.equal(ins[0].recap, null);
-  assert.equal(ins[0].preview, null, "the next lecture's summary is a placeholder");
+  assert.equal(ins[0].recap, null, 'first lecture: nothing to recall');
+  assert.equal(ins[2].preview, null, 'last lecture: nothing ahead');
+  assert.ok(ins[0].preview.startsWith(`"${ins[1].title}"`), "preview is the next lecture's title (+ headings), not its mini_lecture");
+  assert.ok(!ins[2].recap.includes('insert'), 'placeholder summaries never leak into neighbours');
   assert.equal(ins[1].summary, null);
   assert.equal(ins[1].summary_placeholder, true);
-  assert.equal(ins[2].recap, null);
+  // A neighbour outline: short numbered headings, title-cased; long mis-tagged paragraphs skipped.
+  assert.equal(outlineOf('Introduction', [
+    { kind: 'heading', text: '1.1 INTRODUCTION' }, { kind: 'heading', text: '1.2 ELECTRIC CHARGE' },
+    { kind: 'heading', text: 'All of us have the experience of seeing a spark or hearing a crackle when we take off' },
+    { kind: 'text', text: 'body' }, { kind: 'heading', text: '1.3 CONDUCTORS AND INSULATORS' },
+  ]), '"Introduction" — Electric Charge; Conductors and Insulators');
   assert.equal(ins[0].keywords[0], 'flower');
   assert.ok(isPlaceholderSummary('covers [specific topics] and more'));
   assert.ok(!isPlaceholderSummary('Plants reproduce sexually through flowers [Fig. 1.2].'));
@@ -135,10 +142,13 @@ test('lecture job (mock): one textbook row -> content, voice, project; resumable
   const dir = path.join(jobs, 'c58', 'm338', 'l1');
   const content = JSON.parse(fs.readFileSync(path.join(dir, 'content.json'), 'utf8'));
   assert.deepEqual(content.source, { course_id: 58, module_id: 338, lecture_id: 1 });
-  assert.equal(content.slides[0].slide_type, 'chapter_index', 'first lecture of its chapter');
+  assert.equal(content.slides[0].slide_type, 'intro', 'every lecture opens with the intro');
+  assert.equal(content.slides[0].data.lectureNumber, 1);
+  assert.notEqual(content.slides[1].slide_type, 'chapter_index', 'after the intro the lecture goes straight to its first topic');
+  assert.deepEqual(Object.keys(content.slides[0].data).sort().filter((k) => ['hook', 'topics'].includes(k)), [], 'the intro is a title card');
   assert.ok(fs.existsSync(path.join(dir, 'project.json')));
   const prepared = JSON.parse(fs.readFileSync(path.join(dir, 'prepared.json'), 'utf8'));
-  assert.equal(prepared.lecture.preview, rows[1].mini_lecture);
+  assert.ok(prepared.lecture.preview.startsWith(`"${input.chapter_lectures[1]}" — Topic 1; Topic 2`), prepared.lecture.preview);
   const again = [];
   await runLectureJob(input, { cfg: c, to: 'build', offline: true, log: (l) => again.push(l) });
   assert.equal(again.length, 0, 'second run reuses every stage');
@@ -180,4 +190,37 @@ test('catalog: class/subject/pack from the mapping tables; Science chapters and 
   assert.deepEqual(ins.map((i) => i.pack).sort(), ['biology', 'physics']);
   const noPack = lectureInputs([{ ...rows[0], module_id: 555 }], lookup)[0];
   assert.equal(gateLectureInput(noPack, loadPacks())[0].code, 'MODULE_PACK_UNKNOWN');
+});
+
+// ---- course tables: order, names, exclusions; opening slides ---------------------------------
+
+test('course tables: order by modules/lectures orders, real titles, orphans and inactive rows left out', async () => {
+  const { titleCase, exclusionOf } = await import('../src/sources/textbook.js');
+  const row = (lecture_id, lecture_order, extra = {}) => ({ course_id: 29, module_id: 83, lecture_id, content: doc(para(50)), mini_lecture: null, keywords: null,
+    lecture_title: `LECTURE ${lecture_id}`, lecture_order, lecture_active: 1, module_title: 'CHEMICAL REACTIONS AND EQUATIONS', module_order: 1, module_active: 1, course_title: 'Science', course_active: 1, ...extra });
+  const rows = [row(379, 3, { lecture_title: 'TYPES OF CHEMICAL REACTIONS' }), row(377, 1), row(378, 2), row(900, 4, { lecture_active: 0 }), row(901, 5, { lecture_title: null, lecture_active: null })];
+  const ins = lectureInputs(rows, courseLookup({ courses: { 29: { class: 10, subject: 'Science', pack: 'chemistry' } } }));
+  assert.deepEqual(ins.map((i) => i.lecture_id), [377, 378, 379]);
+  assert.equal(ins[2].title, 'Types of Chemical Reactions');
+  assert.equal(ins[2].chapter_title, 'Chemical Reactions and Equations');
+  assert.deepEqual(ins[2].position, { index: 3, count: 3 });
+  assert.equal(ins[2].chapter_number, 1);
+  assert.equal(ins.excluded.length, 2);
+  assert.equal(exclusionOf(rows[4]), 'not in the lectures table (orphan row)');
+  assert.equal(titleCase('COULOMB’S LAW'), 'Coulomb’s Law');
+  assert.equal(titleCase('THE pH SCALE'), 'The pH Scale');
+});
+
+test('openers: intro and chapter index facts come from the course tables', async () => {
+  const { fillOpeners } = await import('../src/generation/openers.js');
+  const G = { prepared: { chapter: { title: 'Electric Charges and Fields' }, lecture: { title: 'Coulomb’s Law', title_from_db: true, chapter_number: 1,
+    chapter_lectures: Array.from({ length: 14 }, (_, i) => `Lecture ${i + 1}`) } }, lecture: { index: 3, title: 'x' }, lectures: 14 };
+  const [intro, idx] = fillOpeners(G, { lecture_title: 'Planner title' }, [
+    { slide_type: 'intro', data: { title: 'whatever', hook: 'h', topics: ['a', 'b'] } },
+    { slide_type: 'chapter_index', data: { title: 'x', items: ['made', 'up'] } },
+  ]);
+  assert.equal(intro.data.title, 'Coulomb’s Law');
+  assert.deepEqual([intro.data.lectureNumber, intro.data.lectureCount, intro.data.chapterNumber], [3, 14, 1]);
+  assert.equal(idx.data.items.length, 10);
+  assert.equal(idx.data.items[9], '+ 5 more lectures');
 });

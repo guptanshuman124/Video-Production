@@ -15,7 +15,7 @@ export const meta = {
   slide: {
     type: 'definition', name: 'Definition',
     use: 'a named quantity, law or concept: one-line definition, a few properties, optional small table, and its formula with a symbol key when one exists',
-    image: 'optional', ratios: ['3:4', '1:1'],
+    image: 'optional', ratios: ['1:1', '3:4', '4:3', '3:2'],
     fields: {
       definition: { required: true, words: 30 },
       points: { items: [0, 3], words: 12 },

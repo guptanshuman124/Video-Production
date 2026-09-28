@@ -68,6 +68,13 @@ export async function lectures(flag, has) {
   const rows = await loadRows(sourceArg(flag), filter);
   const lookup = courseLookup({ as: parseAs(typeof flag('as', null) === 'string' ? flag('as') : null) });
   let inputs = lectureInputs(rows, lookup, filter);
+  // Say why a requested lecture is not produced (orphan / inactive in the course tables).
+  for (const e of inputs.excluded || []) {
+    if (!filter.lecture || filter.lecture.includes(e.lecture_id)) {
+      if (filter.lecture) console.log(`  · skipped c${e.course_id}/m${e.module_id}/l${e.lecture_id}: ${e.reason}`);
+    }
+  }
+  if (!filter.lecture && inputs.excluded?.length) console.log(`  · ${inputs.excluded.length} row(s) left out (orphan or inactive in the course tables)`);
   if (typeof flag('shard', null) === 'string') {
     const [k, n] = flag('shard').split('/').map(Number);
     if (!(k >= 1 && n >= 1 && k <= n)) throw new Error('--shard must look like 2/8');
@@ -125,6 +132,9 @@ export async function sourceAudit(flag, has) {
     console.log(`  ${String(id).padEnd(7)} ${(c.mapped ? 'yes' : 'no').padEnd(7)} ${String(c.lectures).padStart(8)}  ${String(med(c.words)).padStart(12)}  ${(c.minutes / 60).toFixed(1).padStart(11)}  ${String(c.images).padStart(6)}  ${String(c.errors).padStart(7)}  ${String(c.warnings).padStart(6)}  ${Object.entries(c.formats).map(([k, v]) => `${k}:${v}`).join(' ')}`);
   }
   console.log(`\n  ${inputs.length} lectures · ~${hours.toFixed(0)} hours of video at the configured duration · ${blocked} blocked at G0`);
+  const why = {};
+  for (const e of inputs.excluded || []) why[e.reason] = (why[e.reason] || 0) + 1;
+  if (Object.keys(why).length) console.log('  left out by the course tables:', Object.entries(why).map(([k, v]) => `${k} ×${v}`).join(' · '));
   console.log('  issues:', [...codes.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ×${v}`).join(' · ') || 'none');
   const out = path.resolve(typeof flag('out', null) === 'string' ? flag('out') : 'out/source-audit.json');
   fs.mkdirSync(path.dirname(out), { recursive: true });

@@ -180,7 +180,20 @@ export async function runLectureJob(input, opts) {
   store.write('input.json', input);
   if (from >= 0) for (const stage of stages.slice(from)) OUTPUTS[stage].forEach((file) => store.remove(file));
   const label = `c${input.course_id}/m${input.module_id}/l${input.lecture_id}`;
-  const gate = makeGate(store, () => label, log);
+  // opts.onEvent({type:'stage'|'gate'|'render', …}): live progress for a
+  // caller such as the factory worker. Gate events carry the full report.
+  const emit = opts.onEvent || (() => {});
+  const gate0 = makeGate(store, () => label, log);
+  const gate = (unit, stage, issues, extra) => {
+    try {
+      const r = gate0(unit, stage, issues, extra);
+      emit({ type: 'gate', stage, report: r, extra });
+      return r;
+    } catch (e) {
+      emit({ type: 'gate', stage, report: store.readOr(`reports/${stage}.json`, null), extra });
+      throw e;
+    }
+  };
   const summary = { lecture_id: input.lecture_id, unit: label, dir: store.dir };
 
   const build = await buildTemplates();
@@ -189,6 +202,7 @@ export async function runLectureJob(input, opts) {
   const llm = opts.llm || createLLM(cfg, { cacheDir: path.join(cacheRoot, 'llm'), logFile: store.path('llm.jsonl') });
   try {
     if (!store.has('prepared.json') && inRange('prepare')) {
+      emit({ type: 'stage', stage: 'prepare' });
       const pre = gateLectureInput(input, packs);
       if (pre.some((i) => i.severity === 'error')) gate('lecture', 'prepare', pre);
       const sizes = imageSizeCache(path.join(cacheRoot, 'image-sizes.json'));
@@ -209,7 +223,7 @@ export async function runLectureJob(input, opts) {
       },
       vars: { ...base.vars, lecture: L.position.index, lecture_title: L.title },
     };
-    await runLecture({ G, store, unit: 'lecture', rel: (file) => file, dir: store.dir, cfg, gate, inRange, opts, log });
+    await runLecture({ G, store, unit: 'lecture', rel: (file) => file, dir: store.dir, cfg, gate, inRange, opts, log, emit });
     summary.status = 'ok';
   } catch (e) {
     if (!(e instanceof StageFailed)) throw e;
@@ -219,10 +233,11 @@ export async function runLectureJob(input, opts) {
   return summary;
 }
 
-async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, log }) {
+async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, log, emit = () => {} }) {
   const step = async (stage, file, fn) => {
     if (store.has(rel(file))) return store.read(rel(file));
     if (!inRange(stage)) return null;
+    emit({ type: 'stage', stage });
     const r = await fn();
     store.write(rel(file.replace(/\.json$/, '.draft.json')), r.value);   // inspectable even if the gate fails
     gate(unit, stage, r.issues, { attempts: r.attempts });
@@ -253,6 +268,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
   // G3/G4, and the lecture is reviewed again — up to llm.review_repair_rounds.
   // Only what still fails after that goes to the review queue.
   if (inRange('review') && !store.has(rel('review.json'))) {
+    emit({ type: 'stage', stage: 'review' });
     const maxRounds = cfg.llm.review_repair_rounds ?? 1;
     for (let round = 0; ; round++) {
       const r = await reviewLecture(G, plan, slides, english || hinglish);
@@ -288,6 +304,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
     }
   }
   if (!store.has(rel('content.json')) && inRange('assemble')) {
+    emit({ type: 'stage', stage: 'assemble' });
     const gates = Object.fromEntries(['slide-plan', 'slide-write', 'narrate', 'hinglish', 'review']
       .filter((s) => store.has(rel(`reports/${s}.json`))).map((s) => [s, store.read(rel(`reports/${s}.json`)).status]));
     const { content, issues } = assembleLecture(G, { plan, slides, english, hinglish, gates, promptHashes: {} });
@@ -299,10 +316,12 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
 
   // ---- voice → build → render → qa ---------------------------------------------------
   if (!store.has(rel('voice.json')) && inRange('voice')) {
+    emit({ type: 'stage', stage: 'voice' });
     log(`    voicing ${content.slides.length} slides with ${cfg.tts.provider}…`);
     let voice;
     try {
-      voice = await synthesizeLecture(content, cfg, { dir, cacheDir: path.join(path.resolve(cfg.paths.jobs), '.cache', 'tts'), provider: opts.tts });
+      // opts.ttsCacheDir: the factory keeps clips inside the job folder, so they go when it does.
+      voice = await synthesizeLecture(content, cfg, { dir, cacheDir: opts.ttsCacheDir || path.join(path.resolve(cfg.paths.jobs), '.cache', 'tts'), provider: opts.tts });
     } catch (e) {
       // A provider failure after all retries: record it for this lecture
       // (review queue) instead of stopping the whole run. Clips already made
@@ -316,6 +335,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
   const voice = store.read(rel('voice.json'));
 
   if (!store.has(rel('project.json')) && inRange('build')) {
+    emit({ type: 'stage', stage: 'build' });
     const { project, cues, required } = await buildProject(content, voice, G.types, cfg, { dir });
     const issues = [];
     try { await normalizeProject(structuredClone(project), dir, 'project'); } catch (e) {
@@ -331,17 +351,25 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
 
   if (!store.has(rel('lecture.mp4')) && inRange('render')) {
     const project = await loadProject(store.path(rel('project.json')));
+    emit({ type: 'stage', stage: 'render' });
     log(`    rendering ${(timeline(project).duration / 60000).toFixed(1)} min…`);
     const v = cfg.video;
+    let last = 0;
     const r = await renderProject(project, {
       out: store.path(rel('lecture.mp4')), jobs: opts.jobs ?? v.jobs, capture: v.capture, crf: v.crf, preset: v.preset, tune: v.tune,
       draft: !!opts.draft,
+      onFrame: (done, count) => {
+        if (Date.now() - last < 2000 && done < count) return;
+        last = Date.now();
+        emit({ type: 'render', done, count });
+      },
     });
     gate(unit, 'render', [], { seconds: Math.round(r.seconds), frames: r.count, shot: r.captured });
   }
   if (!store.has(rel('lecture.mp4'))) return;
 
   if (!store.has(rel('qa.json')) && inRange('qa')) {
+    emit({ type: 'stage', stage: 'qa' });
     const file = store.path(rel('lecture.mp4'));
     const project = await loadProject(store.path(rel('project.json')));
     const probe = probeAll(file);

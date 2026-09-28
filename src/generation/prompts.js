@@ -70,6 +70,7 @@ export function flowRules(pack) {
   const f = pack.flow || {};
   const lines = [];
   for (const [t, lim] of Object.entries(pack.types || {})) {
+    if (lim.max === 0) continue;   // switched off: not offered to the planner at all
     const b = [lim.min != null && `at least ${lim.min}`, lim.max != null && `at most ${lim.max}`].filter(Boolean).join(', ');
     if (b) lines.push(`- ${t}: ${b} per lecture`);
   }

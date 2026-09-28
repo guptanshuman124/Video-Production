@@ -13,7 +13,7 @@ export const meta = {
   slide: {
     type: 'labeled_diagram', name: 'Labelled diagram',
     use: 'one large NCERT figure (structure, life cycle, pathway, chart) read out part by part',
-    image: 'required', ratios: ['4:3', '16:9', '2:1', '21:9', '3:1'],   // full-width panel letterboxes wide figures
+    image: 'required', ratios: ['1:1', '4:3', '3:2', '16:9', '2:1', '21:9', '3:1'],   // full-width panel letterboxes any landscape or square figure
     fields: { caption: { required: true, words: 12 } },
     reveal: [],
     narrationWords: [220, 320],

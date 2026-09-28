@@ -15,7 +15,7 @@ export const meta = {
   slide: {
     type: 'definition', name: 'Definition',
     use: 'a named concept, process or structure: one-line definition, a few properties, optional small table of its types',
-    image: 'optional', ratios: ['3:4', '1:1'],
+    image: 'optional', ratios: ['1:1', '3:4', '4:3', '3:2'],
     fields: {
       definition: { required: true, words: 30 },
       points: { items: [0, 4], words: 12 },

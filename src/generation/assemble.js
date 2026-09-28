@@ -2,6 +2,7 @@
 
 import { checkContract } from '../contracts/index.js';
 import { requiredMarkers } from '../slides.js';
+import { lectureTitleOf } from './openers.js';
 
 export function assembleLecture(G, { plan, slides, english, hinglish, gates, promptHashes }) {
   const { prepared, lecture, types } = G;
@@ -15,8 +16,9 @@ export function assembleLecture(G, { plan, slides, english, hinglish, gates, pro
     variant: ch.variant ?? null,
     class: ch.class,
     subject: ch.subject,
-    // The planner's clean title: source headings can be garbled ("TRANSPORT ANSPORTATION").
-    title: plan.lecture_title || lecture.title,
+    // The course-table lecture name; without one, the planner's clean title
+    // (source headings can be garbled, e.g. "TRANSPORT ANSPORTATION").
+    title: lectureTitleOf(G, plan),
     slide_language: ch.slide_language || 'english',
     source: prepared.lecture ? { course_id: prepared.lecture.course_id, module_id: prepared.lecture.module_id, lecture_id: prepared.lecture.lecture_id } : null,
     slides: slides.map((s, i) => {

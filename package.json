@@ -1,15 +1,18 @@
 {
-  "name": "html-video-renderer",
+  "name": "lecture-factory",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Render animated HTML layouts to video with Chromium + ffmpeg",
+  "description": "CBSE lecture videos: generation pipeline, renderer, and the Kubernetes lecture factory",
   "bin": {
     "hvr": "./src/cli.js"
   },
   "scripts": {
-    "render": "node src/cli.js render projects/lesson.json",
-    "preview": "node src/cli.js preview projects/demo.json",
+    "factory": "node deploy/factory.mjs",
+    "web:dev": "npm --prefix web run dev",
+    "web:build": "npm --prefix web run build",
+    "central": "node src/cli.js central",
+    "worker": "node src/cli.js worker",
     "templates": "node src/cli.js templates",
     "test": "node --test"
   },

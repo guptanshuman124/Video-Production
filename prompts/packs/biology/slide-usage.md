@@ -1,6 +1,6 @@
 # WHICH SLIDE TYPE FOR WHICH BIOLOGY CONTENT
 
-- **chapter_index** — lecture 1 only, first slide: the chapter name and its main topics (3–10).
+- **intro** — every lecture, first slide only: a title card (chapter name, "Lecture N: title") filled in by code. Nothing to write; the narration is a ~10-second welcome.
 - **definition** — a named concept, process, principle or structure: osmosis, homeostasis, double fertilisation, transpiration, ecological succession, a reflex arc. Add a small table only for the concept's own types.
 - **characteristics** — 4–6 genuine properties of one thing: features of Chordata, a xerophyte, enzymes, C4 plants. Fewer than 4 real points → fold them into a definition instead.
 - **comparison** — two entities across 3–6 bases: mitosis vs meiosis, xylem vs phloem, monocot vs dicot, DNA vs RNA, innate vs acquired immunity. Three entities only when NCERT itself tabulates three.

@@ -8,11 +8,16 @@ import { systemPrompt, slideCatalog, flowRules } from '../prompts.js';
 import { callWithRepair } from '../repair.js';
 
 export async function planLecture(G) {
-  const { cfg, llm, prepared, lecture, types, pack } = G;
+  const { cfg, llm, prepared, lecture, pack } = G;
+  // Types switched off in pack.json (max 0, e.g. chapter_index) are not offered to the planner.
+  const types = Object.fromEntries(Object.entries(G.types).filter(([k]) => pack.types?.[k]?.max !== 0));
   const sections = lecture.section_ids.map((id) => prepared.sections.find((s) => s.id === id)).filter(Boolean);
   // Only images some image-taking type can actually show are offered.
   const ratios = [...new Set(Object.values(types).flatMap((st) => (takesImage(st.spec) ? st.spec.ratios : [])))];
-  const images = prepared.images.filter((im) => fitsRatio(im, ratios));
+  // Only real figures (not screenshots of problems, tables or equations) that some slot can show.
+  const images = prepared.images.filter((im) => (im.kind || 'figure') === 'figure' && fitsRatio(im, ratios));
+  const L = prepared.lecture || {};
+  const chapterNo = L.chapter_number ? `Chapter ${L.chapter_number}: ` : '';
 
   const schema = schemaOf('lecture-plan');
   const item = schema.properties.slides.items;
@@ -20,10 +25,11 @@ export async function planLecture(G) {
   item.properties.image_id = { type: ['string', 'null'], enum: [...images.map((im) => im.id), null] };
 
   const user = [
-    `CHAPTER: ${prepared.chapter.title}`,
+    `CHAPTER: ${chapterNo}${prepared.chapter.title}`,
     `LECTURE ${lecture.index} of ${G.lectures}: ${lecture.title}`,
+    L.chapter_lectures?.length ? `Lectures in this chapter: ${L.chapter_lectures.map((t, i) => `${i + 1}. ${t}`).join(' · ')}` : '',
     lecture.goals?.length ? `Goals / keywords: ${lecture.goals.join('; ')}` : '',
-    lecture.summary ? `Summary of this lecture: ${lecture.summary}` : '',
+    lecture.summary ? `Summary of this lecture (from the database; may be inaccurate — the sections below are the source of truth): ${lecture.summary}` : '',
     lecture.recap ? `Recap (previous lecture): ${lecture.recap}` : 'This is the first lecture of the chapter.',
     lecture.preview ? `Preview (next lecture — do not teach): ${lecture.preview}` : 'This is the last lecture of the chapter.',
     '',
@@ -51,6 +57,8 @@ export async function planLecture(G) {
       const r = gateLecturePlan(data, {
         lecture: lecture.index, lectures: G.lectures, sectionIds: lecture.section_ids,
         images, types, pack, budget: prepared.budget,
+        lectureTitle: lecture.title, chapterTitle: prepared.chapter.title, chapterLectures: L.chapter_lectures || [],
+        sectionHeadings: sections.map((x) => x.heading),
       });
       return { value: r.plan, issues: r.issues };
     },

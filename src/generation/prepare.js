@@ -193,7 +193,18 @@ export function imageSizeCache(file) {
   return {
     get: (url) => map[url],
     set: (url, v) => { map[url] = v; },
-    save: () => { if (file) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(map)); } },
+    // Several workers share this file: merge with what is on disk, then write
+    // a temp file and rename it, so no writer loses or corrupts entries.
+    save: () => {
+      if (!file) return;
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      let disk = {};
+      try { if (fs.existsSync(file)) disk = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { disk = {}; }
+      map = { ...disk, ...map };
+      const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+      fs.writeFileSync(tmp, JSON.stringify(map));
+      fs.renameSync(tmp, file);
+    },
   };
 }
 
@@ -203,6 +214,12 @@ const firstWords = (s, n) => { const w = stripMd(s).split(' '); return w.length 
 // blocks (sources/content.js) -> sections + image catalog. Each image leaves a
 // "[Figure <id>: …]" line where it sat, so planners know which text it
 // illustrates; its AI description stays out of the source text.
+// Screenshots of text (a worked problem, a question list, a table, an equation,
+// a page) are not figures: they never go on a figure slot. Detected from the
+// image's description, or from an extreme strip shape.
+const TEXT_LIKE = /^\W*(this|the)\s+image\s+(shows|contains|is|displays|presents|appears to be)\s+(a|an|the|two|some)?\s*((simple|short|small|typical|set of|list of|chemistry|chemical|math(ematical)?|physics|biology|scientific|numerical|sample|solved|worked|balanced|word|homework or)\s+)*(example\s+)?(problem|question|exercise|homework|practice|table|equation|formula|expression|calculation|solution|text|page|paragraph|passage|list|definition|statement|summary|note|title|heading)s?\b/i;
+export const isTextLike = (description) => TEXT_LIKE.test(String(description || ''));
+
 export function sectionsFromBlocks(blocks, lectureId, { maxWords = 700, minWords = 40 } = {}) {
   const secs = [];
   const images = [];
@@ -213,7 +230,7 @@ export function sectionsFromBlocks(blocks, lectureId, { maxWords = 700, minWords
     if (!cur) open('Introduction');
     if (b.kind === 'image') {
       const id = `img_${lectureId}_${images.length + 1}`;
-      images.push({ id, url: b.src, description: b.description ? firstWords(b.description, 60) : 'No description available' });
+      images.push({ id, url: b.src, description: b.description ? firstWords(b.description, 60) : 'No description available', textLike: isTextLike(b.description) });
       cur.lines.push(`[Figure ${id}: ${b.description ? firstWords(b.description, 18) : 'figure'}]`);
       continue;
     }
@@ -252,7 +269,9 @@ export async function prepareLecture(input, cfg, { offline = false, fetchImpl, s
       }
     }
     if (!size) { issues.push({ code: 'IMAGE_NO_SIZE', severity: 'warning', path: `/images/${img.id}`, message: `${img.id}: size unknown (offline) — left out of the catalog` }); continue; }
-    images.push({ ...img, width: size.width, height: size.height, ratio: ratioBucket(size.width, size.height), lowRes: Math.max(size.width, size.height) < 500 });
+    const aspect = size.width / size.height;
+    const kind = img.textLike || aspect > 4 || aspect < 0.25 ? 'text' : 'figure';
+    images.push({ ...img, width: size.width, height: size.height, ratio: ratioBucket(size.width, size.height), lowRes: Math.max(size.width, size.height) < 500, kind });
   }
   sizes?.save();
 
@@ -267,6 +286,7 @@ export async function prepareLecture(input, cfg, { offline = false, fetchImpl, s
       lecture: {
         lecture_id: input.lecture_id, module_id: input.module_id, course_id: input.course_id,
         title: input.title, position: input.position, summary: input.summary, recap: input.recap, preview: input.preview,
+        title_from_db: !!input.title_from_db, chapter_number: input.chapter_number ?? null, chapter_lectures: input.chapter_lectures || [], course_title: input.course_title ?? null,
         keywords: input.keywords || [], format: input.format,
       },
       band: classBand(input.class || 12),

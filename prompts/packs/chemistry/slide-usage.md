@@ -1,6 +1,6 @@
 # WHICH SLIDE TYPE FOR WHICH CHEMISTRY CONTENT
 
-- **chapter_index** — lecture 1 only, first slide: the chapter and its main topics.
+- **intro** — every lecture, first slide only: a title card (chapter name, "Lecture N: title") filled in by code. Nothing to write; the narration is a ~10-second welcome.
 - **definition** — a named concept, law or process (mole, molarity, oxidation, electronegativity, isomerism): one-line definition, 1–3 properties, optional small table (e.g. of its types), and its formula or balanced equation with a key when one exists.
 - **characteristics** — 4–6 genuine properties of one thing: properties of s-block elements, of ionic compounds, of colloids, of transition elements.
 - **comparison** — two (at most three) things across 3–6 bases: SN1 vs SN2, sigma vs pi bond, lyophilic vs lyophobic, galvanic vs electrolytic cell.

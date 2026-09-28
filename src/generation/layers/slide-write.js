@@ -5,6 +5,7 @@ import { gateSlides } from '../../validators/generation.js';
 import { systemPrompt, typeSpecs } from '../prompts.js';
 import { perSlideWithRepair, batchRepairText } from '../repair.js';
 import { tooLongTargets, shortenStrings, applyShortened } from '../shorten.js';
+import { fillOpeners } from '../openers.js';
 
 // opts.indices: only these slides (1-based); opts.initial: review findings to fix first.
 export async function writeSlides(G, plan, opts = {}) {
@@ -68,9 +69,18 @@ export async function writeSlides(G, plan, opts = {}) {
     return { value: r.slides[0], issues: r.issues.map((x) => ({ ...x, path: x.path.replace(/^s01/, where), message: x.message.replace(/^s01/, where) })) };
   };
 
-  const { results, attempts, promptHashes } = await perSlideWithRepair({ indices, cfg, runBatch, checkOne, initial: opts.initial });
+  // codeOnly types (the intro title card) have nothing for the model to write:
+  // code builds them, fillOpeners below adds the course-table facts.
+  const codeOnly = (i) => !!types[plan.slides[i - 1].slide_type]?.spec.codeOnly;
+  const llmIndices = indices.filter((i) => !codeOnly(i));
+  const { results, attempts, promptHashes } = llmIndices.length
+    ? await perSlideWithRepair({ indices: llmIndices, cfg, runBatch, checkOne, initial: opts.initial })
+    : { results: new Map(), attempts: 0, promptHashes: [] };
+  for (const i of indices.filter(codeOnly)) results.set(i, checkOne(i, { slide_type: plan.slides[i - 1].slide_type, data: { title: 'Intro' } }));
+  // Intro / chapter-index facts come from the course tables, not the model.
+  const filled = fillOpeners(G, plan, indices.map((i) => results.get(i).value));
   return {
-    value: indices.map((i) => results.get(i).value),
+    value: filled,
     issues: indices.flatMap((i) => results.get(i).issues),
     attempts, promptHashes,
   };

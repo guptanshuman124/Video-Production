@@ -1,8 +1,12 @@
 node_modules
+web/node_modules
+web/dist
 out
 jobs
 .git
 .env
 config/local.yaml
 **/.DS_Store
-projects/lectures/assets
+docs
+test
+deploy

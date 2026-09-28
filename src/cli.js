@@ -3,7 +3,6 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { loadProject, normalizeProject, timeline } from './project.js';
 import { buildTemplates, describeSchema, lookup, TEMPLATES_DIR } from './templates.js';
-import { buildLecture, loadLectures, lectureId } from './lecture.js';
 import { openStage } from './stage.js';
 import { renderProject } from './render.js';
 import * as product from './commands.js';
@@ -216,40 +215,11 @@ function newTemplate(id) {
   console.log(`    preview:  node src/cli.js template ${id} --snap\n`);
 }
 
-// ---- server lecture JSON -> projects ----------------------------------------------
-
-async function lecture() {
-  const lectures = loadLectures(file);
-  const want = flag('id', null);
-  const idx = flag('index', null);
-  const lang = String(flag('lang', 'hinglish'));
-  const pace = Number(flag('pace', 0.9));
-  const outDir = path.resolve(String(flag('out-dir', path.join(path.dirname(file), 'lectures'))));
-  const picked = lectures
-    .map((lec, i) => ({ lec, i, id: lectureId(lec) }))
-    .filter(({ i, id }) => (want == null || want === true ? true : String(id) === String(want))
-      && (idx == null || idx === true ? true : i === Number(idx)));
-  if (!picked.length) throw new Error(`no lecture matches (ids: ${lectures.map(lectureId).join(', ')})`);
-
-  for (const { lec, id } of picked) {
-    const { project, report } = await buildLecture(lec, {
-      lang, pace, outDir,
-      name: typeof flag('name', null) === 'string' ? flag('name') : undefined,
-      lectureName: typeof flag('lecture-name', null) === 'string' ? flag('lecture-name') : undefined,
-    });
-    const out = path.join(outDir, `lecture-${id}.json`);
-    fs.writeFileSync(out, JSON.stringify(project, null, 2) + '\n');
-    // validate through the normal loader so problems surface now, not at render time
-    const loaded = await loadProject(out);
-    const tl = timeline(loaded);
-    console.log(`\n  ✓ ${path.relative(process.cwd(), out)}  ·  ${loaded.scenes.length} slides · ${fmt(tl.duration)} · ${lang} narration\n`);
-    console.log(report.join('\n'));
-    fs.writeFileSync(out.replace(/\.json$/, '.cues.txt'), report.join('\n') + '\n');
-  }
-  console.log();
-}
-
 const usage = `
+  LECTURE FACTORY (Kubernetes: npm run factory -- up; dashboard http://localhost:8080)
+  hvr central                                    backend + scheduler + dashboard (FACTORY_DB_URL, TEXTBOOK_DB_URL, LIBRARY_DIR)
+  hvr worker                                     claim lectures from CENTRAL_URL and produce them
+
   TEXTBOOK LECTURES (tutorai.textbook_raw: one row = one video)
   hvr lectures  --source <export.jsonl | db> [--course 58] [--module 338] [--lecture 1717]
                 [--as "class=12,subject=Biology,pack=biology"] [--shard 2/8] [run flags below]
@@ -283,10 +253,6 @@ const usage = `
   hvr template  <id> --snap [f.png] [--at ms[,ms…]] [--data f.json]
                                                  render example (or given) data to PNG
   hvr new-template <id>                          scaffold templates/<id>/
-
-  hvr lecture   <lectures.json> [--id 4969 | --index 0] [--lang hinglish] [--pace 0.9]
-                                [--out-dir dir] [--lecture-name "…"] [--name "…"]
-                                server lecture data -> timed project(s) + narration track
 `;
 
 const COMMANDS = {
@@ -294,7 +260,6 @@ const COMMANDS = {
   templates: listTemplates,
   template: () => showTemplate(file),
   'new-template': () => newTemplate(file),
-  lecture,
   run: () => product.run(file, flag, has),
   generate: () => product.run(file, flag, has, { to: 'assemble' }),
   batch: () => product.batch(file, flag, has),
@@ -303,10 +268,12 @@ const COMMANDS = {
   status: () => product.status(file, flag, has),
   packs: () => product.packs(),
   prompt: () => product.prompt(file, flag, has),
+  central: async () => (await import('./factory/central.js')).runCentral(),
+  worker: async () => (await import('./factory/worker.js')).runWorker(),
 };
 
 try {
-  const needsArg = !['templates', 'packs', 'lectures'].includes(cmd);
+  const needsArg = !['templates', 'packs', 'lectures', 'central', 'worker'].includes(cmd);
   if (!COMMANDS[cmd] || (needsArg && !file)) { console.log(usage); process.exit(1); }
   await COMMANDS[cmd]();
 } catch (e) {

@@ -22,7 +22,8 @@ test('pipeline (mock): chapter -> 5 validated lectures -> content + voice + proj
   const dir = path.join(jobs, 'test-chapter');
   const content = JSON.parse(fs.readFileSync(path.join(dir, 'L1/content.json'), 'utf8'));
   assert.deepEqual(checkContract('content-v1', content), []);
-  assert.equal(content.slides[0].slide_type, 'chapter_index');
+  assert.equal(content.slides[0].slide_type, 'intro');
+  assert.notEqual(content.slides[1].slide_type, 'chapter_index', 'after the intro the lecture goes straight to its first topic');
   const project = JSON.parse(fs.readFileSync(path.join(dir, 'L1/project.json'), 'utf8'));
   assert.equal(project.scenes.length, content.slides.length);
   assert.ok(fs.existsSync(path.join(dir, 'L1/voice/track.wav')));

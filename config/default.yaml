@@ -38,7 +38,7 @@ llm:
   timeout_s: 180
   retries: 3
   repair_attempts: 2           # LLM repair passes per failing unit before human review
-  review_repair_rounds: 1      # reviewer findings: rewrite the flagged slides and review again this many times
+  review_repair_rounds: 2      # reviewer findings: rewrite the flagged slides and review again (each review can surface new points)
   batch_size: 4                # slides per call for the writer, narrator and Hinglish layers
   concurrency: 4               # parallel LLM calls
   cache: true

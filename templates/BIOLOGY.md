@@ -190,4 +190,3 @@ node src/cli.js template bio-12 --snap out/cmp/bio-12.png --data templates/biolo
 # compare out/cmp/bio-12.png with templates/biology/mcq/reference.png
 ```
 
-`projects/biology-demo.json` runs every template in sequence with its example data.

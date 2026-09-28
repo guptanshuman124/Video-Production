@@ -7,13 +7,8 @@
 
 import { ELEMENT_ANIMS, WORD_ANIM, EASE } from './anims.js';
 import { TRANSITIONS, DEFAULT_TRANSITION } from './transitions.js';
-import title from './layouts/title.js';
-import bullets from './layouts/bullets.js';
-import stat from './layouts/stat.js';
-import doc from './layouts/doc.js';
 import { templates as TEMPLATES } from './__templates.js';
 
-const LAYOUTS = { title, bullets, stat, doc };
 
 const NEUTRAL = { opacity: 1, transform: 'none', filter: 'none', clipPath: 'inset(0 0 0 0)' };
 
@@ -235,10 +230,7 @@ export function prepare(project, opts = {}) {
       else if (out) el.appendChild(out);
       localAnims = tpl.mod.animations || {};
     } else {
-      const layout = LAYOUTS[s.layout];
-      if (!layout) throw new Error(`unknown layout: ${s.layout}`);
-      el.className = s.theme === 'light' ? 'scene light' : 'scene';
-      el.innerHTML = layout(s);
+      throw new Error(`scene ${i} has no template`);
     }
     stage.appendChild(el);
 

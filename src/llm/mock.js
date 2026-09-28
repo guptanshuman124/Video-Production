@@ -155,6 +155,7 @@ function narrate(ctx) {
       const sentence = (k, n) => `${phrase(v, n, s.index * 13 + k)}.`;
       const block = (k) => { const out = []; let left = per; let j = 0; while (left > 0) { const n = Math.min(12, left); out.push(sentence(k * 10 + j++, n)); left -= n; } return out.join(' '); };
       let text = s.st.spec.question ? `So what do you think the answer is? ${block(0)}` : block(0);
+      if (s.st.type === 'intro') text = `Welcome to lecture ${ctx.lecture ?? 1} of this chapter. ${text}`;
       ids.forEach((id, k) => { text += ` {{${id}}} ${block(k + 1)}`; });
       return { index: s.index, narration: ctx.language === 'hinglish' ? toHinglish(text) : text };
     }),

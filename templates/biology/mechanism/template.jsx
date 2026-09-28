@@ -15,7 +15,7 @@ export const meta = {
   slide: {
     type: 'mechanism', name: 'Mechanism / process',
     use: 'how something works, in 2–3 headed stages beside a figure',
-    image: 'required', ratios: ['3:4', '1:1'],
+    image: 'required', ratios: ['1:1', '3:4', '4:3', '3:2'],
     fields: {
       sections: { required: true, items: [2, 3], fields: {
         heading: { required: true, words: 6 }, text: { words: 30 }, points: { items: [0, 4], words: 12 },

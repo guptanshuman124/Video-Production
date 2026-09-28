@@ -12,6 +12,24 @@
   <div id="fader"></div>
   <script type="module">
     import { prepare, seek, motionIntervals, duration, sceneTime } from './runtime.js';
+    // Panel figures get an exact size: as large as the panel allows (up to 3×
+    // their pixels) at their own aspect ratio, so the frame drawn around the
+    // picture (global.css .panel-media img) hugs the figure itself instead of
+    // the whole panel, and a white figure never blends into the slide.
+    function fitPanelImages() {
+      for (const im of document.querySelectorAll('.panel-media img')) {
+        const box = im.parentElement;
+        if (!im.naturalWidth || !box || box.closest('.panel.cover')) continue;
+        const cs = getComputedStyle(box);
+        const w = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const h = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        if (!(w > 0 && h > 0)) continue;
+        const k = Math.min(w / im.naturalWidth, h / im.naturalHeight, 3);
+        im.style.width = `${Math.floor(im.naturalWidth * k)}px`;
+        im.style.height = `${Math.floor(im.naturalHeight * k)}px`;
+        im.classList.add('fitted');
+      }
+    }
     // The renderer injects the project + options, then drives everything
     // through these globals. No autoplay, ever.
     window.__prepare = async (project, opts) => {
@@ -26,6 +44,7 @@
         im.complete ? im.decode().catch(() => {}) : new Promise((r) => {
           im.onload = im.onerror = r;
         })));
+      fitPanelImages();
       seek(0);
       return info;
     };

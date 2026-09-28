@@ -1,6 +1,6 @@
 # WHICH SLIDE TYPE FOR WHICH PHYSICS CONTENT
 
-- **chapter_index** — lecture 1 only, first slide: the chapter and its main topics.
+- **intro** — every lecture, first slide only: a title card (chapter name, "Lecture N: title") filled in by code. Nothing to write; the narration is a ~10-second welcome.
 - **definition** — a quantity, law or concept (velocity, Ohm's law, electric flux): one-line definition, 1–3 properties (scalar/vector, unit, dimension), optional small table, and **its formula with a symbol key** when one exists.
 - **characteristics** — 4–6 genuine properties of one thing: properties of electric charge, of a real image, of electromagnetic waves.
 - **comparison** — two (at most three) things across 3–6 bases: distance vs displacement, series vs parallel, real vs virtual image, AC vs DC.

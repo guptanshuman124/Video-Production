@@ -10,7 +10,21 @@ chapter.json ─► prepare ─► chapter-plan ─┬─► L1 … L5, each:
                                          │      (A1)     (A2)      (R1)     (V1)
 ```
 
-## Running
+## Production: the lecture factory
+
+In production the pipeline runs on the local Kubernetes lecture factory (see the [README](../README.md#run-it)): `npm run factory -- up`, then http://localhost:8080.
+- **Central pod** (`src/factory/central.js`):
+  - Keeps the catalog, which is the course tables as class → subject → book → chapter → lecture (`src/factory/catalog.js`).
+  - Runs the class queues and hands lectures to workers.
+  - Follows the workers' progress and requeues a lecture whose worker disappears.
+  - Runs the final validation on each uploaded video and stores it in the library folder and the `videos` table.
+- **Worker pods** (`src/factory/worker.js`):
+  - Run one lecture at a time: `runLectureJob` in a child process (`src/factory/job.js`), streaming stage and gate events back.
+  - Keep job folders on a shared volume. A failed lecture's folder stays, so a retry resumes from the failed stage on any worker. A stored lecture's folder is deleted.
+  - Differ from the CLI in three ways: no LLM response cache (a retried stage must get a fresh answer), TTS clips cached inside the job folder, and 2 render workers and 2 Sarvam requests per pod.
+- **Gate failures** are not retried automatically, because a retry costs API calls. They wait in **Needs attention** with the gate's issues. Crashes and lost workers are requeued automatically, up to 2 times.
+
+## Running (CLI)
 
 ```bash
 hvr run examples/chapter-input.sample.json            # everything, all 5 lectures
@@ -43,8 +57,10 @@ hvr lectures … --as "class=12,subject=Biology,pack=biology"   # try a course b
 - Short all-bold paragraphs are treated as headings.
 - Maths written `\(…\)` becomes `$…$`.
 - The AI-written paragraph after each image ("This image shows…") becomes that image's catalog description. It is **removed from the teaching text**: it is not NCERT content. A `[Figure img_<lecture>_<n>: …]` line stays where the image sat.
-- Lecture order within a module (by `lecture_id`) gives each lecture its position. Lecture 1 opens the chapter with `chapter_index`; the last lecture closes it with a chapter-level revision.
-- The neighbours' `mini_lecture` summaries become the recap and preview, with no LLM call. Unfilled template summaries (`[insert main topic]`, ~640 rows) are ignored.
+- Lecture order within a chapter (from the course tables, below) gives each lecture its position. Lecture 1 opens the chapter with `chapter_index`; the last lecture closes it with a chapter-level revision.
+- **Recap and preview** come from the neighbouring lectures' titles plus their section headings, e.g. `"Basic Properties of Electric Charge" — Additivity of Charges; Charge Is Conserved; …`. No LLM call is needed.
+  - The `mini_lecture` summaries are **not** used for this. About a third are unfilled templates (`[insert main topic]`) or describe a different lecture: 2854 "Basic Properties of Electric Charge" is summarised as kinematics. The reviewer caught that as a continuity error.
+  - A lecture's own summary is shown to the planner only as a hint, labelled "may be inaccurate". The sections are the source of truth.
 
 **Course catalog:** `hvr source courses --catalog db --source db` generates `config/courses.yaml` from `classes` + `subjects` + `class_subject_mapping.course_ids`.
 - **Subject → pack:** Social Science, History, Geography, Political Science, Economics, Sociology, English and Hindi → theory; Mathematics → mathematics; Physics, Chemistry, Biology → their own packs; Accountancy and Business Studies → commerce.
@@ -69,10 +85,29 @@ hvr lectures … --as "class=12,subject=Biology,pack=biology"   # try a course b
 - **Blocks:** `COURSE_UNMAPPED`, `TOO_LITTLE_SOURCE` (< 120 words).
 - **Warns:** `THIN_SOURCE` (< 250), `MOSTLY_IMAGE_DESCRIPTIONS` (> 60% of the row is image descriptions), `LANGUAGE_MISMATCH`, `SUMMARY_PLACEHOLDER`, `PLAIN_TEXT_SOURCE`.
 
+**Course tables = the source of truth.** `courses`, `modules` and `lectures` decide what is produced, in what order and under what names:
+- Chapter order comes from `modules.orders` and lecture order from `lectures.orders` (351 lectures and 55 chapters differ from id order).
+- Chapter and lecture titles are title-cased from the tables ("TYPES OF CHEMICAL REACTIONS" → "Types of Chemical Reactions"; known acronyms such as DNA and pH are kept).
+- Rows are left out if their lecture is inactive (212), missing from `lectures` (180 orphans) or in an inactive chapter or course. `hvr lectures` says why a requested lecture was skipped.
+
+**Every lecture opens with an intro** (`<pack>/intro`, from the intro design):
+- Content: chapter name in the header, the lecture title, a hook line, "Lecture N of M · Chapter K", and the topics covered. The panel shows a matching figure, or the lecture number if there is none.
+- Lecture 1 of a chapter follows it with the **chapter roadmap** (`chapter_index`), which lists the chapter's real lecture titles.
+- Code puts the openers in place (G2 `OPENING_FIXED`) and fills their facts (`src/generation/openers.js`), so the model never invents lecture numbers or titles.
+- The intro narration must welcome the student to "lecture N of chapter K" (G4 `INTRO_NO_WELCOME`). The openers don't count towards the slide budget.
+
 **Images:**
-- Sizes are measured once and cached in `jobs/.cache/image-sizes.json`.
-- 30% of textbook figures are wider than 2:1, so the full-width diagram slot accepts up to 3:1.
-- Half are under 500 px; they are marked low-res in the planner's catalog.
+- **Figures vs text.** Each catalog image is a `figure` (setup, apparatus, diagram, graph, photo) or `text` (a screenshot of a problem, question list, table, equation or page, detected from its description or an extreme strip shape). Only figures are offered to the planner.
+- **The planner is told to use the figures.** Every figure that illustrates the lecture should appear, on a figure slide or as a definition/intro picture.
+- **G2 enforces it:**
+  - A figure the planner picked but whose shape doesn't suit the slide type keeps its slide: the slide switches to a sibling image type that takes that shape (labeled diagram ↔ image + points ↔ definition ↔ mechanism, `IMAGE_TYPE_SWITCHED`). Clearing it instead would let autofill put the wrong figure there.
+  - Image slots the planner left empty are filled with the unused figure whose description best matches the slide (`IMAGE_AUTOFILLED`).
+  - Required-image slides still without one fall back to an image-free type.
+  - A plan that shows none of the available figures fails (`IMAGES_UNUSED`) and goes back for repair.
+- **Slot shapes.** Panels that letterbox (definition, image + points, mechanism, derivation, intro) accept 1:1, 3:4, 4:3 and 3:2. The full-width diagram accepts any landscape or square figure up to 3:1.
+- **Figures fill their panel** (scaled up with `object-fit: contain`, never cropped). NCERT figures are often about 500 px and would otherwise sit small in a large panel.
+- **Low-res and caching.** Half the figures are under 500 px and are marked low-res in the catalog. Sizes are measured once and cached in `jobs/.cache/image-sizes.json`.
+- **Practice MCQs.** If a plan has too few MCQs and the budget has room, G2 appends them (`MCQ_ADDED`) instead of re-asking the model.
 
 ## Input — `chapter.json` (chapter mode: raw chapter text → 5 planned lectures)
 

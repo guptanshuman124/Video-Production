@@ -16,7 +16,7 @@ export const meta = {
   slide: {
     type: 'derivation', name: 'Derivation',
     use: 'an NCERT derivation in 2–4 steps, each a short line plus one equation, building to a stated goal equation',
-    image: 'optional', ratios: ['1:1', '4:3', '3:4'],
+    image: 'optional', ratios: ['1:1', '4:3', '3:4', '3:2'],
     fields: {
       goal: { required: true, note: 'the final result being derived, LaTeX without $…$, e.g. "v^2 = u^2 + 2as"' },
       steps: { required: true, items: [2, 4], fields: {

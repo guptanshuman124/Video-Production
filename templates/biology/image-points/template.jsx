@@ -15,7 +15,7 @@ export const meta = {
   slide: {
     type: 'image_points', name: 'Image + points',
     use: 'a figure or graph with 2–5 observations beside it (optional genuine formula per point)',
-    image: 'required', ratios: ['3:4', '1:1'],
+    image: 'required', ratios: ['1:1', '3:4', '4:3', '3:2'],
     fields: {
       points: { required: true, items: [2, 5], fields: { text: { required: true, words: 16 }, formula: { note: 'LaTeX, only for a genuine equation' } } },
       caption: { words: 10 },

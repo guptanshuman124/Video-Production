@@ -3,7 +3,6 @@ import path from 'node:path';
 import { buildTemplates, validate, lookup } from './templates.js';
 
 const DEFAULTS = { width: 1920, height: 1080, scale: 1, fps: 25 };
-const LAYOUTS = new Set(['title', 'bullets', 'stat', 'doc']);
 
 export async function loadProject(file) {
   const abs = path.resolve(file);
@@ -49,8 +48,8 @@ export async function normalizeProject(project, dir, label = 'project') {
         for (const msg of [t.check(r.value) || []].flat()) errors.push(`${where}: ${msg}`);
       }
       s.data = r.value;
-    } else if (!LAYOUTS.has(s.layout)) {
-      errors.push(`scene ${i}: needs "template" or a known "layout" (got "${s.layout}")`);
+    } else {
+      errors.push(`scene ${i}: needs a "template"`);
       return;
     }
     if (!(s.duration > 0)) errors.push(`scene ${i}: duration must be > 0`);

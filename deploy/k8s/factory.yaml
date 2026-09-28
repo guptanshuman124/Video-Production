@@ -1,0 +1,160 @@
+# Lecture factory on Kubernetes (namespace lecture-factory). Applied by
+# `npm run factory -- up`, which also creates the `factory-secrets` Secret and
+# the `factory-config` ConfigMap from .env.
+#
+#   factory-db   MySQL 8: `tutorai` (copy of the Prepzy source tables) + `factory` (queue, jobs, videos)
+#   central      backend + scheduler + dashboard on one port (NodePort 30080 → http://localhost:8080)
+#                writes finished videos to /library = the videos folder on this PC
+#   worker ×4    one lecture at a time each: generation + validation, voice, render, QA;
+#                job folders on the shared `factory-work` volume, deleted once the central has stored the video
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lecture-factory
+---
+# ---------------------------------------------------------------- database
+apiVersion: v1
+kind: Service
+metadata: { name: factory-db, namespace: lecture-factory }
+spec:
+  selector: { app: factory-db }
+  ports: [{ port: 3306, targetPort: 3306 }]
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: factory-db, namespace: lecture-factory }
+spec:
+  serviceName: factory-db
+  replicas: 1
+  selector: { matchLabels: { app: factory-db } }
+  template:
+    metadata: { labels: { app: factory-db } }
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          args: ["--innodb-buffer-pool-size=384M", "--max-allowed-packet=256M", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci", "--skip-log-bin"]
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: factory-secrets, key: MYSQL_ROOT_PASSWORD } }
+          ports: [{ containerPort: 3306 }]
+          readinessProbe:
+            exec: { command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"] }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { memory: 1Gi }
+          volumeMounts: [{ name: data, mountPath: /var/lib/mysql }]
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: { requests: { storage: 10Gi } }
+---
+# ---------------------------------------------------------------- central
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: central, namespace: lecture-factory }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: scale-workers, namespace: lecture-factory }
+rules:
+  - apiGroups: [apps]
+    resources: [deployments, deployments/scale]
+    resourceNames: [worker]
+    verbs: [get, patch, update]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: central-scale-workers, namespace: lecture-factory }
+subjects: [{ kind: ServiceAccount, name: central, namespace: lecture-factory }]
+roleRef: { kind: Role, name: scale-workers, apiGroup: rbac.authorization.k8s.io }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: central, namespace: lecture-factory }
+spec:
+  type: NodePort
+  selector: { app: central }
+  ports: [{ port: 8080, targetPort: 8080, nodePort: 30080 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: central, namespace: lecture-factory }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: central } }
+  template:
+    metadata: { labels: { app: central } }
+    spec:
+      serviceAccountName: central
+      containers:
+        - name: central
+          image: lecture-factory:latest
+          imagePullPolicy: Never
+          args: ["central"]
+          envFrom:
+            - secretRef: { name: factory-secrets }
+            - configMapRef: { name: factory-config }
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: LIBRARY_DIR, value: /library }
+          ports: [{ containerPort: 8080 }]
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 60
+          resources:
+            requests: { cpu: 200m, memory: 256Mi }
+            limits: { memory: 1Gi }
+          volumeMounts: [{ name: library, mountPath: /library }]
+      volumes:
+        - name: library
+          hostPath: { path: /library, type: DirectoryOrCreate }   # the kind node's mount of the videos folder on this PC
+---
+# ---------------------------------------------------------------- workers
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: factory-work, namespace: lecture-factory }
+spec:
+  accessModes: [ReadWriteOnce]      # one node: every worker pod mounts it
+  resources: { requests: { storage: 60Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: worker, namespace: lecture-factory }
+spec:
+  replicas: 4
+  selector: { matchLabels: { app: worker } }
+  template:
+    metadata: { labels: { app: worker } }
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: worker
+          image: lecture-factory:latest
+          imagePullPolicy: Never
+          args: ["worker"]
+          envFrom:
+            - secretRef: { name: factory-secrets }
+            - configMapRef: { name: factory-config }
+          env:
+            - { name: CENTRAL_URL, value: "http://central:8080" }
+            - { name: WORK_DIR, value: /work }
+            - { name: WORKER_RENDER_JOBS, value: "2" }       # Chromium capture workers per lecture
+            - { name: WORKER_TTS_CONCURRENCY, value: "2" }   # Sarvam requests at once per worker
+          resources:
+            requests: { cpu: 500m, memory: 768Mi }
+            limits: { memory: 2560Mi }
+          volumeMounts:
+            - { name: work, mountPath: /work }
+            - { name: shm, mountPath: /dev/shm }
+      volumes:
+        - name: work
+          persistentVolumeClaim: { claimName: factory-work }
+        - name: shm
+          emptyDir: { medium: Memory, sizeLimit: 512Mi }

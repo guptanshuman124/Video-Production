@@ -1,45 +1,59 @@
-# html-video-renderer
+# Lecture Factory
 
-**CBSE lecture pipeline.** `hvr run chapter.json` turns one NCERT chapter into five validated Hinglish lecture videos. The steps are LLM plans → slides → narration → Hinglish → TTS → timed render → QA, and a code check follows every step. See **[docs/PIPELINE.md](docs/PIPELINE.md)**. Everything below documents the render engine it is built on.
+Produces the CBSE lecture videos (Classes 6–12, English slides, Hinglish voice-over, 1080p25), class by class, on a local Kubernetes cluster.
 
-Render animated HTML layouts to video. Chromium draws the frames, ffmpeg encodes them.
-
-Slides are **static compositions** — the only motion is per-element entrance animation and the
-slide-to-slide transition. The renderer knows this and only screenshots the moments where pixels
-actually change; the rest of the timeline is the previous frame re-piped to ffmpeg.
-
-```bash
-npm run render                 # projects/lesson.json -> out/final.mp4 (1080p)
-node src/cli.js render projects/lesson.json --draft    # fast, for iterating
-node src/cli.js preview projects/lesson.json           # headed browser + scrub bar
-node src/cli.js probe projects/lesson.json             # print the timeline
+```
+                     ┌──────────────── Kubernetes (kind, inside Docker Desktop) ────────────────┐
+ prepzy-mysql ─copy─▶│ factory-db (MySQL)  tutorai = source copy · factory = queue/jobs/videos  │
+ (this PC)           │      ▲                                                                   │
+ browser ──:8080────▶│ central   backend + scheduler + dashboard on one port                    │
+                     │   │  ▲    final validation → Videos\Prepzy Lectures\Class …\Lecture N.mp4 │
+                     │   ▼  │                                                                   │
+                     │ worker ×4  generation + validation → voice → render → QA → upload        │
+                     │            → working files deleted once the video is stored              │
+                     └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Server lectures → video.** `hvr lecture` turns the Prepzy server's lecture JSON into ready-to-render projects:
-
-- **Language:** it picks each slide's narration in the chosen language (`--lang`, default `hinglish`) and downloads the audio and images.
-- **Timing:** it times every block's trigger phrase against that narration and maps each slide to a biology template.
-- **Audio:** it writes one narration track aligned to the scenes.
+## Run it
 
 ```bash
-node src/cli.js lecture projects/lectures.json --lecture-name "Cell: The Unit of Life"
-node src/cli.js render projects/lectures/lecture-4971.json --out out/lecture-4971.mp4 --jobs 6
+npm run factory -- up        # first time: creates the cluster, builds the image, deploys (Docker Desktop must be running)
 ```
 
-- **Pace:** `pace` is Sarvam Bulbul's speed multiplier: 1.0 is normal speed and 0.9 is 10% slower. At 0.9, Hinglish narration runs about 176 words/min including pauses.
-- **Word timing:** a words-per-minute model weighted by word length, numbers and punctuation pauses, calibrated to each clip's real length. Against whisper word timestamps it's about 0.4s off at the median.
-- **Trigger matching:** trigger phrases are paraphrases, so they're matched fuzzily.
-- **Slide types:** `definition` maps to `bio-02`, `mcq` to `bio-12` (trap option red when it's named, answer green when it's confirmed), and `common_misconception` to `bio-14`.
-- **Review file:** each generated project gets a `.cues.txt` listing what matched where.
+Then open **http://localhost:8080**.
 
-**Slide templates.** Besides the built-in layouts, scenes can use registry templates:
-reusable 1920×1080 slides written in JSX with their own schema and animations, filled from JSON
-(`{ "template": "<id>", "data": {…} }`). See [templates/README.md](templates/README.md).
+1. Open a class and press **Start**. Its lectures are queued in course order (subject → chapter → lecture), and the 4 workers make 4 lectures at a time.
+2. Follow each worker live: stage, progress, gate results. Pause or resume a class queue, press **Run next** on a lecture, stop or remove one.
+3. Lectures that fail a validation gate (after automatic repair) land in **Needs attention**. Retry them from the failed stage, from a stage you choose, or from scratch.
+4. Finished videos pass a final check in the central (ffprobe, 1080p, audio, duration versus the worker's QA). They're saved to `C:\Users\<you>\Videos\Prepzy Lectures\Class 10\Science\Chapter 1 - …\Lecture 3 - ….mp4` and recorded in the `videos` table, and play in the **Library**. The worker then deletes that lecture's images, audio and frames.
 
 ```bash
-node src/cli.js templates                 # list registered templates
-node src/cli.js template <id> --snap      # render a template's example data to PNG
+npm run factory -- deploy    # after code or template changes: rebuild the image, restart central + workers
+npm run factory -- status    # pods + URLs
+npm run factory -- logs central     # or: logs worker, logs db
+npm run factory -- down      # delete the cluster (videos stay on disk)
 ```
+
+- **Secrets** come from `.env`: `OPENAI_API_KEY`, `SARVAM_API_KEY` and `TEXTBOOK_DB_URL`, which is the prepzy-mysql URL on this PC. The cluster reaches it through `host.docker.internal`.
+- **Source data:** on first start the central copies the tutorai tables from prepzy-mysql into the cluster database (about 7 s). Copy them again from **Source & settings** after the course tables change.
+- **Scale:** change **Parallel lectures** on the Workers page (or `replicas` in `deploy/k8s/factory.yaml`). Each worker renders with 2 Chromium workers and sends 2 Sarvam requests at a time. Docker Desktop gives Kubernetes 8 GB by default, which fits about 4 parallel lectures.
+- **Library folder:** `FACTORY_LIBRARY` overrides it when the cluster is created. A subject with more than one book (Physics Part I / II) gets a book folder between subject and chapter.
+- **Templates:** today Science (Classes 6–10), Physics, Chemistry and Biology (1,031 lectures) can be produced. Other subjects are listed on the dashboard and become available when their template pack is installed (`templates/<pack>/`).
+
+Code layout: `src/factory/` (central, worker, job runner, catalog, source sync, DB), `web/` (dashboard, React + Vite), `deploy/` (Kubernetes manifests + setup script). The generation pipeline is documented in **[docs/PIPELINE.md](docs/PIPELINE.md)**.
+
+## Pipeline and renderer (CLI)
+
+The same pipeline runs outside Kubernetes for development:
+
+```bash
+node src/cli.js lectures --source db --course 29 --lecture 379      # one lecture → jobs/c29/m83/l379/lecture.mp4
+node src/cli.js templates                                           # list registered templates
+node src/cli.js template <id> --snap                                # render a template's example data to PNG
+npm run web:dev                                                     # dashboard with hot reload (API proxied to :8080)
+```
+
+Slides are reusable 1920×1080 templates written in JSX, each with its own schema and animations, and filled from JSON (`{ "template": "<id>", "data": {…} }`). See [templates/README.md](templates/README.md). Chromium draws the frames and ffmpeg encodes them. Slides are static compositions whose only motion is element entrances and slide transitions, so the renderer only screenshots the moments where pixels change.
 
 ## How it works
 
@@ -64,7 +78,7 @@ scene 1 enter   hold        transition   scene 2 enter   hold
  capture      freeze        capture      capture    freeze
 ```
 
-For `projects/lesson.json` that is 19.1s of motion in a 35.5s video — 46% of frames are held rather
+For a typical short project that is 19.1s of motion in a 35.5s video — 46% of frames are held rather
 than shot.
 
 **Authoring and rendering at 1080p.** The viewport is 1920×1080 CSS px at `deviceScaleFactor: 1`.
@@ -145,7 +159,7 @@ contains. Measured on this machine (8-core M-series, 8 GB):
 Flat slides rasterise ~5x faster. Gradients, blurs, masks and `background-clip: text` are what make a
 frame expensive — avoid them in bulk-rendered decks and the renderer gets dramatically cheaper.
 
-Three independent optimisations stack. Rendering `projects/flat.json` (11.1s, 333 frames, 4K):
+Three independent optimisations stack. Rendering a flat 11.1 s test project (11.1s, 333 frames, 4K):
 
 | configuration | time | per frame |
 |---|---|---|
