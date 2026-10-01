@@ -12,7 +12,7 @@
 }
 .chapter {
   margin: 0; max-width: 1500px;
-  font: 700 96px/1.12 var(--font-display); color: var(--brand-ink); letter-spacing: -.01em;
+  font: 700 96px/1.12 var(--font-display); color: var(--brand-title); letter-spacing: -.01em;
   text-wrap: balance;
 }
 .bar { width: 132px; height: 8px; border-radius: 4px; background: var(--brand-orange); margin: 46px 0 40px; }

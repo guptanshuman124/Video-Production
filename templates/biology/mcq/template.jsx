@@ -34,6 +34,7 @@ export const meta = {
       { field: 'description', cue: 'cues.description', hint: 'the explanation box appears — place it where you explain why the answer is right' },
     ],
     question: true,
+    noHighlight: true,   // the answer reveal is the highlight: no *term* emphasis on question slides
     rules: ['mcq'],
     narrationWords: [200, 280],
   },

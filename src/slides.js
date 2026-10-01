@@ -63,7 +63,7 @@ export function slideTypes(build) {
 function normSpec(s) {
   return {
     name: s.type, use: '', image: 'none', ratios: [], fields: {}, reveal: [], derive: [],
-    narrationWords: [200, 320], question: false, defaults: {}, rules: [], ...s,
+    narrationWords: [200, 320], question: false, noHighlight: false, defaults: {}, rules: [], ...s,
   };
 }
 
@@ -236,6 +236,13 @@ export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['for
       const bare = s.replace(/(?<!\\)\$/g, '').trim();
       if (bare !== s) issues.push({ code: 'LATEX_UNWRAPPED', severity: 'warning', path: p, message: `${p}: $ delimiters removed from a maths field`, autoFixed: true });
       return bare;
+    }
+    // Question slides (spec.noHighlight): drop *term* emphasis outside $…$ — the
+    // revealed answer is the only highlight there.
+    if (st.spec.noHighlight && /\*/.test(s)) {
+      const unmark = (t) => t.replace(/\*\*([^*\n]+?)\*\*/g, '$1').replace(/(?<!\*)\*(?!\*)([^*\n]+?)(?<!\*)\*(?!\*)/g, '$1');
+      const plain = s.split(/(\$[^$]*\$)/).map((part, k) => (k % 2 ? part : unmark(part))).join('');
+      if (plain !== s) { issues.push({ code: 'HIGHLIGHT_REMOVED', severity: 'warning', path: p, message: `${p}: highlight removed (none on question slides)`, autoFixed: true }); s = plain; }
     }
     const r = wrapBareMath(s);
     if (r.changed) issues.push({ code: 'LATEX_WRAPPED', severity: 'warning', path: p, message: `${p}: maths put inside $…$: "${r.text.slice(0, 80)}"`, autoFixed: true });

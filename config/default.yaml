@@ -55,10 +55,17 @@ llm:
     gpt-5-mini:   { input: 0.25, cached_input: 0.025, output: 2.00 }
 
 tts:
-  provider: sarvam             # sarvam | google | elevenlabs
+  # Voice: Google Gemini-TTS (gemini-2.5-pro-tts), voice Aoede, steered by a teacher-style prompt
+  # (2026-10-01). Chosen over Chirp 3 HD Aoede/Schedar/Sulafat because it sounds like a teacher, not a
+  # reader: in a side-by-side test on a real Hinglish lesson it scored highest overall, kept English
+  # terms clear (13/14 in an automatic transcript) and paused most naturally from the prompt alone.
+  # hi-IN reads the mixed Devanagari + English script; English words come out in Indian English.
+  # Price ≈ Chirp: $20 per 1M audio tokens (25/s) → ≈ ₹45–50 for a 20-minute lecture.
+  # Samples: Videos/Prepzy Lectures/Voice samples/. Chirp 3 HD: drop `model`, voice hi-IN-Chirp3-HD-<name>.
+  provider: google             # google | sarvam | elevenlabs
   strategy: auto               # auto | segments | marks  (auto: marks when the provider returns them)
   gap_ms: 200                  # silence between marker segments
-  concurrency: 4               # parallel TTS requests; Sarvam rate-limits bursts (HTTP 429)
+  concurrency: 6               # parallel TTS requests per lecture; Gemini-TTS is ~15–20 s a request, quota 125/min (429s are retried)
   retries: 6                   # transient failures retried with backoff (honours Retry-After)
   cache: true
   loudness_lufs: -16
@@ -70,8 +77,24 @@ tts:
     language: hi-IN
     max_chars: 2400            # API limit is 2,500 characters per request
   google:
-    voice: null
-    speaking_rate: 1.0
+    model: gemini-2.5-pro-tts  # Gemini-TTS; omit for Chirp 3 HD / Neural2 voices
+    voice: Aoede               # female; Gemini voices use the bare name (Chirp: hi-IN-Chirp3-HD-Aoede)
+    language: hi-IN            # Hindi voice that also speaks the English terms (no separate "Hinglish" locale exists)
+    prompt: >-
+      Read this as a warm, lively Indian school teacher explaining a science lesson to a class
+      of students in Hinglish. Sound engaging and encouraging, as if you are talking to the class:
+      stress the key ideas and technical terms, vary your intonation naturally, and take short
+      natural pauses between ideas. Pronounce the English words clearly with a neutral Indian
+      English accent. Keep a moderate, steady pace.
+    speaking_rate: 1.03        # 1.15 felt a bit fast in a real lecture; the user asked for 10% slower (2026-10-01)
+    sample_rate: 24000
+    # Breathing room (2026-10-01, measured against Sarvam on the same passage): plain Chirp leaves
+    # ~0.07 s at commas, so it runs on; [pause short] (~0.3 s) at commas, dashes and sentence ends
+    # gives Sarvam's rhythm (21 vs 22 mid-length pauses). none | short | medium (~1.2 s) | long
+    # With Gemini the prompt gives natural pauses on its own (most mid-length pauses in the test);
+    # inline tags are optional. For Chirp 3 HD use short at all three (it otherwise runs on).
+    pauses: { comma: none, dash: none, sentence: none }
+    gap_ms: 450                # silence where a slide reveals its next point (default 200)
   elevenlabs:
     voice_id: null
     model: null
@@ -80,7 +103,12 @@ tts:
 # converted at usd_inr; the voice is priced from the characters actually sent to the TTS engine.
 costs:
   usd_inr: 96.1                # update when the rate moves (2026-09-30)
-  tts_inr_per_10k_chars: 30    # Sarvam bulbul:v3 list price
+  gemini_tts:                  # Gemini-TTS: USD per 1M tokens (text in, audio out; 25 audio tokens per second)
+    gemini-2.5-pro-tts: { text: 1.00, audio: 20.00 }
+    gemini-2.5-flash-tts: { text: 0.50, audio: 10.00 }
+  tts_inr_per_10k_chars:       # list prices, per voice engine (character-billed voices)
+    google: 28.83              # Chirp 3 HD: $30 per 1M characters at usd_inr
+    sarvam: 30                 # bulbul:v3
 
 # Pictures for 'illustration' slides (real-life scenes; never diagrams — those stay NCERT figures).
 # Drawn by the image model in one house style, then checked by a vision model (llm.models.review):
@@ -98,8 +126,8 @@ art:
 images:
   enhance:                     # NCERT figures: Lanczos resample + light sharpening (never redrawn)
     enabled: true
-    min_side: 1100             # figures whose long side is already this big are left as they are
-    target: 1500               # long side after resampling
+    min_side: 1400             # figures whose long side is already this big are left as they are
+    target: 1800               # long side after resampling (wide figures span up to 1,752 px on the slide)
     max_scale: 3
 
 timing:                         # ms, shared by the audio track and slide cues

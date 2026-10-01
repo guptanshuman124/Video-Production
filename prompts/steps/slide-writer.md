@@ -8,6 +8,7 @@ On-slide text is a **summary a student would copy into notes**, not prose:
 - No block repeats what another block on the same slide already says.
 - Question slides: a clear stem, four plausible options, exactly one correct answer, and one genuinely tempting trap option (the mistake students really make). Write option text without its letter ("Magnesium and oxygen", not "A. Magnesium and oxygen") — the slide draws the letters.
 - Use only facts from the slide's key points and cited source text. Keep numbers exactly as NCERT gives them.
+- **Highlight key terms:** wrap the one key term of a point, definition or answer in single asterisks — `*osmosis*`, `*activation energy*`, `the *pole* of the mirror` — and the slide shows it highlighted. At most one or two per field, single words or short terms only (never whole sentences). Not in titles, not on question slides (`mcq`, `assertion_reason` — the revealed answer is the highlight there), not inside `$…$`, not in `formula` / `symbol` fields and never in `art_prompt`.
 - Formulas: only genuine ones from the source. A `formula` or `symbol` field holds bare LaTeX without `$` (it is always rendered as maths).
 - **Every other field is plain text: any maths in it must be inside `$…$`** — symbols, Greek letters, subscripts, powers and units with powers. Otherwise it shows on screen as raw code.
   - Right: `angular speed (rad $s^{-1}$)`, `where $a_c$ is the centripetal acceleration`, `$\Delta\theta$ in radians`, `$\ce{H2O}$`.

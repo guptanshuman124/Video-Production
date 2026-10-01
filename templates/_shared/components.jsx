@@ -77,13 +77,14 @@ export const cueList = (what) => ({
   description: `narration sync: seconds on the video timeline when each ${what} appears; omit for auto stagger`,
 });
 
-// Answer-state keyframes for option rows (PDF page 16). Literal colours
-// because WAAPI keyframes are resolved before custom properties would be.
+// Answer-state keyframes for option rows. Literal colours because WAAPI
+// keyframes are resolved before custom properties would be; they match the
+// --mcq-* and --brand-surface-alt tokens in global.css.
 export const MCQ = {
-  correct: { bg: '#e8f4ef', border: '#1f7a5a' },
-  wrong: { bg: '#fbecea', border: '#c0392b' },
+  correct: { bg: '#def2e8', border: '#1f8a6a' },
+  wrong: { bg: '#fbe5e1', border: '#c8553d' },
 };
-export const stateAnim = (state, base = '#f6f7f9') => ({
+export const stateAnim = (state, base = '#f6f9fc') => ({
   dur: 450, ease: 'outSoft',
   kf: [{ backgroundColor: base, borderColor: 'rgba(0,0,0,0)' },
        { backgroundColor: MCQ[state].bg, borderColor: MCQ[state].border }],

@@ -11,7 +11,7 @@
   &.alt { background: var(--brand-surface-alt); }
   &.thead { background: var(--brand-surface-head); }
 }
-.th { font: 600 32px/1.2 var(--font-body); color: var(--brand-ink); }
+.th { font: 600 32px/1.2 var(--font-body); color: var(--brand-title); }
 .td { font: 400 24px/1.35 var(--font-body); color: var(--brand-body); padding-right: 32px; }
 .td.label { font: 700 32px/1.2 var(--font-body); color: var(--brand-navy); }
 .caps .th, .caps .td.label { text-transform: uppercase; }

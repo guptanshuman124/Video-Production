@@ -45,6 +45,7 @@
       "max": 2
     },
     "illustration": {
+      "min": 1,
       "max": 2
     },
     "process_flow": {

@@ -54,7 +54,7 @@ function kindBin() {
 }
 
 // Copied from .env into the cluster Secret (OneDrive ones are optional: without them videos stay local).
-const SECRET_KEYS = ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'MS_TENANT_ID', 'MS_CLIENT_ID', 'MS_CLIENT_SECRET', 'SHAREPOINT_SITE_URL', 'SHAREPOINT_ROOT', 'LIBRARY_KEEP_LOCAL'];
+const SECRET_KEYS = ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'GOOGLE_TTS_CREDENTIALS_B64', 'MS_TENANT_ID', 'MS_CLIENT_ID', 'MS_CLIENT_SECRET', 'SHAREPOINT_SITE_URL', 'SHAREPOINT_ROOT', 'LIBRARY_KEEP_LOCAL'];
 
 function readEnv() {
   const f = path.join(ROOT, '.env');

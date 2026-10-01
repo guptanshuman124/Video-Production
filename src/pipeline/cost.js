@@ -17,9 +17,11 @@ const GROUPS = [
 
 const round = (x, d = 2) => Math.round(x * 10 ** d) / 10 ** d;
 
-export function costRates(cfg) {
+// tts_inr_per_10k_chars may be one number or a map per engine ({ google, sarvam }).
+export function costRates(cfg, provider = cfg.tts?.provider) {
   const c = cfg.costs || {};
-  return { usd_inr: c.usd_inr ?? 96, tts_inr_per_10k_chars: c.tts_inr_per_10k_chars ?? 30 };
+  const t = c.tts_inr_per_10k_chars ?? 30;
+  return { usd_inr: c.usd_inr ?? 96, tts_inr_per_10k_chars: typeof t === 'object' ? (t[provider] ?? 30) : t };
 }
 
 // -> { total_inr, openai_usd, openai_inr, voice_inr, rates, items: [...] } or null (no log)
@@ -30,7 +32,8 @@ export function costBreakdown(logFile, cfg) {
     if (!line.trim()) continue;
     try { rows.push(JSON.parse(line)); } catch { /* a partial last line */ }
   }
-  const rates = costRates(cfg);
+  const ttsRow = rows.find((r) => r.task === 'tts');
+  const rates = costRates(cfg, ttsRow?.provider);
   const items = [];
   for (const g of GROUPS) {
     const mine = rows.filter((r) => g.tasks.includes(r.task) && !r.cached && r.usage);
@@ -54,10 +57,26 @@ export function costBreakdown(logFile, cfg) {
   const tts = rows.filter((r) => r.task === 'tts');
   if (tts.length) {
     const chars = tts.reduce((a, r) => a + (r.chars || 0), 0);
+    const requests = tts.reduce((a, r) => a + (r.requests || 0), 0);
+    const seconds = tts.reduce((a, r) => a + (r.seconds || 0), 0);
+    const engine = tts.find((r) => r.engine)?.engine || null;
+    const tok = engine && cfg.costs?.gemini_tts?.[engine];
+    let inr, note;
+    if (tok) {
+      // Gemini-TTS bills tokens: 25 audio tokens per second of speech, plus the
+      // text and the style prompt sent with every request (~3 characters a token).
+      const audioTokens = seconds * 25;
+      const textTokens = (chars + tts.reduce((a, r) => a + (r.requests || 0) * (r.prompt_chars || 0), 0)) / 3;
+      const usd = (audioTokens * tok.audio + textTokens * tok.text) / 1e6;
+      inr = round(usd * rates.usd_inr);
+      note = `${Math.round(seconds / 6) / 10} min of speech · ${requests} requests · ≈ USD ${usd.toFixed(3)}`;
+    } else {
+      inr = round((chars / 10000) * rates.tts_inr_per_10k_chars);
+    }
     items.push({
-      key: 'voice', label: `Voice (${tts[0].provider || 'tts'})`, calls: tts.reduce((a, r) => a + (r.requests || 0), 0),
+      key: 'voice', label: `Voice (${tts[0].provider || 'tts'})`, calls: requests,
       models: [...new Set(tts.map((r) => r.model).filter(Boolean))], chars,
-      usd: null, inr: round((chars / 10000) * rates.tts_inr_per_10k_chars),
+      usd: null, inr, ...(note ? { note } : {}),
     });
   }
   const openaiUsd = items.filter((i) => i.usd != null).reduce((a, i) => a + i.usd, 0);

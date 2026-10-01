@@ -89,7 +89,10 @@ export function createVoice(cfg, { cacheDir = null, provider = null, usage = nul
     }
     return limit(() => retry(make, cfg.tts.retries ?? 3)).then((out) => {
       if (f) fs.writeFileSync(f, kind === 'marked' ? JSON.stringify({ wav: out.wav.toString('base64'), marks: out.marks }) : out);
-      if (usage) { usage.requests++; usage.chars += text.length; }
+      if (usage) {
+        usage.requests++; usage.chars += text.length;
+        try { usage.seconds += wavDuration(kind === 'marked' ? out.wav : out); } catch { /* not a WAV */ }
+      }
       return out;
     });
   };
@@ -109,7 +112,8 @@ export function createVoice(cfg, { cacheDir = null, provider = null, usage = nul
     const spoken = segs.map((s) => ({ ...s, spoken: speakable(s.text) }));
     const audio = await Promise.all(spoken.map((s) => (s.spoken ? plain(s.spoken) : null)));
     const present = spoken.map((s, i) => ({ s, wav: audio[i] })).filter((x) => x.wav);
-    const joined = join(present.map((x) => x.wav), cfg.tts.gap_ms ?? 200);
+    // A provider may want a longer silence between marker pieces (tts.<provider>.gap_ms).
+    const joined = join(present.map((x) => x.wav), cfg.tts[tts.name]?.gap_ms ?? cfg.tts.gap_ms ?? 200);
     const markers = {};
     let k = 0;
     spoken.forEach((s, i) => {
@@ -155,7 +159,7 @@ export function createVoice(cfg, { cacheDir = null, provider = null, usage = nul
 // logFile: the lecture's call log (llm.jsonl) — one 'tts' row with the
 // characters actually sent, so the per-video cost can price the voice.
 export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, provider = null, onSlide, logFile = null } = {}) {
-  const usage = { requests: 0, chars: 0 };
+  const usage = { requests: 0, chars: 0, seconds: 0 };
   const voice = createVoice(cfg, { cacheDir, provider, usage });
   const outDir = path.join(dir, 'voice');
   fs.mkdirSync(outDir, { recursive: true });
@@ -171,9 +175,11 @@ export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, pr
     };
   }));
   if (logFile) {
-    const model = cfg.tts[voice.provider]?.model || null;
+    const p = cfg.tts[voice.provider] || {};
+    const model = [p.model, p.voice || p.speaker].filter(Boolean).join(' · ') || null;
     fs.mkdirSync(path.dirname(logFile), { recursive: true });
-    fs.appendFileSync(logFile, `${JSON.stringify({ at: new Date().toISOString(), provider: voice.provider, task: 'tts', model, requests: usage.requests, chars: usage.chars })}
+    fs.appendFileSync(logFile, `${JSON.stringify({ at: new Date().toISOString(), provider: voice.provider, task: 'tts', model, engine: p.model || null,
+      requests: usage.requests, chars: usage.chars, seconds: Math.round(usage.seconds * 10) / 10, prompt_chars: p.prompt ? p.prompt.length : 0 })}
 `);
   }
   return { provider: voice.provider, slides, usage };

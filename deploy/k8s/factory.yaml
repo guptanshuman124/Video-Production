@@ -148,7 +148,9 @@ spec:
             - { name: CENTRAL_URL, value: "http://central:8080" }
             - { name: WORK_DIR, value: /work }
             - { name: WORKER_RENDER_JOBS, value: "2" }       # Chromium capture workers per lecture
-            - { name: WORKER_TTS_CONCURRENCY, value: "2" }   # Sarvam requests at once per worker
+            # Voice requests at once per worker. Gemini-TTS takes ~15–20 s per piece, so 2 at a time made
+            # the voice step ~7 min; 6 → ~2–3 min. 2 workers × 6 ≈ 45 requests/min, under the 125/min quota.
+            - { name: WORKER_TTS_CONCURRENCY, value: "6" }
           resources:
             requests: { cpu: 500m, memory: 768Mi }
             limits: { memory: 2560Mi }

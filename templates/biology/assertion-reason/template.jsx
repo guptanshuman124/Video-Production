@@ -29,6 +29,7 @@ export const meta = {
       { field: 'explanation', cue: 'cues.explanation', hint: 'the explanation card appears' },
     ],
     question: true,
+    noHighlight: true,   // the answer reveal is the highlight: no *term* emphasis on question slides
     rules: ['assertion'],
     narrationWords: [240, 320],
   },

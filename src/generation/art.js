@@ -22,7 +22,7 @@ import OpenAI from 'openai';
 import { sha } from '../llm/index.js';
 import { FFMPEG } from '../tools.js';
 
-export const STYLE = 'Clean, soft semi-realistic educational illustration in a calm palette (warm off-white, sage green, soft blue, gentle amber), natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.';
+export const STYLE = 'Clean, soft semi-realistic educational illustration in a soft, fresh palette that sits on light sky-blue and sage slides (soft sky blue, sage teal, warm amber accents, clean whites), gently saturated, never neon or dark, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.';
 
 const VERDICT = {
   type: 'object', additionalProperties: false,
@@ -91,7 +91,8 @@ export async function illustrate(items, cfg, { cacheDir, logFile = null, subject
     let note = '';
     let problems = '';
     for (let attempt = 1; attempt <= A.attempts; attempt++) {
-      const prompt = `${it.prompt}. ${STYLE}${note ? ` Avoid: ${note}` : ''}`;
+      // Highlight asterisks (*term*) mean nothing to the image model.
+      const prompt = `${it.prompt.replace(/\*/g, '')}. ${STYLE}${note ? ` Avoid: ${note}` : ''}`;
       let b64;
       try {
         const t0 = Date.now();

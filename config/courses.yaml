@@ -89,6 +89,10 @@ courses:
     streams:
       - class-10
     enabled: true
+    lectures:                  # corrected lecture names (the course table has typos)
+      "402": Transportation in Human Beings
+      "403": Excretion
+      "433": Magnetic Field Due to a Current-Carrying Conductor
     modules:
       "83":
         pack: chemistry

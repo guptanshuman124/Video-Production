@@ -60,7 +60,7 @@ function lecturePlan({ lecture, lectures, sections, images, types, budget }) {
   // Closing slides the pack has (theory / maths have practice_problem instead of descriptive_answer).
   const answer = has('descriptive_answer') ? 'descriptive_answer' : 'practice_problem';
   const tail = (last ? ['quick_revision', 'mcq', answer, 'mcq'] : ['quick_revision', 'mcq']).filter(has);
-  const body = ['concept_intro', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
+  const body = ['concept_intro', 'illustration', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
                 'labeled_diagram', 'cause_effect', 'descriptive_answer', 'comparison', 'person', 'definition', 'misconception', 'try_this',
                 'characteristics', 'assertion_reason', 'source_extract', 'definition', 'image_points', 'practice_problem', 'solved_example',
                 'process_flow', 'illustration'];

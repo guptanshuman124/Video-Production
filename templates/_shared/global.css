@@ -22,6 +22,25 @@
 @font-face { font-family: 'Poppins'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-500-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Poppins'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Poppins'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/poppins-latin-700-normal.woff2') format('woff2'); }
+/* Product type (2026-10-01): Baloo 2 headings (Ek Type, rounded and friendly, with
+   matching Devanagari) and Nunito body text (rounded, very readable). Inter /
+   Poppins / Arimo stay loaded as fallbacks (Greek letters, rare symbols). */
+@font-face { font-family: 'Baloo 2'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/baloo-2-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Baloo 2'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/baloo-2-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Baloo 2'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/baloo-2-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Baloo 2'; font-weight: 800; font-style: normal; font-display: block; src: url('./fonts/baloo-2-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Baloo 2'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/baloo-2-devanagari-500-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: 'Baloo 2'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/baloo-2-devanagari-600-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: 'Baloo 2'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/baloo-2-devanagari-700-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: 'Baloo 2'; font-weight: 800; font-style: normal; font-display: block; src: url('./fonts/baloo-2-devanagari-800-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: 'Nunito'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 500; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 800; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-ext-400-normal.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Nunito'; font-weight: 600; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-ext-600-normal.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Nunito'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/nunito-latin-ext-700-normal.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 /* Devanagari (Hindi-subject slides). Second in every stack below, so Latin
    text keeps Inter/Poppins/Arimo and Devanagari glyphs fall through to Noto. */
 @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 400; font-style: normal; font-display: block; src: url('./fonts/noto-sans-devanagari-devanagari-400-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
@@ -30,46 +49,52 @@
 @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/noto-sans-devanagari-devanagari-700-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
 
 .scene:where(.tpl) {
-  /* ---- colour: "calm study" palette ----
-     Low-glare, warm-tinted backgrounds and deep slate ink instead of pure
-     black on grey, so a 20-minute lecture is easy on the eyes. One family:
-     every slide background is a soft tint of the same paper / sage / mist
-     range; cards are white on top of it. Names are kept from the original
-     Prepzy PDF tokens so every template picks the new values up. */
-  --brand-navy:         #22497a;   /* primary accent: labels, lecture name, formulas, option letters */
-  --brand-orange:       #e8963a;   /* warm accent: title bar, number badges */
-  --brand-teal:         #2c8a80;   /* secondary accent: highlights, success, arrows */
-  --brand-ink:          #1d2733;   /* titles, running text */
-  --brand-body:         #4a5663;   /* secondary text, table cells */
-  --brand-muted:        #7d8896;   /* small caps labels (PROBLEM, Question) */
-  --brand-rule:         rgba(34, 73, 122, .16);   /* header divider */
+  /* ---- colour: "soft horizon" palette ----
+     The middle ground between the plain near-white slides (felt dull) and the
+     deep-navy showcase (too loud): every slide sits on a clearly tinted,
+     light sky / sage / periwinkle background with a gentle top-to-bottom
+     gradient, white cards stand out on it, titles are deep navy instead of
+     black, and the accents are a little richer. Still light and low-glare
+     for a 20-minute lecture, and NCERT figures (white) sit on white mats.
+     Names are kept from the original Prepzy PDF tokens so every template
+     picks the new values up. */
+  --brand-navy:         #1f4a86;   /* primary accent: labels, lecture name, formulas, option letters */
+  --brand-orange:       #e8892e;   /* warm accent: title bar, number badges */
+  --brand-teal:         #1f8a7e;   /* secondary accent: highlights, success, arrows */
+  --brand-title:        #12305f;   /* slide titles: deep navy, complements the sky backgrounds */
+  --brand-highlight:    #0d6e74;   /* *key terms* in slide text: deep teal … */
+  --brand-marker:       rgba(240, 160, 60, .32);   /* … over a soft amber highlighter stroke */
+  --brand-ink:          #1a2433;   /* running text */
+  --brand-body:         #3d4a5c;   /* secondary text, table cells */
+  --brand-muted:        #6c7a8e;   /* small caps labels (PROBLEM, Question) */
+  --brand-rule:         rgba(31, 74, 134, .20);   /* header divider */
   --brand-surface:      #ffffff;
-  --brand-surface-alt:  #f8f9fb;   /* panels, cards, alt rows */
-  --brand-surface-head: #e2eaf3;   /* table heads, section bars */
-  --brand-panel-line:   #dde3ea;   /* image panel border */
-  --brand-image-line:   #c3ccd8;   /* frame around a figure: darker than the slide and the panel, so white figures stand out */
-  --brand-cream:        #fcf1de;   /* answer / description boxes */
-  --brand-myth:         #f8dfdb;   /* misconception (wrong idea) */
-  --brand-fact:         #d3ebe0;   /* misconception (correct idea) */
-  --brand-shadow:       0 1px 2px rgba(29, 39, 51, .05), 0 8px 24px rgba(29, 39, 51, .07);
+  --brand-surface-alt:  #f6f9fc;   /* panels, cards, alt rows */
+  --brand-surface-head: #cfe0f2;   /* table heads, section bars */
+  --brand-panel-line:   rgba(31, 74, 134, .14);   /* image panel border */
+  --brand-image-line:   #b9c6d8;   /* frame around a figure: darker than the slide and the panel, so white figures stand out */
+  --brand-cream:        #fdeed6;   /* answer / description boxes */
+  --brand-myth:         #f8dad4;   /* misconception (wrong idea) */
+  --brand-fact:         #cfeadd;   /* misconception (correct idea) */
+  --brand-shadow:       0 1px 2px rgba(23, 48, 92, .06), 0 10px 28px rgba(23, 48, 92, .10);
 
-  /* slide backgrounds used across the deck: one soft family */
-  --bg-white:    #f4f2ec;   /* warm paper */
-  --bg-grey:     #e7edea;   /* sage mist */
-  --bg-lavender: #e8eaf4;   /* soft periwinkle */
-  --bg-teal:     #dcebe8;   /* pale teal */
-  --bg-mist:     #eef1f4;   /* cool mist */
+  /* slide backgrounds used across the deck: one tinted family (light, never white) */
+  --bg-white:    #c8dbee;   /* sky */
+  --bg-grey:     #c3d9e7;   /* sky-teal */
+  --bg-lavender: #cdd5ee;   /* sky-periwinkle */
+  --bg-teal:     #c1dce2;   /* sky-aqua */
+  --bg-mist:     #cfdfee;   /* pale sky */
 
   /* MCQ answer states */
-  --mcq-correct-bg:     #e3f3ec;
-  --mcq-correct-border: #2c8a6a;
-  --mcq-wrong-bg:       #fbe9e6;
+  --mcq-correct-bg:     #def2e8;
+  --mcq-correct-border: #1f8a6a;
+  --mcq-wrong-bg:       #fbe5e1;
   --mcq-wrong-border:   #c8553d;
 
   /* ---- type ---- */
-  --font-display: 'Poppins', 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;   /* slide titles */
-  --font-body:    'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
-  --font-card:    'Arimo', 'Noto Sans Devanagari', Arial, 'Helvetica Neue', sans-serif; /* card / option text */
+  --font-display: 'Baloo 2', 'Poppins', 'Noto Sans Devanagari', system-ui, sans-serif;            /* slide titles, headings */
+  --font-body:    'Nunito', 'Noto Sans Devanagari', 'Inter', system-ui, -apple-system, sans-serif;  /* running text */
+  --font-card:    'Nunito', 'Noto Sans Devanagari', 'Arimo', Arial, sans-serif;                     /* card / option text */
 
   /* ---- frame ---- */
   --frame-left:  84px;
@@ -80,18 +105,26 @@
   --radius-card:  16px;
   --radius-row:   8px;
 
-  /* A faint glow of the two accents over the slide tint: gives the frame depth
-     without drawing the eye (gradients are baked, no blur filter). */
+  /* A light-to-deeper wash and a soft glow of the two accents over the slide
+     tint: depth and colour without drawing the eye (baked gradients, no blur). */
   background:
-    radial-gradient(1200px 700px at 100% 0%, rgba(34, 73, 122, .07), transparent 60%),
-    radial-gradient(1000px 640px at 0% 100%, rgba(232, 150, 58, .07), transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .42) 0%, rgba(255, 255, 255, 0) 46%, rgba(23, 48, 92, .06) 100%),
+    radial-gradient(1200px 720px at 100% 0%, rgba(31, 138, 126, .13), transparent 62%),
+    radial-gradient(1000px 640px at 0% 100%, rgba(232, 137, 46, .10), transparent 62%),
     var(--brand-bg, var(--bg-grey));
   color: var(--brand-ink);
   font-family: var(--font-body);
   font-kerning: normal;
 }
 
-.scene.tpl .accent { color: var(--brand-navy); }
+/* *emphasis* in slide text (rich()): a key term, highlighter-pen style. */
+.scene.tpl .accent {
+  color: var(--brand-highlight); font-weight: 700;
+  background: linear-gradient(transparent 60%, var(--brand-marker) 60%, var(--brand-marker) 92%, transparent 92%);
+  padding: 0 .08em; border-radius: 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.scene.tpl strong { color: var(--brand-title); font-weight: 800; }
+:where(.scene.tpl) h1, :where(.scene.tpl) h2, :where(.scene.tpl) h3 { font-family: var(--font-display); }
 .scene.tpl .katex { color: var(--brand-navy); font-size: 1.15em; }
 
 /* ---- <Header> -------------------------------------------------------------- */
@@ -135,8 +168,8 @@
   box-shadow: 0 4px 14px rgba(232, 150, 58, .35);
 }
 :where(.scene.tpl) .brand-title h1 {
-  font: 600 61.3px/1.4 var(--font-display);
-  color: var(--brand-ink); white-space: nowrap;
+  font: 700 62px/1.25 var(--font-display); letter-spacing: -.005em;
+  color: var(--brand-title); white-space: nowrap;
 }
 
 /* ---- <Panel>: image placeholder box with caption --------------------------- */
