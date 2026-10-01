@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "A Magnet at Work",
+    "art_prompt": "A school student on a wooden desk lifting a small cluster of steel paper pins with a red and silver bar magnet, a few pins still on the desk, classroom window light, close-up at eye level",
+    "points": [
+      "A magnet attracts objects made of iron, such as steel pins",
+      "The pins cling most strongly near the ends of the magnet",
+      "Wood and paper are not attracted: they are non-magnetic"
+    ]
+  },
+  "narration_hinglish": "इस picture में एक bar magnet desk पर पड़े steel pins को उठा रहा है। {{b1.1}} Magnet उन चीज़ों को attract करता है जो iron से बनी होती हैं — जैसे ये steel के pins। {{b1.2}} ध्यान से देखो, pins magnet के ends के पास सबसे ज़्यादा चिपकते हैं — इन ends को हम poles कहते हैं। {{b1.3}} लेकिन desk की wood और paper magnet की तरफ़ नहीं खिंचते, क्योंकि ये non-magnetic materials हैं।"
+}

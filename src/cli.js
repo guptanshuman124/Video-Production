@@ -36,6 +36,8 @@ async function render() {
     crf: flag('crf', undefined),
     preset: flag('preset', undefined),
     tune: flag('tune', undefined),
+    threads: flag('threads', undefined),
+    lookahead: flag('lookahead', undefined),
     allFrames: has('all-frames'),
     log: (line) => console.log(`  ${line}\n`),
     onFrame: (done, count, shot) => {

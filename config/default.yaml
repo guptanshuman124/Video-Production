@@ -28,14 +28,18 @@ narration:
 
 llm:
   provider: openai
-  # Chosen by bake-off on real lectures (2026-09-27): gpt-6-luna writes natural Hinglish at
-  # ~$0.007/lecture; gpt-6-sol as the fact reviewer catches what luna misses (one call per lecture).
-  model: gpt-6-luna
+  # Quality first (2026-09-29): gpt-6-sol plans, writes and narrates (~$0.15/lecture);
+  # gpt-6-astra, OpenAI's top model, is the fact reviewer and checks every generated picture
+  # (~$0.15–0.40/lecture depending on repair rounds). The cheaper 2026-09-27 setup was
+  # model gpt-6-luna + review gpt-6-sol (~$0.03/lecture) — switch back here if cost matters more.
+  model: gpt-6-sol
   models:
-    review: gpt-6-sol
+    review: gpt-6-astra
   reasoning_effort: low        # current OpenAI models take reasoning effort, not temperature
+  efforts:                     # per-task override of reasoning_effort
+    review: medium
   temperature: null            # only sent when set (older models)
-  timeout_s: 180
+  timeout_s: 300
   retries: 3
   repair_attempts: 2           # LLM repair passes per failing unit before human review
   review_repair_rounds: 2      # reviewer findings: rewrite the flagged slides and review again (each review can surface new points)
@@ -43,6 +47,7 @@ llm:
   concurrency: 4               # parallel LLM calls
   cache: true
   prices:                      # USD per 1M tokens (developers.openai.com/api/docs/pricing, 2026-09-27); logged per call
+    gpt-6-astra:  { input: 10.00, cached_input: 1.00, output: 50.00 }   # cached rate assumed at 10%, as for sol/luna
     gpt-6-sol:    { input: 2.00, cached_input: 0.20, output: 10.00 }
     gpt-6-luna:   { input: 0.10, cached_input: 0.01, output: 0.50 }
     gpt-5.6-luna: { input: 0.20, cached_input: 0.02, output: 1.20 }
@@ -71,8 +76,35 @@ tts:
     voice_id: null
     model: null
 
+# Per-video cost shown in the dashboard (Details tab). OpenAI calls are logged in USD and
+# converted at usd_inr; the voice is priced from the characters actually sent to the TTS engine.
+costs:
+  usd_inr: 96.1                # update when the rate moves (2026-09-30)
+  tts_inr_per_10k_chars: 30    # Sarvam bulbul:v3 list price
+
+# Pictures for 'illustration' slides (real-life scenes; never diagrams — those stay NCERT figures).
+# Drawn by the image model in one house style, then checked by a vision model (llm.models.review):
+# any text, mismatch, misleading or distorted detail rejects it (one redraw, then a text-only layout).
+art:
+  enabled: true
+  model: gpt-image-2.5-sunburst  # top quality; gpt-image-2.5-flare is the faster twin at the same price
+  quality: high
+  size: 1536x1024
+  attempts: 2                  # draws per picture before falling back to the text-only layout
+  concurrency: 2
+  max_per_lecture: 2           # ≈ $0.20 per picture at high quality
+  prices: { text_input: 5.00, image_output: 30.00 }   # USD per 1M tokens, for the cost log
+
+images:
+  enhance:                     # NCERT figures: Lanczos resample + light sharpening (never redrawn)
+    enabled: true
+    min_side: 1100             # figures whose long side is already this big are left as they are
+    target: 1500               # long side after resampling
+    max_scale: 3
+
 timing:                         # ms, shared by the audio track and slide cues
-  transition: 600
+  transition: 800
+  transition_style: soft       # stage/transitions.js
   settle: 900                  # after the slide's entrance, before narration starts
   tail: 1800                   # after narration, for exits and breathing room
   reveal_lead: 250             # a block appears this long before it is spoken
@@ -86,6 +118,12 @@ video:
   tune: stillimage
   capture: jpeg
   jobs: 4
+  # x264 memory: on auto it starts ~1.5 threads per core (~800 MB per encoder on 12 cores), and a
+  # worker encodes one chunk per capture job at once — 2 × auto OOM-killed the 2.5 GiB worker pod
+  # (2026-09-29). 3 threads + 15-frame lookahead: ~1.3 GiB for the whole render, same speed
+  # (capture is the bottleneck).
+  encode_threads: 3
+  lookahead: 15
 
 paths:
   jobs: jobs                   # per-stage outputs: jobs/<chapter>/<lecture>/<stage>.json

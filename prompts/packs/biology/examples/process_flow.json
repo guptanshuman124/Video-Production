@@ -1,0 +1,30 @@
+{
+  "data": {
+    "title": "Food's Journey Through the Gut",
+    "steps": [
+      {
+        "label": "Mouth",
+        "detail": "Teeth crush food; salivary amylase starts breaking down starch"
+      },
+      {
+        "label": "Oesophagus",
+        "detail": "Peristaltic movements push the food down to the stomach"
+      },
+      {
+        "label": "Stomach",
+        "detail": "Hydrochloric acid, pepsin and mucus act on the food"
+      },
+      {
+        "label": "Small intestine",
+        "detail": "Digestion is completed and villi absorb the digested food"
+      },
+      {
+        "label": "Large intestine",
+        "detail": "More water is absorbed; waste leaves through the anus"
+      }
+    ],
+    "cycle": false,
+    "note": null
+  },
+  "narration_hinglish": "चलो खाने का पूरा journey एक नज़र में देखते हैं। {{b1.1}} शुरुआत mouth से होती है — teeth खाने को crush करते हैं और salivary amylase starch को तोड़ना शुरू कर देता है। {{b1.2}} फिर खाना oesophagus से नीचे जाता है, जहाँ peristaltic movements उसे धीरे-धीरे stomach तक push करती हैं। {{b1.3}} Stomach में hydrochloric acid, pepsin और mucus अपना काम करते हैं। {{b1.4}} उसके बाद small intestine में digestion पूरा होता है, और villi digested food को absorb कर लेती हैं। {{b1.5}} आख़िर में large intestine बचा हुआ water absorb करती है, और waste anus से बाहर निकल जाता है।"
+}

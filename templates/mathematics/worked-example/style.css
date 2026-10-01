@@ -25,6 +25,6 @@
 .stext { margin-right: 18px; }
 .seq { color: var(--brand-navy); font-size: 1.12em; white-space: nowrap; }
 .tip { margin-top: 10px; font: 400 23px/1.35 var(--font-body); color: var(--brand-body); }
-.tip b { color: #b45309; font-weight: 700; }
+.tip b { color: var(--brand-orange); font-weight: 700; }
 .side { left: 1257px; top: 220px; width: 579px; height: 756px; }
 .side .panel-caption { padding-bottom: 15px; }

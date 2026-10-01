@@ -19,7 +19,7 @@
 .teq .katex-display { margin: 0; }
 .tlabel {
   position: absolute; left: 9px; bottom: 7px; right: 9px;
-  font: 300 21.3px/1.2 'Poppins', var(--font-body); color: #000;
+  font: 300 21.3px/1.2 'Poppins', var(--font-body); color: var(--brand-ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .l-wide .tlabel, .l-full .tlabel { left: 19px; }
@@ -27,7 +27,7 @@
   border-radius: 12px; background: var(--brand-surface-head); padding: 26px 34px;
   display: flex; flex-direction: column; align-items: center;
 }
-.shead { font: 600 26.7px/1.2 var(--font-body); color: #000; }
+.shead { font: 600 26.7px/1.2 var(--font-body); color: var(--brand-ink); }
 /* Symbol key: symbol (maths) · dash · meaning, aligned in columns. */
 .symbols ul {
   margin: 18px 0 0; padding: 0; list-style: none; width: 100%;

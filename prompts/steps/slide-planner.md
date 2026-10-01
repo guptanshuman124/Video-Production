@@ -23,6 +23,12 @@ For each slide give:
 - Give a figure its own `labeled_diagram` slide when it deserves to be read part by part, or put it on an `image_points` / `mechanism` slide beside its explanation, or as the picture on a `definition`.
 - Only leave `image_id` null when no catalog figure relates to that slide. Never put an unrelated figure on a slide.
 - A type that **needs** an image may only be used with a catalog figure.
+- Stay inside the per-type limits and the same-type run limit (FLOW RULES) while doing this. When a lecture has more figures than one type allows (e.g. six ray-diagram cases), spread them over `labeled_diagram` and `image_points` (both show wide figures) and `mechanism`, alternating so no type runs more than the limit in a row; if there are still more figures than slots, show the ones that teach most and describe the rest in words.
+
+**Make it visual — safely.** Students remember what they see, but a picture must never teach something wrong:
+- A process, sequence, cycle or chain of causes in the text (stages, the steps of a method, a cycle) with no catalog figure for it → a `process_flow` slide: 3–6 boxes joined by arrows, drawn by code from the facts you plan.
+- A real-life example, application or hook the text mentions (an everyday object, place, activity or situation) → an `illustration` slide, when seeing it genuinely helps a student connect the idea to their world. At most 2 per lecture, and never where the picture would have to be exact (a structure with parts, apparatus, a circuit, an experiment set-up, a map, a graph, a specific famous person or monument) or where the picture itself would have to show a scientific effect correctly (light bending, the colours of a spectrum, a reaction happening): those stay on catalog figures or in text. The picture sets the scene; the teaching is in the points.
+- When a catalog figure shows the same thing, use the figure.
 
 Rules:
 - Cover every section of this lecture; follow NCERT order.

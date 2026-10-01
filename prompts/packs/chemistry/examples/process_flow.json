@@ -1,0 +1,26 @@
+{
+  "data": {
+    "title": "From Ore to Metal",
+    "steps": [
+      {
+        "label": "Concentration of ore",
+        "detail": "Unwanted impurities (gangue) are removed from the ore"
+      },
+      {
+        "label": "Conversion to oxide",
+        "detail": "Sulphide ores are roasted; carbonate ores are calcined"
+      },
+      {
+        "label": "Reduction to metal",
+        "detail": "The metal oxide is reduced, for example with carbon"
+      },
+      {
+        "label": "Refining",
+        "detail": "The impure metal is purified, for example by electrolysis"
+      }
+    ],
+    "cycle": false,
+    "note": null
+  },
+  "narration_hinglish": "Ore से pure metal तक पहुँचने के steps को order में समझते हैं। {{b1.1}} पहला step है ore का concentration — इसमें gangue यानी unwanted impurities हटा दी जाती हैं। {{b1.2}} फिर ore को oxide में बदला जाता है — sulphide ores को roasting से और carbonate ores को calcination से। {{b1.3}} तीसरे step में metal oxide को reduce किया जाता है, जैसे carbon के साथ heat करके। {{b1.4}} और आख़िर में refining से impure metal को purify किया जाता है, जैसे electrolytic refining से। Board में यह sequence exactly इसी order में लिखना।"
+}

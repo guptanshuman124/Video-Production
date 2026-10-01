@@ -72,6 +72,41 @@ export function LectureButtons({ id, size = 'sm', showDetails = true, withLabels
   );
 }
 
+const fmtInr = (x) => `₹${(x || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtNum = (x) => (x || 0).toLocaleString('en-IN');
+
+// What this video cost, from its call log: every OpenAI call (text + pictures)
+// and the characters sent to the voice engine, including retries and repairs.
+function CostBreakdown({ cost }) {
+  const detail = (i) => (i.note ? i.note : i.key === 'voice'
+    ? `${fmtNum(i.chars)} characters · ${fmtNum(i.calls)} requests`
+    : `${fmtNum(i.calls)} call${i.calls === 1 ? '' : 's'} · ${fmtNum(i.input_tokens)} in / ${fmtNum(i.output_tokens)} out tokens`);
+  return (
+    <>
+      <h4 className="section-title">Cost</h4>
+      <div className="cost">
+        <table className="cost-table">
+          <tbody>
+            {cost.items.map((i) => (
+              <tr key={i.key}>
+                <td><div className="cost-label">{i.label}</div><div className="muted small">{i.models?.length ? `${i.models.join(', ')} · ` : ''}{detail(i)}</div></td>
+                <td className="num">{fmtInr(i.inr)}{i.usd != null && <div className="muted small">${i.usd.toFixed(4)}</div>}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr><td>OpenAI (text + pictures)</td><td className="num">{cost.openai_known === false ? <span className="muted">not recorded</span> : fmtInr(cost.openai_inr)}</td></tr>
+            <tr><td>Voice</td><td className="num">{cost.voice_known ? fmtInr(cost.voice_inr) : <span className="muted">not recorded</span>}</td></tr>
+            <tr className="cost-total"><td>{cost.openai_known === false ? 'Total (voice only)' : 'Total'}</td><td className="num">{fmtInr(cost.total_inr)}</td></tr>
+          </tfoot>
+        </table>
+        {cost.estimated && <div className="t-amber small">{cost.openai_known === false ? 'Made before costs were recorded: the OpenAI cost was not logged, and the voice is estimated from the video length.' : 'Made before per-stage costs were recorded: OpenAI is the exact total, the voice is estimated from the video length.'}</div>}
+        <div className="muted small">At ₹{cost.rates.usd_inr}/$ and ₹{cost.rates.tts_inr_per_10k_chars} per 10,000 voice characters (config `costs`). Includes failed attempts and review repairs; cached answers are free.</div>
+      </div>
+    </>
+  );
+}
+
 const STEP_ICON = { pass: CheckCircle2, warn: AlertTriangle, fail: AlertTriangle, active: Loader2, pending: Circle, running: Loader2 };
 
 export function LectureDrawer({ id, onClose }) {
@@ -108,7 +143,7 @@ export function LectureDrawer({ id, onClose }) {
           <StatusChip status={st} />
           {job?.worker && ['running', 'validating'].includes(st) && <span className="muted">on <b>{job.worker}</b> · {fmtElapsed(job.started_at)}</span>}
           {job?.attempts > 0 && <span className="muted">attempt {job.attempts}</span>}
-          {job?.cost_usd > 0 && <span className="muted">LLM {fmtUsd(job.cost_usd)}</span>}
+          {detail?.cost?.total_inr > 0 ? <span className="muted">cost {fmtInr(detail.cost.total_inr)}</span> : job?.cost_usd > 0 && <span className="muted">LLM {fmtUsd(job.cost_usd)}</span>}
         </div>
         {['running', 'validating'].includes(st) && <div style={{ marginTop: 12 }}><Progress value={job.progress} striped /><div className="muted small" style={{ marginTop: 6 }}>{stageLabel(job.stage)} · {Math.round(job.progress)}%{stages.render?.frames && job.stage === 'render' ? ` · frame ${stages.render.frames}/${stages.render.total}` : ''}</div></div>}
       </div>
@@ -159,6 +194,8 @@ export function LectureDrawer({ id, onClose }) {
           </div>
         </div>
       )}
+
+      {detail?.cost && <CostBreakdown cost={detail.cost} />}
 
       <h4 className="section-title">Pipeline</h4>
       <ol className="timeline">

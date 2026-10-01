@@ -72,7 +72,9 @@ function limiter(n) {
   return (fn) => new Promise((res, rej) => { queue.push({ fn, res, rej }); next(); });
 }
 
-export function createVoice(cfg, { cacheDir = null, provider = null } = {}) {
+// usage (optional): { requests, chars } — counts what the engine is actually
+// asked to speak (cache hits are free), for the per-video cost breakdown.
+export function createVoice(cfg, { cacheDir = null, provider = null, usage = null } = {}) {
   const tts = provider || createTTS(cfg);
   const limit = limiter(cfg.tts.concurrency || 8);
   const useCache = cfg.tts.cache && cacheDir;
@@ -87,6 +89,7 @@ export function createVoice(cfg, { cacheDir = null, provider = null } = {}) {
     }
     return limit(() => retry(make, cfg.tts.retries ?? 3)).then((out) => {
       if (f) fs.writeFileSync(f, kind === 'marked' ? JSON.stringify({ wav: out.wav.toString('base64'), marks: out.marks }) : out);
+      if (usage) { usage.requests++; usage.chars += text.length; }
       return out;
     });
   };
@@ -149,8 +152,11 @@ export function createVoice(cfg, { cacheDir = null, provider = null } = {}) {
 }
 
 // Voice a whole lecture into <dir>/voice/sNN.wav.
-export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, provider = null, onSlide } = {}) {
-  const voice = createVoice(cfg, { cacheDir, provider });
+// logFile: the lecture's call log (llm.jsonl) — one 'tts' row with the
+// characters actually sent, so the per-video cost can price the voice.
+export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, provider = null, onSlide, logFile = null } = {}) {
+  const usage = { requests: 0, chars: 0 };
+  const voice = createVoice(cfg, { cacheDir, provider, usage });
   const outDir = path.join(dir, 'voice');
   fs.mkdirSync(outDir, { recursive: true });
   const slides = await Promise.all(content.slides.map(async (s) => {
@@ -164,5 +170,11 @@ export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, pr
       segments: r.segments, silences: silences(path.join(dir, clip), { min: 2.5 }),
     };
   }));
-  return { provider: voice.provider, slides };
+  if (logFile) {
+    const model = cfg.tts[voice.provider]?.model || null;
+    fs.mkdirSync(path.dirname(logFile), { recursive: true });
+    fs.appendFileSync(logFile, `${JSON.stringify({ at: new Date().toISOString(), provider: voice.provider, task: 'tts', model, requests: usage.requests, chars: usage.chars })}
+`);
+  }
+  return { provider: voice.provider, slides, usage };
 }

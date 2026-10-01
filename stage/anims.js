@@ -106,16 +106,25 @@ export const ELEMENT_ANIMS = {
     kf: [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
   },
   // ---- deck vocabulary: content fades in rising, leaves fading out rising ----
+  // Calm, unhurried: a short rise with a long expo settle (no bounce, no blur).
   riseIn: {
-    dur: 700, ease: EASE.out,
-    kf: [{ opacity: 0, transform: 'translateY(28px)' },
-         { opacity: 1, transform: 'translateY(0)' }],
+    dur: 900, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'translateY(22px) scale(.99)' },
+         { opacity: 1, transform: 'translateY(0) scale(1)' }],
   },
-  // Image panels settle in from a hair larger — no filter, cheap to rasterise.
+  // Image panels open from a slightly inset rounded mask while settling from a
+  // hair larger — reads as "the picture comes into focus". The end mask is
+  // outset (negative inset) so it never clips the panel's shadow.
   panelIn: {
-    dur: 800, ease: EASE.out,
-    kf: [{ opacity: 0, transform: 'scale(1.03)' },
-         { opacity: 1, transform: 'scale(1)' }],
+    dur: 1100, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'scale(1.035)', clipPath: 'inset(3.5% 3.5% 3.5% 3.5% round 16px)' },
+         { opacity: 1, transform: 'scale(1)', clipPath: 'inset(-40px -40px -40px -40px round 16px)' }],
+  },
+  // A picture that fills its frame: slow reveal from a soft mask.
+  imageIn: {
+    dur: 1400, ease: EASE.out,
+    kf: [{ opacity: 0, transform: 'scale(1.06)', clipPath: 'inset(6% 6% 6% 6% round 24px)' },
+         { opacity: 1, transform: 'scale(1)', clipPath: 'inset(0% 0% 0% 0% round 0px)' }],
   },
   // ---- exits (use with exit=) ----
   fadeOut: {

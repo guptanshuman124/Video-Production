@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "A Weekly Village Market",
+    "art_prompt": "A busy weekly village market in India, vendors selling vegetables, cloth and clay pots at stalls under cloth shades, people buying and bargaining, afternoon light, wide view",
+    "points": [
+      "Weekly markets are held on a fixed day of the week",
+      "Traders set up stalls in the day and pack up by evening",
+      "Goods are cheaper as shopkeepers have few fixed costs"
+    ]
+  },
+  "narration_hinglish": "यह एक weekly market का scene है, जिसे कई जगह haat भी कहते हैं। {{b1.1}} ऐसे markets हफ़्ते के एक fixed दिन लगते हैं। {{b1.2}} Traders दिन में अपनी stalls लगाते हैं और शाम तक सामान समेटकर चले जाते हैं। {{b1.3}} क्योंकि इनके पास पक्की shop का rent या electricity का खर्च नहीं होता, इसलिए यहाँ चीज़ें अक्सर सस्ती मिलती हैं।"
+}

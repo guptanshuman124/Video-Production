@@ -113,7 +113,7 @@ async function enqueue(scope, { redo = false, resume = false } = {}) {
     await db.query(`INSERT INTO jobs (lecture_id, course_id, module_id, class_no, subject, book, chapter_no, chapter_title, lecture_no, lecture_count, lecture_title, seq, status, stage, progress, from_stage, priority, attempts, queued_at, stages, issues)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', NULL, 0, ?, 0, 0, ?, '{}', NULL)
       ON DUPLICATE KEY UPDATE status='queued', stage=NULL, progress=0, from_stage=VALUES(from_stage), priority=0, attempts=0, worker=NULL,
-        error_code=NULL, error_stage=NULL, error_message=NULL, stages='{}', issues=NULL, cost_usd=0, queued_at=VALUES(queued_at), started_at=NULL, finished_at=NULL,
+        error_code=NULL, error_stage=NULL, error_message=NULL, stages='{}', issues=NULL, cost_usd=0, cost_detail=NULL, queued_at=VALUES(queued_at), started_at=NULL, finished_at=NULL,
         course_id=VALUES(course_id), module_id=VALUES(module_id), class_no=VALUES(class_no), subject=VALUES(subject), book=VALUES(book), chapter_no=VALUES(chapter_no),
         chapter_title=VALUES(chapter_title), lecture_no=VALUES(lecture_no), lecture_count=VALUES(lecture_count), lecture_title=VALUES(lecture_title), seq=VALUES(seq)`,
     [l.lecture_id, l.course_id, l.module_id, l.class_no, l.subject, l.book, l.chapter_no, l.chapter_title, l.lecture_no, l.lecture_count, l.lecture_title, l.seq, redo ? 'prepare' : null, t]);
@@ -277,8 +277,8 @@ async function receiveVideo(req, id, worker) {
   if (expected && got !== expected) check.errors.unshift(`received ${got} of ${expected} bytes`);
   if (check.errors.length) {
     fs.rmSync(tmp, { force: true });
-    await db.query("UPDATE jobs SET status='failed', error_code='VIDEO_INVALID', error_stage='qa', error_message=?, finished_at=?, cost_usd=? WHERE lecture_id=?",
-      [check.errors.join('; '), now(), meta.cost_usd || 0, id]);
+    await db.query("UPDATE jobs SET status='failed', error_code='VIDEO_INVALID', error_stage='qa', error_message=?, finished_at=?, cost_usd=?, cost_detail=? WHERE lecture_id=?",
+      [check.errors.join('; '), now(), meta.cost_usd || 0, json(meta.cost), id]);
     await db.query("UPDATE workers SET status='idle', lecture_id=NULL, jobs_failed=jobs_failed+1 WHERE name=?", [worker]);
     await event(id, 'error', 'qa', `final validation failed: ${check.errors.join('; ')}`);
     await pushJob(id); pushWorkers(true);
@@ -296,13 +296,13 @@ async function receiveVideo(req, id, worker) {
   }
   fs.rmSync(dest, { force: true });
   fs.renameSync(tmp, dest);
-  await db.query(`INSERT INTO videos (lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, qa, created_at, storage)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local') ON DUPLICATE KEY UPDATE path=VALUES(path), bytes=VALUES(bytes), duration_s=VALUES(duration_s),
-    width=VALUES(width), height=VALUES(height), slides=VALUES(slides), cost_usd=VALUES(cost_usd), qa=VALUES(qa), created_at=VALUES(created_at),
+  await db.query(`INSERT INTO videos (lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, cost_detail, qa, created_at, storage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local') ON DUPLICATE KEY UPDATE path=VALUES(path), bytes=VALUES(bytes), duration_s=VALUES(duration_s),
+    width=VALUES(width), height=VALUES(height), slides=VALUES(slides), cost_usd=VALUES(cost_usd), cost_detail=VALUES(cost_detail), qa=VALUES(qa), created_at=VALUES(created_at),
     storage='local', remote_error=NULL`,
-  [id, lecture.course_id, lecture.module_id, lecture.class_no, rel, got, check.duration, check.width, check.height, meta.slides ?? null, meta.cost_usd ?? 0, json(meta.qa), now()]);
-  await db.query("UPDATE jobs SET status='done', stage='qa', progress=100, finished_at=?, cost_usd=?, stages=? WHERE lecture_id=?",
-    [now(), meta.cost_usd || 0, json(mergeStages(parse(r.stages), meta.stages)), id]);
+  [id, lecture.course_id, lecture.module_id, lecture.class_no, rel, got, check.duration, check.width, check.height, meta.slides ?? null, meta.cost_usd ?? 0, json(meta.cost), json(meta.qa), now()]);
+  await db.query("UPDATE jobs SET status='done', stage='qa', progress=100, finished_at=?, cost_usd=?, cost_detail=?, stages=? WHERE lecture_id=?",
+    [now(), meta.cost_usd || 0, json(meta.cost), json(mergeStages(parse(r.stages), meta.stages)), id]);
   await db.query("UPDATE workers SET status='idle', lecture_id=NULL, jobs_done=jobs_done+1 WHERE name=?", [worker]);
   await event(id, 'info', 'qa', `validated and stored: ${rel} (${(check.duration / 60).toFixed(1)} min, ${(got / 1048576).toFixed(0)} MB)`);
   await pushJob(id); pushWorkers(true);
@@ -417,8 +417,8 @@ async function workerFailed(id, worker, body) {
     await event(id, 'warn', r.stage, `crashed (${body.status}); requeued automatically`);
   } else {
     const message = errors.length ? errors.slice(0, 5).map((i) => `[${i.code}] ${i.message}`).join('\n') : String(body.status || 'failed');
-    await db.query("UPDATE jobs SET status='failed', worker=NULL, stages=?, issues=?, error_code=?, error_stage=?, error_message=?, finished_at=?, cost_usd=? WHERE lecture_id=?",
-      [json(stages), json(errors), body.crashed ? 'CRASHED' : 'GATE_FAILED', failedStage, message.slice(0, 4000), now(), body.cost_usd || 0, id]);
+    await db.query("UPDATE jobs SET status='failed', worker=NULL, stages=?, issues=?, error_code=?, error_stage=?, error_message=?, finished_at=?, cost_usd=?, cost_detail=? WHERE lecture_id=?",
+      [json(stages), json(errors), body.crashed ? 'CRASHED' : 'GATE_FAILED', failedStage, message.slice(0, 4000), now(), body.cost_usd || 0, json(body.cost), id]);
     await event(id, 'error', failedStage, `${body.crashed ? 'crashed' : `failed at ${failedStage}`}: ${message.slice(0, 1500)}`);
     if (body.error) await event(id, 'error', failedStage, body.error.slice(0, 3000));
   }
@@ -546,7 +546,10 @@ route('GET', '/api/state', async () => {
 route('GET', '/api/jobs/:id', async ({ id }) => {
   const [[j]] = await db.query('SELECT * FROM jobs WHERE lecture_id = ?', [Number(id)]);
   const [events] = await db.query('SELECT at, level, stage, message FROM job_events WHERE lecture_id = ? ORDER BY id DESC LIMIT 300', [Number(id)]);
-  return { lecture: catalog.lectures.get(Number(id)) || null, job: j ? { ...compact(j), issues: parse(j.issues) } : null, events: events.reverse(), video: await videoRow(Number(id)) };
+  // Cost: this run's breakdown, else the stored video's (a regenerate resets the job row).
+  const [[vc]] = await db.query('SELECT cost_detail FROM videos WHERE lecture_id = ?', [Number(id)]);
+  const cost = parse(j?.cost_detail) || parse(vc?.cost_detail) || null;
+  return { lecture: catalog.lectures.get(Number(id)) || null, job: j ? { ...compact(j), issues: parse(j.issues) } : null, events: events.reverse(), video: await videoRow(Number(id)), cost };
 });
 route('GET', '/api/activity', async () => {
   const [rows] = await db.query('SELECT lecture_id, at, level, stage, message FROM job_events ORDER BY id DESC LIMIT 80');

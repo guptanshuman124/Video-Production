@@ -19,7 +19,7 @@
   min-height: 59px; padding: 8px 12px; border-radius: var(--radius-row);
   display: flex; align-items: center; justify-content: center; text-align: center;
   background: var(--brand-surface-alt);
-  font: 400 22px/1.2 var(--font-card); color: #000;
+  font: 400 22px/1.2 var(--font-card); color: var(--brand-ink);
 }
 .head .dcell { background: var(--brand-surface-head); }
 
@@ -28,7 +28,7 @@
   border-radius: var(--radius-card); background: var(--brand-surface-head);
   display: flex; flex-direction: column;
 }
-.flabel { font: 400 24px/1.2 var(--font-body); color: #000; }
+.flabel { font: 400 24px/1.2 var(--font-body); color: var(--brand-ink); }
 .feq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-size: 38px; color: var(--brand-navy); }
 .feq .katex-display { margin: 0; }
 .fsym { font: 400 21.3px/1.5 var(--font-body); color: var(--brand-muted); display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 0; }

@@ -65,6 +65,21 @@ test('G2: invented image ids and wrong ratios are cleared, not trusted', () => {
   assert.ok(r.issues.some((i) => i.code === 'IMAGE_RATIO'));
 });
 
+test('G2: a figure-heavy plan (six wide ray diagrams on labeled_diagram) is spread over figure types, figures kept', () => {
+  const P = slideTypes(build).physics;
+  const ppack = loadPacks().physics;
+  const figs = Array.from({ length: 6 }, (_, i) => ({ id: `ray${i + 1}`, width: 1000, height: 330, ratio: '3:1', description: `ray diagram case ${i + 1}` }));
+  const plan = { lecture_title: 'Refraction by Spherical Lenses', slides: [
+    slide('comparison'), slide('mcq'),
+    ...figs.map((f) => slide('labeled_diagram', { image_id: f.id, title: f.description })),
+    slide('quick_revision', { source_refs: [] }), slide('mcq'),
+  ] };
+  const r = gateLecturePlan(plan, ctx({ pack: ppack, types: P, images: figs }));
+  assert.deepEqual(codes(r.issues).filter((c) => ['TYPE_MAX', 'FLOW_REPEAT'].includes(c)), []);
+  assert.equal(r.plan.slides.filter((s) => s.image_id).length, 6, 'every figure still shown');
+  assert.ok(r.issues.some((i) => i.code === 'TYPE_REBALANCED' && i.autoFixed));
+});
+
 test('G2: flow and count rules from pack.json', () => {
   const r = gateLecturePlan({ lecture_title: 'Transport in Plants', slides: [slide('chapter_index'), slide('definition'), slide('definition'), slide('definition'), slide('comparison', { source_refs: ['s99'] })] }, ctx());
   const c = codes(r.issues);
@@ -206,10 +221,10 @@ test('G2: a well-matched figure in the wrong shape keeps its slide — the type 
   const r = gateLecturePlan(plan, ctx({ images }));
   const byTitle = Object.fromEntries(r.plan.slides.map((x) => [x.title, x]));
   assert.equal(byTitle['Attraction and Repulsion'].image_id, 'img_rods');
-  assert.equal(byTitle['Attraction and Repulsion'].slide_type, 'labeled_diagram');
+  assert.equal(byTitle['Attraction and Repulsion'].slide_type, 'image_points', 'image_points has a wide-figure layout now');
   assert.equal(byTitle['Gold-Leaf Electroscope'].image_id, 'img_scope');
   assert.notEqual(byTitle['Gold-Leaf Electroscope'].slide_type, 'labeled_diagram');
-  assert.equal(r.issues.filter((i) => i.code === 'IMAGE_TYPE_SWITCHED').length, 2);
+  assert.equal(r.issues.filter((i) => i.code === 'IMAGE_TYPE_SWITCHED').length, 1);
   assert.ok(!r.issues.some((i) => i.code === 'IMAGE_AUTOFILLED'));
 });
 

@@ -5,10 +5,15 @@ import { FFMPEG, FFPROBE } from './tools.js';
 // A single ffmpeg pass fed raw PNGs on stdin. Duplicate (held) frames are just
 // the same buffer written again — x264 encodes those almost for free.
 // `tune: 'stillimage'` suits long lectures that are mostly held slides.
-export function startEncoder({ out, fps, crf = 18, preset = 'slow', tune = null, audio = null, inputCodec = 'png' }) {
+// `threads` / `lookahead` bound x264's memory: left on auto it starts ~1.5
+// frame threads per visible core, each holding its own 1080p frames (~800 MB
+// per encoder on a 12-core host, enough to OOM a worker pod rendering two
+// chunks). Capture is the bottleneck, so a few threads encode just as fast.
+export function startEncoder({ out, fps, crf = 18, preset = 'slow', tune = null, audio = null, inputCodec = 'png', threads = null, lookahead = null }) {
   const args = ['-y', '-f', 'image2pipe', '-c:v', inputCodec, '-framerate', String(fps), '-i', 'pipe:0'];
   if (audio) args.push('-i', audio);
-  args.push('-c:v', 'libx264', '-preset', preset, ...(tune ? ['-tune', tune] : []));
+  args.push('-c:v', 'libx264', '-preset', preset, ...(tune ? ['-tune', tune] : []),
+    ...(threads ? ['-threads', String(threads)] : []), ...(lookahead ? ['-rc-lookahead', String(lookahead)] : []));
   args.push(
     '-crf', String(crf),
     '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-r', String(fps),

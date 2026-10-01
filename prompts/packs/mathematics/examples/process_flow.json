@@ -1,0 +1,26 @@
+{
+  "data": {
+    "title": "Euclid's Division Algorithm",
+    "steps": [
+      {
+        "label": "Divide",
+        "detail": "Divide $a$ by $b$ to get $a = bq + r$, with $0 \\le r < b$"
+      },
+      {
+        "label": "Check the remainder",
+        "detail": "If $r = 0$, then $b$ is the HCF"
+      },
+      {
+        "label": "Replace and repeat",
+        "detail": "Otherwise apply the division to $b$ and $r$"
+      },
+      {
+        "label": "Stop at zero",
+        "detail": "The divisor at the stage where $r = 0$ is the HCF"
+      }
+    ],
+    "cycle": false,
+    "note": null
+  },
+  "narration_hinglish": "Euclid का division algorithm steps में समझते हैं। {{b1.1}} पहले a को b से divide करो, ताकि a equals b q plus r मिले, जहाँ r zero या उससे बड़ा और b से छोटा हो। {{b1.2}} अब remainder check करो — अगर r zero है, तो b ही HCF है। {{b1.3}} अगर नहीं, तो b और r पर वही division दोबारा लगाओ। {{b1.4}} यह तब तक करते रहो जब तक remainder zero न हो जाए — उस stage का divisor ही HCF होता है।"
+}

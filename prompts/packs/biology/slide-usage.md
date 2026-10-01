@@ -13,3 +13,5 @@
 - **assertion_reason** — only a genuine claim-and-cause pair from this content.
 - **misconception** — only real, frequent confusions from this content ("all bacteria are harmful", "genes and chromosomes are the same thing").
 - **quick_revision** — recap of what this lecture already taught: key points plus glossary. Never introduces anything new.
+- **process_flow** — stages of a process in order — the path of food through the alimentary canal, the steps of photosynthesis, a reflex arc, the nitrogen or carbon cycle (`cycle`: true). Drawn by code as boxes and arrows: 3–6 steps, each a short label plus one line of detail.
+- **illustration** — an everyday scene the lecture uses — a meal being chewed, a person exercising and sweating, a potted plant on a sunny window-sill, a doctor listening to a heartbeat. At most 2 per lecture. `art_prompt` describes only what is seen (subject, setting, view, light) — never text, labels, arrows, diagrams, maps or graphs; those stay on NCERT figures. The narration first says in a line what the picture shows, then ties it to each point.

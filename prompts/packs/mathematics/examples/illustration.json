@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "Fencing a Garden Plot",
+    "art_prompt": "A father and daughter in an Indian village fencing a rectangular vegetable garden plot with wooden posts and wire, green plants inside, morning sunlight, wide view from a slight height",
+    "points": [
+      "The fence runs all round the plot: that is its perimeter",
+      "The ground the plot covers is its area",
+      "Both depend on the length and breadth of the rectangle"
+    ]
+  },
+  "narration_hinglish": "इस picture में एक garden plot के चारों तरफ़ fence लगाई जा रही है। {{b1.1}} Fence जो पूरी boundary के साथ चलती है, उसकी total length ही plot का perimeter है। {{b1.2}} और plot जितनी ज़मीन cover करता है, वह उसका area है। {{b1.3}} ध्यान दो, दोनों ही rectangle की length और breadth पर depend करते हैं — बस formula अलग है।"
+}

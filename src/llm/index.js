@@ -27,10 +27,13 @@ export function createLLM(cfg, { cacheDir = null, logFile = null, provider = nul
   if (!make) throw new Error(`unknown llm.provider "${provider || cfg.llm.provider}" (known: ${Object.keys(PROVIDERS).join(', ')})`);
   const providers = new Map();
   const modelFor = (task) => cfg.llm.models?.[task] || cfg.llm.model;
+  // llm.efforts maps a task to its own reasoning effort (e.g. a deeper review).
+  const effortFor = (task) => cfg.llm.efforts?.[task] ?? cfg.llm.reasoning_effort;
   const providerFor = (task) => {
-    const model = modelFor(task);
-    if (!providers.has(model)) providers.set(model, make({ ...cfg, llm: { ...cfg.llm, model } }));
-    return providers.get(model);
+    const model = modelFor(task), effort = effortFor(task);
+    const id = `${model}|${effort ?? ''}`;
+    if (!providers.has(id)) providers.set(id, make({ ...cfg, llm: { ...cfg.llm, model, reasoning_effort: effort } }));
+    return providers.get(id);
   };
   const p = providerFor(null);
   // Mock answers are free and change with the mock's code: never cache them.
@@ -49,7 +52,7 @@ export function createLLM(cfg, { cacheDir = null, logFile = null, provider = nul
     modelFor,
     async call(req) {
       const q = providerFor(req.task);
-      const key = sha(JSON.stringify([q.name, q.model, cfg.llm.temperature, cfg.llm.reasoning_effort, req.system, req.user, req.schema, req.salt ?? 0]), 32);
+      const key = sha(JSON.stringify([q.name, q.model, cfg.llm.temperature, effortFor(req.task), req.system, req.user, req.schema, req.salt ?? 0]), 32);
       const promptHash = sha(`${req.system}\n\n${req.user}`, 12);
       const file = useCache && path.join(cacheDir, `${key}.json`);
       if (file && fs.existsSync(file)) {

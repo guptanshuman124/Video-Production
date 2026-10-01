@@ -17,7 +17,7 @@
   background: var(--brand-surface-alt);
   display: flex; flex-direction: column;
 }
-.stext { font: 400 26.7px/1.25 var(--font-body); color: #000; }
+.stext { font: 400 26.7px/1.25 var(--font-body); color: var(--brand-ink); }
 .seq {
   flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
   font-size: calc(40px - var(--n) * 2px); color: var(--brand-navy);

@@ -1,0 +1,28 @@
+{
+  "lecture": "Life Processes",
+  "title": "Food's Journey Through the Gut",
+  "steps": [
+    {
+      "label": "Mouth",
+      "detail": "Teeth crush food; salivary amylase starts breaking down starch"
+    },
+    {
+      "label": "Oesophagus",
+      "detail": "Peristaltic movements push the food down to the stomach"
+    },
+    {
+      "label": "Stomach",
+      "detail": "Hydrochloric acid, pepsin and mucus act on the food"
+    },
+    {
+      "label": "Small intestine",
+      "detail": "Digestion is completed and villi absorb the digested food"
+    },
+    {
+      "label": "Large intestine",
+      "detail": "More water is absorbed; waste leaves through the anus"
+    }
+  ],
+  "cycle": false,
+  "note": null
+}

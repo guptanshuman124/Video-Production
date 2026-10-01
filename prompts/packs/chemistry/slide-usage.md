@@ -15,3 +15,5 @@
 - **misconception** — real, frequent confusions ("a catalyst shifts equilibrium", "all metals react with acids to give hydrogen").
 - **formula_sheet** — end of a numerical-heavy lecture: the formulas and key equations taught, each labelled, plus a symbol key.
 - **quick_revision** — end of a descriptive lecture: key points + glossary (named reactions, trends, exceptions).
+- **process_flow** — the steps of a method or a sequence of changes — extraction of a metal, purification of water, the stages of a titration. Drawn by code as boxes and arrows: 3–6 steps, each a short label plus one line of detail.
+- **illustration** — an everyday scene with the chemistry in it — a rusting iron gate, curd setting in a bowl, baking soda in a cake batter, a fire extinguisher in use. At most 2 per lecture. `art_prompt` describes only what is seen (subject, setting, view, light) — never text, labels, arrows, diagrams, maps or graphs; those stay on NCERT figures. The narration first says in a line what the picture shows, then ties it to each point.

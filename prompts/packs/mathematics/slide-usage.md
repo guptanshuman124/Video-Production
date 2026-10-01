@@ -16,3 +16,5 @@
 - **mcq** — conceptual or one-step numerical, with one trap option (the classic slip: sign, formula, unit).
 - **assertion_reason** — a genuine claim-and-reason pair from this content (Classes 10–12 especially).
 - **quick_revision** — end of the lecture: key points (formulas as `$…$`) + glossary.
+- **process_flow** — the steps of a method, algorithm or construction in order — Euclid's division, bisecting a line segment, solving a linear equation. Drawn by code as boxes and arrows: 3–6 steps, each a short label plus one line of detail.
+- **illustration** — the real-life setting of an idea or a problem — fencing a garden plot, a ladder leaning on a wall, a clock face, a stack of coins. At most 2 per lecture. `art_prompt` describes only what is seen (subject, setting, view, light) — never text, labels, arrows, diagrams, maps or graphs; those stay on NCERT figures. The narration first says in a line what the picture shows, then ties it to each point.

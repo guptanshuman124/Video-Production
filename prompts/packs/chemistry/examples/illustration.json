@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "Rust on an Iron Gate",
+    "art_prompt": "An old iron gate of an Indian house in the monsoon, reddish-brown rust patches on its bars, raindrops on the metal, close-up at eye level, soft overcast light",
+    "points": [
+      "Iron reacts with oxygen and water in moist air",
+      "The reddish-brown flaky coating formed is rust",
+      "Painting or oiling iron keeps air and water away"
+    ]
+  },
+  "narration_hinglish": "यह gate देखो — बारिश के मौसम में इसके bars पर reddish-brown सी coating आ गई है। {{b1.1}} जब iron moist air में रहता है, तो वह oxygen और water दोनों के साथ react करता है। {{b1.2}} इस reaction से जो reddish-brown, flaky coating बनती है, उसे हम rust कहते हैं। {{b1.3}} इसीलिए iron की चीज़ों को paint या oil किया जाता है — ताकि air और water surface तक पहुँच ही न पाएँ, और rusting रुक जाए।"
+}

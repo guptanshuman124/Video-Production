@@ -26,7 +26,7 @@
       "max": 3
     },
     "image_points": {
-      "max": 3
+      "max": 4
     },
     "mechanism": {
       "max": 2
@@ -38,6 +38,12 @@
       "max": 3
     },
     "descriptive_answer": {
+      "max": 2
+    },
+    "illustration": {
+      "max": 2
+    },
+    "process_flow": {
       "max": 2
     },
     "mcq": {

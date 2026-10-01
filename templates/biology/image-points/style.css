@@ -9,3 +9,11 @@
 .formula { margin-top: 6px; font-size: 29px; color: var(--brand-navy); }
 .formula .katex-display { margin: 0; text-align: left; }
 .formula .katex-display > .katex { text-align: left; font-size: 1.21em; }
+
+/* Wide figures: across the top, points in two columns underneath. */
+.side.wide { left: 84px; top: 232px; width: 1752px; height: 452px; }
+.points.wide {
+  left: 84px; top: 712px; width: 1752px;
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; row-gap: 18px;
+}
+.points.wide .desc { font-size: 26px; }

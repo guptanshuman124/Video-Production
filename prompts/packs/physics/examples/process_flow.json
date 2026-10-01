@@ -1,0 +1,26 @@
+{
+  "data": {
+    "title": "Energy in a Hydro Power Plant",
+    "steps": [
+      {
+        "label": "Water stored in a dam",
+        "detail": "Water held high up has potential energy"
+      },
+      {
+        "label": "Water falls through pipes",
+        "detail": "Its potential energy changes into kinetic energy"
+      },
+      {
+        "label": "Turbine turns",
+        "detail": "The moving water rotates the turbine blades"
+      },
+      {
+        "label": "Generator",
+        "detail": "The rotating turbine drives a generator that produces electricity"
+      }
+    ],
+    "cycle": false,
+    "note": null
+  },
+  "narration_hinglish": "Hydro power plant में energy एक form से दूसरे form में कैसे बदलती है, step by step देखते हैं। {{b1.1}} Dam में ऊँचाई पर रुका हुआ water potential energy store करता है। {{b1.2}} जब यह water pipes से नीचे गिरता है, तो potential energy kinetic energy में बदल जाती है। {{b1.3}} तेज़ बहता water turbine के blades को घुमाता है। {{b1.4}} और घूमता हुआ turbine generator को चलाता है, जो electricity produce करता है।"
+}

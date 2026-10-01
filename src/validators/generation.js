@@ -268,6 +268,53 @@ export function gateLecturePlan(plan, ctx) {
   const cited = new Set(S.flatMap((s) => s.source_refs));
   for (const id of ctx.sectionIds) if (!cited.has(id)) issues.push(issue('SECTION_UNUSED', 'warning', '/slides', `section ${id} is assigned to this lecture but no slide covers it`));
 
+  // Figure-heavy lectures (e.g. six lens ray-diagram cases) make the planner
+  // put every figure on its own labeled_diagram: over the type's per-lecture
+  // cap and far past the same-type run limit — and a re-plan tends to repeat
+  // it. Here, a figure slide over its cap or past the run limit moves to a
+  // sibling figure type (image_points → mechanism → definition) that still
+  // has room, takes the figure's shape and does not repeat its neighbour;
+  // the figure stays. Whatever cannot be moved is left for the checks below.
+  {
+    const maxOf = (t) => ctx.pack.types?.[t]?.max ?? Infinity;
+    const maxRun = (ctx.pack.flow || {}).maxConsecutiveSameType || Infinity;
+    const FAMILY = IMAGE_SWAP;
+    const countOf = (t) => S.filter((x) => x.slide_type === t).length;
+    // Length of the same-type run slide i would sit in if it became type t.
+    const runIf = (i, t) => {
+      let n = 1;
+      for (let j = i - 1; j >= 0 && S[j].slide_type === t; j--) n++;
+      for (let j = i + 1; j < S.length && S[j].slide_type === t; j++) n++;
+      return n;
+    };
+    S.forEach((s, i) => {
+      // Only slides that show a figure; text slides are the planner's to reorder.
+      if (!FAMILY.includes(s.slide_type) || !s.image_id) return;
+      const before = S.slice(0, i + 1).filter((x) => x.slide_type === s.slide_type).length;
+      let run = 1;
+      for (let j = i - 1; j >= 0 && S[j].slide_type === s.slide_type; j--) run++;
+      if (before <= maxOf(s.slide_type) && run <= maxRun) return;
+      const img = s.image_id ? catalog.get(s.image_id) : null;
+      const to = FAMILY.find((t) => t !== s.slide_type && ctx.types[t] && takesImage(ctx.types[t].spec)
+        && (!img || fitsRatio(img, ctx.types[t].spec.ratios)) && countOf(t) < maxOf(t) && runIf(i, t) <= maxRun);
+      if (to) {
+        fix('TYPE_REBALANCED', i, `slide ${i + 1}: ${before > maxOf(s.slide_type) ? `more than ${maxOf(s.slide_type)} × ${s.slide_type}` : `${run} × ${s.slide_type} in a row`}; switched to ${to}${img ? ` (keeps ${img.id})` : ''}`);
+        s.slide_type = to;
+        return;
+      }
+      // Every figure slot of the lecture is taken: teach this one in words (a
+      // definition slide: explanation + points) and leave its figure out, rather
+      // than failing the whole lecture on a slide count.
+      if (before > maxOf(s.slide_type) && s.slide_type !== 'definition' && ctx.types.definition && countOf('definition') < maxOf('definition')
+          && runIf(i, 'definition') <= maxRun) {
+        const keep = img && takesImage(ctx.types.definition.spec) && fitsRatio(img, ctx.types.definition.spec.ratios);
+        fix('FIGURE_DROPPED', i, `slide ${i + 1}: no figure slot left (${s.slide_type} at most ${maxOf(s.slide_type)}); taught as a definition${img && !keep ? ` without ${img.id}` : ''}`);
+        s.slide_type = 'definition';
+        if (!keep) s.image_id = null;
+      }
+    });
+  }
+
   // pack.json: per-type counts and flow.
   const types = S.map((s) => s.slide_type);
   const count = (t) => types.filter((x) => x === t).length;

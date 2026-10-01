@@ -37,6 +37,12 @@
     "descriptive_answer": {
       "max": 2
     },
+    "illustration": {
+      "max": 2
+    },
+    "process_flow": {
+      "max": 2
+    },
     "mcq": {
       "min": 2,
       "max": 5

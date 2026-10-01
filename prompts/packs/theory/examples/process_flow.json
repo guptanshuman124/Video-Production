@@ -1,0 +1,26 @@
+{
+  "data": {
+    "title": "The Water Cycle",
+    "steps": [
+      {
+        "label": "Evaporation",
+        "detail": "The sun heats water in seas, rivers and lakes into water vapour"
+      },
+      {
+        "label": "Condensation",
+        "detail": "The vapour rises, cools and forms clouds"
+      },
+      {
+        "label": "Precipitation",
+        "detail": "Water falls back to the earth as rain, snow or hail"
+      },
+      {
+        "label": "Collection",
+        "detail": "Water flows back into rivers, lakes, seas and the ground"
+      }
+    ],
+    "cycle": true,
+    "note": "The same water keeps moving in this cycle"
+  },
+  "narration_hinglish": "Water cycle एक ऐसा cycle है जो कभी रुकता नहीं। {{b1.1}} Sun की heat से seas, rivers और lakes का water, water vapour बनकर ऊपर उठता है — यह evaporation है। {{b1.2}} ऊपर जाकर vapour ठंडा होता है और clouds बनाता है — यह condensation है। {{b1.3}} फिर यही water rain, snow या hail के रूप में वापस earth पर गिरता है — यह precipitation है। {{b1.4}} और यह water वापस rivers, lakes, seas और ज़मीन के अंदर पहुँच जाता है, जहाँ से cycle फिर शुरू होता है।"
+}

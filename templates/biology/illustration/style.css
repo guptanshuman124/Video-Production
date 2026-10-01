@@ -1,0 +1,30 @@
+--brand-bg: var(--bg-mist);
+
+/* Picture on the left (3:2), points stacked on the right. */
+.art {
+  position: absolute; left: 84px; top: 236px; width: 1086px; height: 724px; margin: 0;
+  border-radius: 22px; overflow: hidden; background: #dfe5ea;
+  box-shadow: 0 2px 4px rgba(29, 39, 51, .06), 0 22px 54px rgba(29, 39, 51, .16);
+}
+.art img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 58% 45%; }
+.tag {
+  position: absolute; left: 18px; bottom: 16px; padding: 7px 14px; border-radius: 999px;
+  background: rgba(255, 255, 255, .85); color: var(--brand-body);
+  font: 600 16px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase;
+}
+.points {
+  position: absolute; left: 1206px; top: 252px; width: 630px;
+  list-style: none; display: flex; flex-direction: column; gap: 22px;
+}
+.points.wide { left: 240px; width: 1440px; top: 300px; gap: 28px; }
+.points li {
+  display: flex; gap: 18px; align-items: flex-start; padding: 22px 24px 22px 20px;
+  background: var(--brand-surface); border-radius: var(--radius-card); box-shadow: var(--brand-shadow);
+  border-left: 5px solid var(--brand-teal);
+}
+.n {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brand-orange); color: #fff; font: 700 21px/1 var(--font-body); margin-top: 1px;
+}
+.t { font: 400 28px/1.36 var(--font-card); color: var(--brand-ink); }
+.points.wide .t { font-size: 32px; }

@@ -6,8 +6,8 @@
 }
 .card {
   height: 240px; padding: 22px 32px 0 25px;
-  background: #f8f8f8; border-radius: 14px;
-  box-shadow: 3px 4px 10px rgba(0, 0, 0, .16), 0 1px 2px rgba(0, 0, 0, .06);
+  background: var(--brand-surface); border-radius: 14px;
+  box-shadow: var(--brand-shadow); border-top: 4px solid var(--brand-teal);
 }
 .card-head { display: flex; align-items: center; gap: 18px; height: 55px; }
 .check { flex: 0 0 auto; color: var(--brand-navy); overflow: visible; }

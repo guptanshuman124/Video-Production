@@ -31,6 +31,8 @@ export async function renderProject(project, opts = {}) {
     preset: String(opts.preset ?? (draft ? 'veryfast' : (project.video.preset ?? 'slow'))),
     tune: opts.tune ?? project.video.tune ?? null,
     inputCodec: capture === 'jpeg' ? 'mjpeg' : 'png',
+    threads: opts.threads ?? null,
+    lookahead: opts.lookahead ?? null,
   };
   const audio = hasAudio(project.audio && path.resolve(project.dir, project.audio));
 

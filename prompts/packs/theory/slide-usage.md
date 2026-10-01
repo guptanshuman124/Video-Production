@@ -16,3 +16,5 @@
 - **mcq** — a CBSE-style MCQ with one trap option (a close date, a similar name, a related concept).
 - **assertion_reason** — a genuine claim-and-cause pair from this content (Classes 9–12).
 - **quick_revision** — end of the lecture: key points + glossary of the terms taught.
+- **process_flow** — a sequence of events, the stages of a process or a cycle — the water cycle (`cycle`: true), how a bill becomes a law, the stages of a movement. Drawn by code as boxes and arrows: 3–6 steps, each a short label plus one line of detail.
+- **illustration** — a general everyday or historical-life scene — a weekly village market, a farmer irrigating a field, voters queuing at a polling booth (never a specific famous person or monument). At most 2 per lecture. `art_prompt` describes only what is seen (subject, setting, view, light) — never text, labels, arrows, diagrams, maps or graphs; those stay on NCERT figures. The narration first says in a line what the picture shows, then ties it to each point.

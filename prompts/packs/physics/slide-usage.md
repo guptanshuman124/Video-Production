@@ -15,3 +15,5 @@
 - **misconception** — real, frequent confusions ("heavier bodies fall faster", "current is used up in a bulb").
 - **formula_sheet** — end of a formula-heavy lecture: the formulas taught, each labelled, plus a symbol key.
 - **quick_revision** — end of a concept-heavy lecture: key points + glossary of what was taught.
+- **process_flow** — a chain of energy conversions or the steps of a method — a hydro power plant, the path from a battery to a glowing bulb, the steps of a measurement. Drawn by code as boxes and arrows: 3–6 steps, each a short label plus one line of detail.
+- **illustration** — an everyday scene where the idea is at work — a child pulling a loaded cart, a cyclist going downhill, a magnet picking up steel pins, a pressure cooker on a stove (the scene, not the effect: never rely on the picture to show light bending, a spectrum or a field). At most 2 per lecture. `art_prompt` describes only what is seen (subject, setting, view, light) — never text, labels, arrows, diagrams, maps or graphs; those stay on NCERT figures. The narration first says in a line what the picture shows, then ties it to each point.

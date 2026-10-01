@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig, merge } from '../config.js';
 import { runLectureJob } from '../pipeline/run.js';
+import { costBreakdown } from '../pipeline/cost.js';
 
 export function jobDir(jobsDir, input) {
   return path.join(jobsDir, `c${input.course_id}`, `m${input.module_id}`, `l${input.lecture_id}`);
@@ -34,7 +35,7 @@ function llmCost(dir) {
   let usd = 0;
   for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
     if (!line.trim()) continue;
-    try { usd += Number(JSON.parse(line).cost_usd || 0); } catch { /* partial line */ }
+    try { const row = JSON.parse(line); usd += Number(row.cost_usd ?? row.usage?.cost_usd ?? 0); } catch { /* partial line */ }
   }
   return usd;
 }
@@ -65,10 +66,10 @@ async function main({ input, from, jobsDir }) {
       status: r.status, ok: r.status === 'ok', dir,
       video: r.status === 'ok' ? path.join(dir, 'lecture.mp4') : null,
       qa: read('qa.json'), stages: read('status.json', {}), reviewQueue: read('review-queue.json', []),
-      slides: content?.slides?.length ?? null, cost_usd: llmCost(dir),
+      slides: content?.slides?.length ?? null, cost_usd: llmCost(dir), cost: costBreakdown(path.join(dir, 'llm.jsonl'), cfg),
     };
   } catch (e) {
-    result = { status: `crashed: ${e.message}`, ok: false, crashed: true, dir, error: String(e.stack || e.message).slice(0, 4000), cost_usd: llmCost(dir),
+    result = { status: `crashed: ${e.message}`, ok: false, crashed: true, dir, error: String(e.stack || e.message).slice(0, 4000), cost_usd: llmCost(dir), cost: costBreakdown(path.join(dir, 'llm.jsonl'), cfg),
                stages: (() => { try { return JSON.parse(fs.readFileSync(path.join(dir, 'status.json'), 'utf8')); } catch { return {}; } })() };
   }
   send({ type: 'result', result });

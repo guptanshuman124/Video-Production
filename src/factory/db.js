@@ -69,7 +69,10 @@ export async function openDb(url) {
   const pool = mysql.createPool({ uri: url, charset: 'utf8mb4', connectionLimit: 8, dateStrings: false, timezone: 'Z' });
   for (const sql of SCHEMA) await pool.query(sql);
   // Columns added after the first release (MySQL has no ADD COLUMN IF NOT EXISTS).
+  // Per-video cost breakdown (pipeline/cost.js), kept after the job folder is deleted.
+  await addColumns(pool, name, 'jobs', { cost_detail: 'JSON NULL' });
   await addColumns(pool, name, 'videos', {
+    cost_detail: 'JSON NULL',
     storage: "VARCHAR(20) NOT NULL DEFAULT 'local'",
     remote_id: 'VARCHAR(200) NULL',
     remote_url: 'VARCHAR(1000) NULL',

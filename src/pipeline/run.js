@@ -31,6 +31,7 @@ import { gateAudio, gateSync, gateVideo } from '../validators/media.js';
 import { synthesizeLecture } from '../sound/index.js';
 import { duration as wavDuration } from '../sound/wav.js';
 import { buildProject } from '../build/project.js';
+import { artAvailable } from '../generation/art.js';
 import { normalizeProject, loadProject, timeline } from '../project.js';
 import { renderProject } from '../render.js';
 import { probeAll, blackSegments, revealCheck } from '../qa.js';
@@ -321,7 +322,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
     let voice;
     try {
       // opts.ttsCacheDir: the factory keeps clips inside the job folder, so they go when it does.
-      voice = await synthesizeLecture(content, cfg, { dir, cacheDir: opts.ttsCacheDir || path.join(path.resolve(cfg.paths.jobs), '.cache', 'tts'), provider: opts.tts });
+      voice = await synthesizeLecture(content, cfg, { dir, cacheDir: opts.ttsCacheDir || path.join(path.resolve(cfg.paths.jobs), '.cache', 'tts'), provider: opts.tts, logFile: store.path(rel('llm.jsonl')) });
     } catch (e) {
       // A provider failure after all retries: record it for this lecture
       // (review queue) instead of stopping the whole run. Clips already made
@@ -336,8 +337,12 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
 
   if (!store.has(rel('project.json')) && inRange('build')) {
     emit({ type: 'stage', stage: 'build' });
-    const { project, cues, required } = await buildProject(content, voice, G.types, cfg, { dir });
-    const issues = [];
+    // Pictures only with a real text model (mock runs and tests stay offline) and an API key.
+    const art = { enabled: G.llm.name !== 'mock' && artAvailable(cfg), cacheDir: path.join(path.resolve(cfg.paths.jobs), '.cache', 'art'), logFile: store.path(rel('llm.jsonl')) };
+    const enhance = cfg.images?.enhance?.enabled ? cfg.images.enhance : null;
+    const built = await buildProject(content, voice, G.types, cfg, { dir, enhance, art });
+    const { project, cues, required } = built;
+    const issues = [...built.issues];
     try { await normalizeProject(structuredClone(project), dir, 'project'); } catch (e) {
       issues.push({ code: 'PROJECT_INVALID', severity: 'error', path: '/', message: e.message });
     }
@@ -357,6 +362,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
     let last = 0;
     const r = await renderProject(project, {
       out: store.path(rel('lecture.mp4')), jobs: opts.jobs ?? v.jobs, capture: v.capture, crf: v.crf, preset: v.preset, tune: v.tune,
+      threads: v.encode_threads, lookahead: v.lookahead,
       draft: !!opts.draft,
       onFrame: (done, count) => {
         if (Date.now() - last < 2000 && done < count) return;

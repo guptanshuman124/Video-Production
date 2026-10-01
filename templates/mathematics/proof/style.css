@@ -22,7 +22,7 @@
   background: var(--brand-surface-alt); border: 1px solid var(--brand-panel-line);
   display: flex; flex-direction: column;
 }
-.stext { font: 400 26.7px/1.25 var(--font-body); color: #000; }
+.stext { font: 400 26.7px/1.25 var(--font-body); color: var(--brand-ink); }
 .seq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-size: calc(40px - var(--n) * 2px); color: var(--brand-navy); }
 .seq .katex-display { margin: 0; }
 .slabel { position: absolute; right: 18px; bottom: 10px; font: 400 24px/1 var(--font-body); color: var(--brand-navy); }

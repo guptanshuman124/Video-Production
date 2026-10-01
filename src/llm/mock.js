@@ -62,7 +62,8 @@ function lecturePlan({ lecture, lectures, sections, images, types, budget }) {
   const tail = (last ? ['quick_revision', 'mcq', answer, 'mcq'] : ['quick_revision', 'mcq']).filter(has);
   const body = ['concept_intro', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
                 'labeled_diagram', 'cause_effect', 'descriptive_answer', 'comparison', 'person', 'definition', 'misconception', 'try_this',
-                'characteristics', 'assertion_reason', 'source_extract', 'definition', 'image_points', 'practice_problem', 'solved_example'];
+                'characteristics', 'assertion_reason', 'source_extract', 'definition', 'image_points', 'practice_problem', 'solved_example',
+                'process_flow', 'illustration'];
   const want = Math.max(budget.min, Math.min(budget.max, head.length + tail.length + 8));
   const picked = [];
   const count = (t) => [...head, ...picked, ...tail].filter((x) => x === t).length;
@@ -117,6 +118,8 @@ function slideData(st, plan, v, seed) {
   }
   if (st.type === 'mcq') Object.assign(d, { options: ['Option one', 'Option two', 'Option three', 'Option four'], answer: 'A', wrong: ['C'] });
   if (st.type === 'assertion_reason') Object.assign(d, { answer: 'A', wrong: ['B'] });
+  // A fixed plain scene: source vocabulary could contain words the art_prompt check refuses.
+  if (st.type === 'illustration') d.art_prompt = 'A student reading a book at a wooden desk beside a sunny window, side view';
   if (st.type === 'comparison') {
     d.columns = ['Basis', 'First', 'Second'];
     d.rows = [0, 1, 2].map((i) => [phrase(v, 2, seed + i), phrase(v, 4, seed + i + 1), phrase(v, 4, seed + i + 2)]);

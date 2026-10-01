@@ -98,7 +98,7 @@ async function runOne(job) {
   if (!result) result = { ok: false, crashed: true, status: stopping ? 'worker pod stopped (redeploy or scale-down)' : `worker process exited (${exit.signal || `code ${exit.code}`})` };
 
   if (result.ok && result.video && fs.existsSync(result.video)) {
-    const meta = { qa: result.qa, stages: result.stages, slides: result.slides, cost_usd: result.cost_usd };
+    const meta = { qa: result.qa, stages: result.stages, slides: result.slides, cost_usd: result.cost_usd, cost: result.cost || null };
     try {
       const size = fs.statSync(result.video).size;
       const r = await reliably(() => api('PUT', `/api/worker/video/${id}`, fs.createReadStream(result.video), {
@@ -116,7 +116,7 @@ async function runOne(job) {
   log(`✗ lecture ${id}: ${result.status}`);
   await reliably(() => api('POST', `/api/worker/failed/${id}`, {
     status: result.status, crashed: !!result.crashed, error: result.error, stages: result.stages,
-    reviewQueue: result.reviewQueue, cost_usd: result.cost_usd,
+    reviewQueue: result.reviewQueue, cost_usd: result.cost_usd, cost: result.cost || null,
   }), 'report failure');
 }
 

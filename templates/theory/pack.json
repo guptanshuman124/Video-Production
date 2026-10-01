@@ -54,6 +54,12 @@
     "source_extract": {
       "max": 2
     },
+    "illustration": {
+      "max": 2
+    },
+    "process_flow": {
+      "max": 2
+    },
     "mcq": {
       "min": 1,
       "max": 4

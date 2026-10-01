@@ -1,0 +1,24 @@
+{
+  "lecture": "Water",
+  "title": "The Water Cycle",
+  "steps": [
+    {
+      "label": "Evaporation",
+      "detail": "The sun heats water in seas, rivers and lakes into water vapour"
+    },
+    {
+      "label": "Condensation",
+      "detail": "The vapour rises, cools and forms clouds"
+    },
+    {
+      "label": "Precipitation",
+      "detail": "Water falls back to the earth as rain, snow or hail"
+    },
+    {
+      "label": "Collection",
+      "detail": "Water flows back into rivers, lakes, seas and the ground"
+    }
+  ],
+  "cycle": true,
+  "note": "The same water keeps moving in this cycle"
+}

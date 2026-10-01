@@ -42,6 +42,15 @@ export const TRANSITIONS = {
                 to:   { opacity: 1, transform: 'scale(1)', filter: 'blur(0px)' } },
     outgoing: { to: { opacity: 1, transform: 'scale(.94)', filter: 'blur(10px)' } },
   },
+  // The deck default: the new slide fades in while drifting up a few pixels
+  // and settling from a hair larger; the old one eases back slightly under it.
+  // Gentle enough for 20 minutes of lecture, but reads as a designed cut.
+  soft: {
+    ease: EASE.out,
+    into:     { from: { opacity: 0, transform: 'translateY(16px) scale(1.008)' },
+                to:   { opacity: 1, transform: 'translateY(0) scale(1)' } },
+    outgoing: { to: { opacity: 1, transform: 'scale(.985)' } },
+  },
 };
 
-export const DEFAULT_TRANSITION = { name: 'dissolve', duration: 700 };
+export const DEFAULT_TRANSITION = { name: 'soft', duration: 800 };

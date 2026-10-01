@@ -321,3 +321,13 @@ h3 { font-size: 15px; font-weight: 600; }
   .chapter-head { grid-template-columns: 20px 1fr; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Per-video cost breakdown (lecture drawer) */
+.cost { display: flex; flex-direction: column; gap: 8px; }
+.cost-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cost-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cost-table .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cost-label { font-weight: 600; color: var(--text); }
+.cost-table tfoot td { color: var(--text-2); border-bottom: none; padding-top: 6px; padding-bottom: 2px; }
+.cost-table tfoot tr:first-child td { border-top: 1px solid var(--line); padding-top: 10px; }
+.cost-table .cost-total td { font-weight: 700; color: var(--text); font-size: 15px; padding-top: 8px; }

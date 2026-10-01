@@ -6,8 +6,8 @@
 .bar {
   height: 72px; border-radius: var(--radius-card); background: var(--brand-surface-head);
   display: flex; align-items: center; justify-content: center;
-  font: 700 28px/1 var(--font-body); color: #000;
+  font: 700 28px/1 var(--font-body); color: var(--brand-ink);
 }
-.bullets { margin-top: 14px; gap: 10px; font: 400 28px/1.21 var(--font-body); color: #000; }
+.bullets { margin-top: 14px; gap: 10px; font: 400 28px/1.21 var(--font-body); color: var(--brand-ink); }
 .bullets > li { padding-left: 52px; }
 .bullets > li::before { left: 27px; }
