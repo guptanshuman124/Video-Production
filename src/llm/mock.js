@@ -183,7 +183,7 @@ function narrate(ctx) {
       let text = s.st.spec.question ? `So what do you think the answer is? ${block(0)}` : block(0);
       if (s.st.type === 'intro') text = `Welcome to lecture ${ctx.lecture ?? 1} of this chapter. ${text}`;
       ids.forEach((id, k) => { text += ` {{${id}}} ${block(k + 1)}`; });
-      return { index: s.index, narration: ctx.language === 'hinglish' ? toHinglish(text) : text };
+      return { index: s.index, narration: ctx.language === 'hinglish' ? toHinglish(text) : ctx.language === 'hindi' ? toHindi(text) : text };
     }),
   };
 }
@@ -191,6 +191,16 @@ function narrate(ctx) {
 const HI = { the: '', is: 'है', are: 'हैं', and: 'और', of: 'का', to: 'को', in: 'में', this: 'यह', so: 'तो', with: 'के साथ', from: 'से', all: 'सब', we: 'हम', how: 'कैसे', why: 'क्यों', what: 'क्या', each: 'हर', which: 'जो', do: 'करते', you: 'आप', think: 'सोचिए' };
 
 const TAILS = ['यह ध्यान से समझिए', 'इसे याद रखना ज़रूरी है', 'यही इसकी असली बात है', 'इसे ऐसे देखो'];
+
+// Hindi courses: every word in Devanagari (the welcome keeps "lecture N").
+const HINDI_WORDS = ['यह', 'पाठ', 'हमें', 'सिखाता', 'है', 'कि', 'कवि', 'ने', 'इस', 'पंक्ति', 'में', 'अपने', 'मन', 'की', 'बात', 'कही', 'और', 'इसका', 'अर्थ', 'बहुत', 'सुंदर', 'समझिए', 'ध्यान', 'से'];
+function toHindi(en) {
+  let k = 0;
+  return en.split(/(\{\{b\d+(?:\.\d+){0,2}\}\}|lecture \d+)/).map((part) => {
+    if (/^\{\{|^lecture \d+$/.test(part)) return part;
+    return part.replace(/[A-Za-z]+/g, () => HINDI_WORDS[k++ % HINDI_WORDS.length]).replace(/\./g, '।');
+  }).join('');
+}
 
 function toHinglish(en) {
   let k = 0;
@@ -206,7 +216,75 @@ function hinglish(ctx) {
   return { slides: ctx.slides.map((s) => ({ index: s.index, hinglish: toHinglish(s.english) })) };
 }
 
+// ---- summary videos ------------------------------------------------------------------
+
+// Parts follow the lectures (merged or split to fit the allowed part count).
+function summaryOutline({ sections, lectures, minutes, parts: [pmin, pmax] }) {
+  let groups = lectures.map((l) => sections.filter((s) => s.lecture === l.index));
+  while (groups.length > pmax) { const [a, b] = groups.splice(groups.length - 2, 2); groups.push([...a, ...b]); }
+  while (groups.length < Math.min(pmin, sections.length)) {
+    const i = groups.reduce((best, g, j) => (g.length > groups[best].length ? j : best), 0);
+    const g = groups[i];
+    if (g.length < 2) break;
+    groups.splice(i, 1, g.slice(0, Math.ceil(g.length / 2)), g.slice(Math.ceil(g.length / 2)));
+  }
+  const total = sections.reduce((a, s) => a + s.words, 0) || 1;
+  return {
+    parts: groups.map((g) => ({
+      title: (g[0]?.heading || 'Part').replace(/^[\d.]+\s*/, '').split(/\s+/).slice(0, 5).join(' '),
+      lectures: [...new Set(g.map((s) => s.lecture))],
+      section_ids: g.map((s) => s.id),
+      minutes: Math.round((g.reduce((a, s) => a + s.words, 0) / total) * minutes * 10) / 10,
+      key_points: [...g.map((s) => s.heading), 'The main idea of this part', 'How it is asked in the exam', 'A common mistake to avoid'].slice(0, 6),
+      must_include: [],
+    })),
+  };
+}
+
+const SUMMARY_BODY = ['definition', 'comparison', 'process_flow', 'labeled_diagram', 'image_points', 'characteristics', 'formula_sheet', 'timeline',
+  'cause_effect', 'principle', 'journal_entry', 'ledger', 'trial_balance', 'rule_cards', 'passage', 'word_meanings', 'grammar_rule', 'central_idea',
+  'character', 'misconception', 'mechanism', 'person', 'source_extract', 'definition', 'comparison'];
+
+function summaryPlan({ sections, images, types, budget, final, endTypes, finalQuestions, questionTypes }) {
+  const has = (t) => !!types[t];
+  const usedImg = new Set();
+  const img = (t) => {
+    const im = images.find((x) => types[t].fits(x) && !usedImg.has(x.id));
+    if (im) usedImg.add(im.id);
+    return im?.id ?? null;
+  };
+  const end = endTypes.find((t) => has(t) && !questionTypes.includes(t)) || endTypes.find(has);
+  const tail = [end, ...(final ? Array(finalQuestions).fill(questionTypes.find(has) || 'mcq') : [])].filter(has);
+  const want = Math.max(budget.min, tail.length + 2);
+  const body = [];
+  for (let k = 0; body.length < want - tail.length && k < SUMMARY_BODY.length * 2; k++) {
+    const t = SUMMARY_BODY[k % SUMMARY_BODY.length];
+    if (!has(t) || body.filter((x) => x === t).length >= (t === 'definition' ? 2 : 1) || body.at(-1) === t) continue;
+    if (types[t].needsImage && !images.some((x) => types[t].fits(x) && !usedImg.has(x.id))) continue;
+    body.push(t);
+  }
+  const list = [...body, ...tail];
+  return {
+    slides: list.map((t, i) => {
+      const sec = sections[i % sections.length];
+      return {
+        slide_type: t,
+        title: sec.heading.replace(/^[\d.]+\s*/, '').split(' ').slice(0, 6).join(' ') || `Topic ${i + 1}`,
+        purpose: `${t} for ${sec.heading}`,
+        key_points: [sec.text.split(/[.!?]/)[0].slice(0, 120) || sec.heading],
+        source_refs: [sec.id],
+        image_id: types[t].takesImage ? img(t) : null,
+      };
+    }),
+  };
+}
+
 const TASKS = {
+  'summary-outline': summaryOutline,
+  'summary-plan': summaryPlan,
+  'summary-write': (ctx) => slideWrite(ctx),
+  'summary-narrate': (ctx) => narrate(ctx),
+  'summary-review': () => ({ issues: [] }),
   'chapter-plan': chapterPlan,
   'slide-plan': lecturePlan,
   'slide-write': slideWrite,

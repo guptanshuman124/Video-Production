@@ -17,6 +17,6 @@
 }
 .qnum {
   flex: none; width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center;
-  background: var(--brand-orange); color: #1a1030; font: 700 22px/1 var(--font-body); transform: translateY(-2px);
+  background: var(--brand-orange); color: var(--on-accent); font: 700 22px/1 var(--font-body); transform: translateY(-2px);
 }
 .qtext { font: 700 28px/1.35 var(--font-body); color: var(--brand-navy); }

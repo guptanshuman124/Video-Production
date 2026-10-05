@@ -65,6 +65,12 @@ export const cue = (list, i) => {
   return typeof t === 'number' ? t * 1000 : null;
 };
 export const sec = (v) => (typeof v === 'number' ? v * 1000 : null);
+// Two-part reveals (`parts` in meta.slide.reveal): list[i] = [t1, t2] seconds -> ms of part p.
+export const partCue = (list, i, p) => {
+  const v = list?.[i];
+  const t = Array.isArray(v) ? v[p] : p === 0 ? v : null;
+  return typeof t === 'number' ? t * 1000 : null;
+};
 
 // Schema fragments reused by every biology template.
 export const common = {
@@ -79,12 +85,15 @@ export const cueList = (what) => ({
 
 // Answer-state keyframes for option rows. Literal colours because WAAPI
 // keyframes are resolved before custom properties would be; they match the
-// --mcq-* and --brand-surface-alt tokens in global.css.
-export const MCQ = {
-  correct: { bg: 'rgba(94, 230, 168, 0.18)', border: '#5ee6a8' },
-  wrong: { bg: 'rgba(255, 122, 122, 0.18)', border: '#ff7a7a' },
+// --mcq-* and --brand-surface-alt tokens of each theme (global.css: sky,
+// theme-dark.css: dark). The stage sets globalThis.HVR_THEME before rendering.
+const MCQ_THEMES = {
+  sky: { correct: { bg: '#def2e8', border: '#1f8a6a' }, wrong: { bg: '#fbe5e1', border: '#c8553d' }, base: '#f6f9fc' },
+  dark: { correct: { bg: 'rgba(94, 230, 168, 0.18)', border: '#5ee6a8' }, wrong: { bg: 'rgba(255, 122, 122, 0.18)', border: '#ff7a7a' }, base: 'rgba(255, 255, 255, 0.05)' },
 };
-export const stateAnim = (state, base = 'rgba(255, 255, 255, 0.05)') => ({
+const mcqTheme = () => MCQ_THEMES[globalThis.HVR_THEME] || MCQ_THEMES.sky;
+export const MCQ = { get correct() { return mcqTheme().correct; }, get wrong() { return mcqTheme().wrong; } };
+export const stateAnim = (state, base = mcqTheme().base) => ({
   dur: 450, ease: 'outSoft',
   kf: [{ backgroundColor: base, borderColor: 'rgba(0,0,0,0)' },
        { backgroundColor: MCQ[state].bg, borderColor: MCQ[state].border }],

@@ -1,0 +1,30 @@
+--brand-bg: var(--bg-grey);
+
+/* Rule card, pattern bar, then the example rows — one flowing column. */
+.col {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; height: 744px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.rule {
+  flex: none; padding: 16px 26px 18px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+}
+.label { font: 700 21px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .04em; }
+.rtext { margin-top: 6px; font: 600 30px/1.38 var(--font-body); color: var(--brand-title); }
+.pattern {
+  flex: none; display: flex; align-items: baseline; gap: 20px; padding: 14px 26px;
+  border-radius: var(--radius-card); background: var(--brand-surface-head);
+}
+.ptext { font: 700 30px/1.3 var(--font-body); color: var(--brand-navy); letter-spacing: .01em; }
+.exlabel { margin: 4px 0 -6px 4px; }
+.examples { display: flex; flex-direction: column; gap: 12px; }
+.ex {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 520px); gap: 18px; align-items: center;
+  padding: 12px 22px; border-radius: var(--radius-card); background: var(--brand-surface-alt);
+}
+.num {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brand-orange); color: var(--on-accent); font: 700 20px/1 var(--font-body);
+}
+.sentence { font: 500 29px/1.35 var(--font-body); color: var(--brand-ink); }
+.note { font: italic 400 23px/1.35 var(--font-body); color: var(--brand-muted); }

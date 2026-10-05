@@ -1,0 +1,29 @@
+--brand-bg: var(--bg-mist);
+
+/* Instruction bar at y=236; question rows below share the height. */
+.instr {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; box-sizing: border-box;
+  padding: 14px 26px; border-radius: var(--radius-card); background: var(--brand-surface-head);
+  font: 700 30px/1.3 var(--font-body); color: var(--brand-title);
+}
+.items {
+  position: absolute; left: var(--frame-left); top: 340px; width: 1752px; height: 640px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.item {
+  flex: 0 1 calc((100% - (var(--n) - 1) * 14px) / var(--n)); max-height: 150px; min-height: 0; overflow: hidden;
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center;
+  padding: 12px 22px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line);
+}
+.num {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brand-orange); color: var(--on-accent); font: 700 20px/1 var(--font-body);
+}
+.q { font: 500 28px/1.35 var(--font-body); color: var(--brand-ink); }
+.a {
+  display: flex; flex-direction: column; gap: 2px; padding: 8px 16px; border-radius: var(--radius-row);
+  background: var(--good-bg); border-left: 5px solid var(--good-line);
+  font: 700 27px/1.3 var(--font-body); color: var(--good-ink);
+}
+.a .label { font: 700 17px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .05em; }

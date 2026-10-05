@@ -1,0 +1,11 @@
+{
+  "lecture": "Tenses",
+  "title": "The Present Perfect Tense",
+  "rule": "Use the present perfect for an action completed in the recent past whose result matters now.",
+  "pattern": "Subject + has / have + V3 (past participle)",
+  "examples": [
+    { "sentence": "She *has finished* her homework.", "note": "has — with he / she / it" },
+    { "sentence": "They *have gone* to the market.", "note": "have — with I / you / we / they" },
+    { "sentence": "I *have* never *seen* snow.", "note": "never / ever sit between has/have and V3" }
+  ]
+}

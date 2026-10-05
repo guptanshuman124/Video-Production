@@ -16,5 +16,5 @@
 }
 .qlabel { font: 700 22px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; letter-spacing: .02em; }
 .qtext { margin-top: 8px; font: 600 30px/1.3 var(--font-body); color: var(--brand-navy); }
-.side { left: 960px; top: 157px; width: 856px; height: 833px; }
+.side { left: 960px; top: 236px; width: 856px; height: 754px; }   /* below the title band (was top 157: long titles ran under it) */
 .side .panel-caption { padding-bottom: 15px; }

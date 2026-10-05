@@ -11,7 +11,7 @@ const SCHEMA = {
     type: 'object', additionalProperties: false, required: ['slide', 'code', 'severity', 'message'],
     properties: {
       slide: { type: ['integer', 'null'] },
-      code: { type: 'string', enum: ['FACT', 'LEVEL', 'CONTINUITY', 'ANSWER', 'REPETITION', 'OTHER'] },
+      code: { type: 'string', enum: ['FACT', 'LEVEL', 'CONTINUITY', 'ANSWER', 'REPETITION', 'LANGUAGE', 'OTHER'] },
       severity: { type: 'string', enum: ['error', 'warning'] },
       message: { type: 'string' },
     },

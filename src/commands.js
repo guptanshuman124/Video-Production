@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig, merge } from './config.js';
 import { runChapter, runLectureJob, STAGES } from './pipeline/run.js';
+import { runSummaryJob } from './summary/run.js';
+import { summaryInputs } from './summary/input.js';
 import { loadRows, lectureInputs, exportRows } from './sources/textbook.js';
 import { courseLookup, parseAs, loadCourses } from './curriculum/courses.js';
 import { loadCatalog, buildCourses, textbookRowsLite, exportCatalog } from './sources/catalog.js';
@@ -15,7 +17,7 @@ import { JobStore } from './pipeline/store.js';
 import { buildTemplates, loadPacks, packFor } from './templates.js';
 import { slideTypes, catalogLine, llmSchema } from './slides.js';
 import { systemPrompt, LAYERS, slideCatalog, flowRules, typeSpecs } from './generation/prompts.js';
-import { BAND_NOTES, PACKS } from './curriculum/index.js';
+import { BAND_NOTES, PACKS, VOICE_LANGUAGE_NAME, slideLanguageName } from './curriculum/index.js';
 
 // Flags shared by run/generate: config file, mocks, offline.
 export function configFrom(flag, has) {
@@ -101,6 +103,33 @@ export async function lectures(flag, has) {
   if (ok < results.length) process.exitCode = 2;
 }
 
+// Chapter summary videos (src/summary/): one ~1-hour revision video per
+// chapter, from all of its lectures at once. --module picks the chapter(s).
+export async function summaries(flag, has) {
+  const cfg = configFrom(flag, has);
+  const filter = filterFrom(flag);
+  const rows = await loadRows(sourceArg(flag), filter);
+  const lookup = courseLookup({ as: parseAs(typeof flag('as', null) === 'string' ? flag('as') : null) });
+  const inputs = summaryInputs(rows, lookup, filter.module ? { module: filter.module } : {});
+  if (!inputs.length) throw new Error('no chapters match that selection');
+  console.log(`\n  ${inputs.length} chapter summary video(s) · llm ${cfg.llm.provider}${cfg.llm.model ? ` (${cfg.llm.model})` : ''} · tts ${cfg.tts.provider} · jobs in ${cfg.paths.jobs}/summaries/\n`);
+  const results = [];
+  for (const input of inputs) {
+    console.log(`  ── c${input.course_id}/m${input.module_id} · ${input.chapter_title} · ${input.lectures.length} lecture(s)`);
+    results.push(await runSummaryJob(input, {
+      cfg,
+      from: typeof flag('from', null) === 'string' ? flag('from') : null,
+      to: typeof flag('to', null) === 'string' ? flag('to') : null,
+      offline: has('offline'), draft: has('draft'), jobs: flag('jobs', undefined), revealCheck: !has('no-reveal-check'),
+    }));
+  }
+  const ok = results.filter((r) => r.status === 'ok').length;
+  console.log(`\n  ${ok}/${results.length} summary video(s) passed every stage run`);
+  for (const r of results.filter((x) => x.status !== 'ok')) console.log(`  ✗ ${r.unit}: ${r.status}`);
+  console.log();
+  if (ok < results.length) process.exitCode = 2;
+}
+
 // Parse every row and report what would pass G0, with no LLM, TTS or network.
 export async function sourceAudit(flag, has) {
   const cfg = configFrom(flag, has);
@@ -161,6 +190,8 @@ export async function sourceCourses(flag) {
 #
 # modules: per-chapter pack (Science) or variant (Chemistry), auto-classified from the chapter text.
 #          \`review: true\` = low confidence — check these first. Courses not listed are blocked at G0.
+# narration_language: what the voice-over is spoken in — hinglish (default), hindi (Hindi courses: taught in
+#          Hindi) or english (English courses: taught in English). English and Hindi use the \`language\` pack.
 #
 # Not in the catalog (blocked): ${report.unmappedCourses.map((c) => `${c.id} (${c.lectures})`).join(', ') || 'none'}
 `;
@@ -269,9 +300,14 @@ export async function prompt(layer, flag, has) {
     class: cls, subject: pack.subjects?.[0] || packId, chapter_title: '<chapter title>', lectures: 5, lecture_minutes: 20,
     band_note: BAND_NOTES[cls <= 8 ? '6-8' : cls <= 10 ? '9-10' : '11-12'], pack: packId, variant,
     pack_name: pack.name, lecture: 2, lecture_title: '<lecture title>', slide_min: 10, slide_max: 14,
+    // --language hinglish|hindi|english (default: the language courses speak their own language).
+    narration_language: String(flag('language', variant === 'hindi' ? 'hindi' : variant === 'english' ? 'english' : 'hinglish')),
+    slide_language: variant === 'hindi' ? 'hindi' : 'english',
   };
+  vars.slide_language_name = slideLanguageName(vars.slide_language);
+  vars.voice_language_name = VOICE_LANGUAGE_NAME[vars.narration_language];
   const extra = layer === 'slide-plan' ? [slideCatalog(types), flowRules(pack)]
-    : layer === 'slide-write' ? [`# SLIDE TYPE SPECS\n\n${typeSpecs(types, packId)}`] : [];
+    : layer === 'slide-write' ? [`# SLIDE TYPE SPECS\n\n${typeSpecs(types, packId, variant)}`] : [];
   console.log(systemPrompt(layer, vars, extra));
   if (has('schema') && layer === 'slide-write') {
     const t = String(flag('type', Object.keys(types)[0]));

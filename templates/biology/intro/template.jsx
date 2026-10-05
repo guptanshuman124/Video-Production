@@ -31,6 +31,8 @@ export const schema = {
   chapterNumber: { type: 'number', min: 0 },
   lectureNumber: { type: 'number', min: 0 },
   lectureCount: { type: 'number', min: 0 },
+  chapterWord: { type: 'text', default: 'Chapter', max: 20 },
+  lectureWord: { type: 'text', default: 'Lecture', max: 20 },
   cues: { type: 'object', fields: { image: 'number' } },
 };
 
@@ -39,11 +41,11 @@ export default function Intro(d) {
     <>
       <Header lecture="" logo={d.logo} />
       <div className="card">
-        {d.chapterNumber ? <div className="eyebrow" anim="riseIn" delay={250} exit="riseOut">Chapter {d.chapterNumber}</div> : null}
+        {d.chapterNumber ? <div className="eyebrow" anim="riseIn" delay={250} exit="riseOut">{d.chapterWord} {d.chapterNumber}</div> : null}
         <h1 className="chapter" anim="riseIn" delay={400} exit="riseOut">{d.chapterName || d.title}</h1>
         <div className="bar" anim="fadeIn" delay={650} exit="fadeOut" />
         <div className="lecture" anim="riseIn" delay={800} exit="riseOut">
-          {d.lectureNumber ? <b>Lecture {d.lectureNumber}: </b> : null}{d.title}
+          {d.lectureNumber ? <b>{d.lectureWord} {d.lectureNumber}: </b> : null}{d.title}
         </div>
       </div>
     </>

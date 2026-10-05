@@ -7,8 +7,27 @@ export const PACKS = {
   biology:     { subjects: ['Biology', 'Science'], variants: [] },
   mathematics: { subjects: ['Mathematics', 'Applied Mathematics'], variants: [] },
   commerce:    { subjects: ['Accountancy', 'Business Studies'], variants: ['accountancy', 'business-studies'] },
-  theory:      { subjects: ['English', 'Hindi', 'History', 'Geography', 'Political Science', 'Civics', 'Economics', 'Social Science', 'Sociology', 'Psychology'], variants: [] },
+  theory:      { subjects: ['History', 'Geography', 'Political Science', 'Civics', 'Economics', 'Social Science', 'Sociology', 'Psychology'], variants: [] },
+  // English and Hindi are taught as languages (reading the text, meanings,
+  // grammar, writing), in their own language — not as theory subjects.
+  language:    { subjects: ['English', 'Hindi'], variants: ['english', 'hindi'] },
 };
+
+// What the voice-over is spoken in. Every subject is taught in Hinglish except
+// the two language subjects, which are taught in their own language: Hindi in
+// Hindi (an English word only where a teacher would really use one), English
+// in English. courses.yaml `narration_language` overrides it per course.
+export const NARRATION_LANGUAGES = ['hinglish', 'hindi', 'english'];
+// Names for prompts: "Hinglish", "Hindi", "English"; slides "English" / "Hindi (Devanagari)".
+export const VOICE_LANGUAGE_NAME = { hinglish: 'Hinglish (Hindi in Devanagari mixed with English terms)', hindi: 'Hindi', english: 'English' };
+export const slideLanguageName = (l) => (l === 'hindi' ? 'Hindi (Devanagari)' : 'English');
+
+export function narrationLanguageOf(meta) {
+  if (meta?.narration_language && NARRATION_LANGUAGES.includes(meta.narration_language)) return meta.narration_language;
+  if (meta?.subject === 'Hindi') return 'hindi';
+  if (meta?.subject === 'English') return 'english';
+  return 'hinglish';
+}
 
 export const classBand = (cls) => (cls <= 8 ? '6-8' : cls <= 10 ? '9-10' : '11-12');
 

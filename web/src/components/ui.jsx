@@ -31,6 +31,7 @@ export const STATUS = {
   running: { label: 'In production', tone: 'blue', Icon: Loader2, spin: true },
   validating: { label: 'Validating', tone: 'blue', Icon: Loader2, spin: true },
   cancelling: { label: 'Cancelling', tone: 'amber', Icon: Loader2, spin: true },
+  rendering: { label: 'Rendering', tone: 'blue', Icon: Loader2, spin: true },
   queued: { label: 'Queued', tone: 'violet', Icon: Clock },
   failed: { label: 'Needs attention', tone: 'red', Icon: AlertTriangle },
   idle: { label: 'Not started', tone: 'gray', Icon: CircleDashed },
@@ -121,6 +122,27 @@ export function Card({ title, actions, children, className = '', pad = true }) {
       {(title || actions) && <header className="card-head"><h3>{title}</h3><div className="card-actions">{actions}</div></header>}
       <div className={pad ? 'card-body' : ''}>{children}</div>
     </section>
+  );
+}
+
+// The activity log of a lecture or summary: a tall, resizable box with an Expand toggle.
+export function ActivityLog({ events }) {
+  const [tall, setTall] = useState(false);
+  const list = (events || []).slice().reverse();
+  return (
+    <>
+      <h4 className="section-title with-action">Activity <button className="link small" onClick={() => setTall(!tall)}>{tall ? 'Collapse' : `Expand (${list.length})`}</button></h4>
+      <div className={`log ${tall ? 'tall' : ''}`}>
+        {list.map((e, k) => (
+          <div key={k} className={`log-line lv-${e.level}`}>
+            <span className="log-time">{new Date(e.at).toLocaleTimeString()}</span>
+            {e.stage && <span className="log-stage">{e.stage}</span>}
+            <span className="log-msg">{e.message}</span>
+          </div>
+        ))}
+        {!list.length && <div className="muted small">Nothing yet.</div>}
+      </div>
+    </>
   );
 }
 

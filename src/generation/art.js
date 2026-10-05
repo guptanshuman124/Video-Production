@@ -22,7 +22,13 @@ import OpenAI from 'openai';
 import { sha } from '../llm/index.js';
 import { FFMPEG } from '../tools.js';
 
-export const STYLE = 'Clean, soft semi-realistic educational illustration with cinematic lighting in a palette that sits on deep-navy slides (deep navy and indigo tones, warm amber light, soft cyan highlights), rich but natural colours, never neon, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.';
+// One house style per slide theme (project.theme): sky-blue lecture videos,
+// deep-navy summary videos. The style is part of the cache key.
+export const STYLES = {
+  sky: 'Clean, soft semi-realistic educational illustration in a soft, fresh palette that sits on light sky-blue and sage slides (soft sky blue, sage teal, warm amber accents, clean whites), gently saturated, never neon or dark, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.',
+  dark: 'Clean, soft semi-realistic educational illustration with cinematic lighting in a palette that sits on deep-navy slides (deep navy and indigo tones, warm amber light, soft cyan highlights), rich but natural colours, never neon, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.',
+};
+export const STYLE = STYLES.sky;
 
 const VERDICT = {
   type: 'object', additionalProperties: false,
@@ -69,8 +75,9 @@ async function limit(n, items, fn) {
 
 // items: [{ key, prompt, points }]. Returns [{ key, file?, problems?, cost }]:
 // `file` (a JPEG in cacheDir) when a picture passed the check.
-export async function illustrate(items, cfg, { cacheDir, logFile = null, subject = 'Science', klass = 10, client = null } = {}) {
+export async function illustrate(items, cfg, { cacheDir, logFile = null, subject = 'Science', klass = 10, client = null, theme = 'sky' } = {}) {
   const A = artConfig(cfg);
+  const STYLE = STYLES[theme] || STYLES.sky;
   fs.mkdirSync(cacheDir, { recursive: true });
   const api = client || new OpenAI({ apiKey: process.env.OPENAI_API_KEY, baseURL: process.env.OPENAI_BASE_URL || undefined, timeout: 300000, maxRetries: 2 });
   const log = (row) => {

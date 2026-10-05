@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildTemplates, loadPacks } from '../src/templates.js';
 import { slideTypes, checkSlideData, requiredMarkers } from '../src/slides.js';
-import { gateLecturePlan, gateNarration, gateHinglish, gateChapterPlan } from '../src/validators/generation.js';
+import { gateLecturePlan, gateNarration, gateHinglish, gateChapterPlan, pictureOf, pictureIssues, lengthIssues } from '../src/validators/generation.js';
 
 const build = await buildTemplates();
 const T = slideTypes(build).biology;
@@ -235,4 +235,20 @@ test('images: screenshots of problems, tables and equations are not figures', as
   assert.ok(isTextLike('This image shows a chemical equation representing a decomposition reaction'));
   assert.ok(!isTextLike('This image shows an experimental setup for the electrolysis of water'));
   assert.ok(!isTextLike('This image shows the correct way to heat a boiling tube'));
+});
+
+test('narration points only at the picture the slide shows, and never states the video length', () => {
+  const codes = (l) => l.map((i) => i.code);
+  const none = pictureOf(null, {});
+  const one = pictureOf({ description: 'Structure of cyclohexane' });
+  assert.deepEqual(codes(pictureIssues('Look at this diagram: the atoms form a ring.', none)), ['PICTURE_NOT_ON_SLIDE']);
+  assert.deepEqual(codes(pictureIssues('इस चित्र में देखिए, ring बनती है।', none)), ['PICTURE_NOT_ON_SLIDE']);
+  assert.deepEqual(codes(pictureIssues('In the exam, draw a neat labelled diagram.', none)), []);
+  assert.deepEqual(codes(pictureIssues('A concave mirror forms a virtual image; this image is erect.', none)), []);
+  assert.deepEqual(codes(pictureIssues('These two diagrams show cyclohexane and benzene.', one)), ['PICTURE_COUNT']);
+  assert.deepEqual(codes(pictureIssues('This figure shows the ring.', one)), []);
+  assert.deepEqual(codes(pictureIssues('Both diagrams show a ring.', pictureOf({ description: '(a) benzene (b) cyclohexane' }))), []);
+  assert.deepEqual(codes(lengthIssues('Welcome to this 60-minute summary.')), ['STATES_VIDEO_LENGTH']);
+  assert.deepEqual(codes(lengthIssues('इस एक घंटे के वीडियो में हम revise करेंगे।')), ['STATES_VIDEO_LENGTH']);
+  assert.deepEqual(codes(lengthIssues('Heat it for 10 minutes; you get 3 hours in the exam.')), []);
 });

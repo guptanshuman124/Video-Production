@@ -213,7 +213,17 @@ export function prepare(project, opts = {}) {
   totalDuration = starts[scenes.length - 1] + scenes[scenes.length - 1].duration;
 
   const stage = document.getElementById('stage');
+  // Theme (project.theme): 'sky' (default, lecture videos) or 'dark' (summary
+  // videos). Templates read it for values CSS cannot reach (WAAPI colours).
+  const theme = project.theme || 'sky';
+  globalThis.HVR_THEME = theme;
+  // opts.window = [fromMs, toMs]: only the scenes that are on screen in that
+  // span are built (summary render pieces: a page renders a few minutes of a
+  // long video, so it need not hold every slide and figure). The timeline —
+  // starts, total duration — is the full project's either way.
+  const win = Array.isArray(opts.window) ? opts.window : null;
   scenes.forEach((s, i) => {
+    if (win && (starts[i] + s.duration < win[0] || starts[i] > win[1])) { sceneTimes[i] = { exitStart: null }; return; }
     const el = document.createElement('section');
     el.style.zIndex = String(10 + i);
     el.dataset.scene = String(i);
@@ -223,7 +233,7 @@ export function prepare(project, opts = {}) {
       // to [data-template=<id>], which is this section.
       const tpl = TEMPLATES[s.template];
       if (!tpl) throw new Error(`unknown template: ${s.template}`);
-      el.className = 'scene tpl';
+      el.className = theme === 'sky' ? 'scene tpl' : `scene tpl theme-${theme}`;
       el.dataset.template = s.template;
       const out = tpl.mod.default(s.data || {}, { index: i, scene: s, example: tpl.example });
       if (typeof out === 'string') el.innerHTML = out;

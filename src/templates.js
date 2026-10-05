@@ -7,6 +7,7 @@
 //   templates/<id>/template.jsx   required — meta, schema, default render fn
 //   templates/<id>/style.css      optional — auto-scoped to [data-template="<id>"]
 //   templates/<id>/global.css     optional — unscoped (@font-face, @keyframes)
+//   templates/_shared/theme-*.css  theme overlays (theme-dark.css: summary videos)
 //   templates/<id>/example.json   optional — sample data, used by `hvr template <id> --snap`
 //
 // All templates are bundled by esbuild into ONE browser module + ONE stylesheet
@@ -89,6 +90,8 @@ function entrySource(ids) {
   const lines = [], rows = [];
   // Brand-wide fonts, colours and shared component styles load first.
   if (fs.existsSync(path.join(SHARED, 'global.css'))) lines.push(`import './_shared/global.css';`);
+  // Theme overlays (theme-<name>.css), scoped to scenes with class theme-<name>.
+  for (const f of fs.readdirSync(SHARED).filter((x) => /^theme-[\w-]+\.css$/.test(x)).sort()) lines.push(`import './_shared/${f}';`);
   ids.forEach((id, i) => {
     const has = (f) => fs.existsSync(path.join(TEMPLATES_DIR, id, f));
     const q = (f) => JSON.stringify(`./${id}/${f}`);

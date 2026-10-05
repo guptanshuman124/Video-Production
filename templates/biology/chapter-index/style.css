@@ -11,4 +11,4 @@
   font: 800 32px/1 var(--font-body); color: var(--brand-ink);
 }
 .label { font: 400 28px/1.2 var(--font-body); color: var(--brand-ink); }
-.side { left: 1268px; top: 157px; width: 548px; height: 819px; }
+.side { left: 1268px; top: 236px; width: 548px; height: 740px; }   /* below the title band */

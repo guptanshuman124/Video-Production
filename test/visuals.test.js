@@ -22,7 +22,7 @@ const T = ALL.biology;
 const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex');
 
 test('every pack offers illustration and process_flow', () => {
-  for (const pack of ['biology', 'chemistry', 'physics', 'mathematics', 'theory', 'commerce']) {
+  for (const pack of ['biology', 'chemistry', 'physics', 'mathematics', 'theory', 'commerce', 'language']) {
     assert.ok(ALL[pack].illustration, `${pack}: illustration`);
     assert.ok(ALL[pack].process_flow, `${pack}: process_flow`);
   }
@@ -103,15 +103,19 @@ test('art: off in a run → text-only layout with a warning', async () => {
 });
 
 const hasFfmpeg = spawnSync(FFMPEG, ['-version']).status === 0;
-test('NCERT figures: small ones are resampled sharper, large ones left alone', { skip: !hasFfmpeg && 'ffmpeg not available' }, () => {
+test('NCERT figures: every one is enhanced — small ones enlarged and sharpened, large ones sharpened at their size', { skip: !hasFfmpeg && 'ffmpeg not available' }, () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hvr-img-'));
-  const small = path.join(dir, 'small.png'), big = path.join(dir, 'big.png');
+  const small = path.join(dir, 'small.png'), big = path.join(dir, 'big.jpg'), bad = path.join(dir, 'bad.png');
   spawnSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=white:s=400x300', '-frames:v', '1', small]);
-  spawnSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=white:s=1600x1200', '-frames:v', '1', big]);
-  const hd = enhanceFigure(small, { min_side: 1100, target: 1500, max_scale: 3 });
-  assert.ok(hd && hd.endsWith('.hd.png'));
+  spawnSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=white:s=2400x1600', '-frames:v', '1', big]);
+  fs.writeFileSync(bad, 'not an image');
+  const hd = enhanceFigure(small, { target: 2000, max_scale: 3 });
+  assert.ok(hd && hd.endsWith('.hd2.png'));
   assert.deepEqual(imageSize(fs.readFileSync(hd)), { width: 1200, height: 900 });   // capped at 3×
-  assert.equal(enhanceFigure(big), null);
+  const large = enhanceFigure(big);
+  assert.ok(large, 'a large JPEG is still denoised and sharpened');
+  assert.deepEqual(imageSize(fs.readFileSync(large)), { width: 2400, height: 1600 });
+  assert.equal(enhanceFigure(bad), null);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

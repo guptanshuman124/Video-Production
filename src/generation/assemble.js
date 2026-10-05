@@ -25,6 +25,7 @@ export function assembleLecture(G, { plan, slides, english, hinglish, gates, pro
     // (source headings can be garbled, e.g. "TRANSPORT ANSPORTATION").
     title: lectureTitleOf(G, plan),
     slide_language: ch.slide_language || 'english',
+    narration_language: ch.narration_language || 'hinglish',
     source: prepared.lecture ? { course_id: prepared.lecture.course_id, module_id: prepared.lecture.module_id, lecture_id: prepared.lecture.lecture_id } : null,
     slides: slides.map((s, i) => {
       const p = plan.slides[i];

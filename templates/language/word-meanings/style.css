@@ -1,0 +1,17 @@
+--brand-bg: var(--bg-teal);
+
+/* Two columns of word cards from y=240; rows share the height evenly. */
+.grid {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px; height: 740px;
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--rows), minmax(0, 200px)); gap: 20px 24px;
+  align-content: start;
+}
+.word {
+  max-height: 230px; padding: 16px 24px; border-radius: var(--radius-card); overflow: hidden;
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+  border-left: 6px solid var(--brand-orange);
+  display: flex; flex-direction: column; justify-content: center; gap: 6px;
+}
+.w { font: 700 32px/1.2 var(--font-heading, var(--font-display)); color: var(--brand-heading); }
+.m { font: 400 26px/1.35 var(--font-body); color: var(--brand-ink); }
+.ex { font: italic 400 22px/1.35 var(--font-body); color: var(--brand-muted); }

@@ -127,10 +127,14 @@ function applySecrets() {
 
 function deploy({ restart }) {
   kubectl(['apply', '-f', 'deploy/k8s/factory.yaml'], { quiet: true });
-  if (restart) kubectl(['-n', NS, 'rollout', 'restart', 'deployment/central', 'deployment/worker'], { quiet: true });
   say('waiting for the database, central and workers');
   kubectl(['-n', NS, 'rollout', 'status', 'statefulset/factory-db', '--timeout=300s']);
+  // The central first, then the workers: a new worker must never talk to an old
+  // central (2026-10-05: new workers called a route the old central did not have
+  // yet, and a summary used up its retries in those seconds).
+  if (restart) kubectl(['-n', NS, 'rollout', 'restart', 'deployment/central'], { quiet: true });
   kubectl(['-n', NS, 'rollout', 'status', 'deployment/central', '--timeout=900s']);
+  if (restart) kubectl(['-n', NS, 'rollout', 'restart', 'deployment/worker'], { quiet: true });
   kubectl(['-n', NS, 'rollout', 'status', 'deployment/worker', '--timeout=300s']);
 }
 

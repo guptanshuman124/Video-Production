@@ -16,9 +16,9 @@
   padding: 24px 28px; border-radius: var(--radius-card); border: 2.5px solid;
   background: var(--brand-surface-alt); overflow: hidden;
 }
-.e0 { border-color: #5ee6a8; background: rgba(94, 230, 168, .07); }
-.e1 { border-color: #ff8a8a; background: rgba(255, 122, 122, .07); }
+.e0 { border-color: var(--good-line); background: var(--good-bg); }
+.e1 { border-color: var(--bad-line); background: var(--bad-bg); }
 .ehead { font: 700 30px/1.25 var(--font-heading); }
-.e0 .ehead { color: #7ff0bb; }
-.e1 .ehead { color: #ffa3a3; }
+.e0 .ehead { color: var(--good-ink); }
+.e1 .ehead { color: var(--bad-ink); }
 .etext { margin-top: 16px; font: 400 29px/1.45 var(--font-body); color: var(--brand-ink); }

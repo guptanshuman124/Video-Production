@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { LayoutDashboard, GraduationCap, ListOrdered, AlertTriangle, Film, Server, Database, Wifi, WifiOff, Loader2 } from 'lucide-react';
-import { allLectures, countLectures, useStore } from './store.js';
+import { LayoutDashboard, GraduationCap, ListOrdered, AlertTriangle, Film, Server, Database, Wifi, WifiOff, Loader2, Clapperboard } from 'lucide-react';
+import { allLectures, countLectures, allChapters, countSummaries, useStore } from './store.js';
 import { ToastProvider } from './components/ui.jsx';
 import { AppCtx, LectureDrawer, PlayerModal } from './components/lecture.jsx';
 import Overview from './pages/Overview.jsx';
 import { ClassesPage, ClassDetail } from './pages/Classes.jsx';
 import { QueuePage, AttentionPage, LibraryPage, WorkersPage, SourcePage } from './pages/Other.jsx';
+import { SummariesPage, SummaryDrawer, SummaryPlayer, SummaryCtx } from './pages/Summaries.jsx';
 
 function useHash() {
   const [h, set] = useState(window.location.hash || '#/');
@@ -17,12 +18,14 @@ function Sidebar({ route }) {
   const s = useStore();
   const c = useMemo(() => countLectures(s, allLectures(s)), [s.version]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = (s.workers.workers || []).filter((w) => w.online).length;
+  const sc = useMemo(() => countSummaries(s, allChapters(s)), [s.version]); // eslint-disable-line react-hooks/exhaustive-deps
   const items = [
     ['/', 'Overview', LayoutDashboard],
     ['/classes', 'Classes', GraduationCap],
     ['/queue', 'Queue', ListOrdered, c.queued + c.running || null, 'violet'],
     ['/attention', 'Needs attention', AlertTriangle, c.failed || null, 'red'],
     ['/library', 'Library', Film, c.done || null, 'green'],
+    ['/summaries', 'Summary videos', Clapperboard, sc.queued + sc.running || null, 'violet'],
     ['/workers', 'Workers', Server, online || null, 'blue'],
     ['/source', 'Source & settings', Database],
   ];
@@ -57,10 +60,14 @@ export default function App() {
   const route = useHash();
   const [lecture, setLecture] = useState(null);
   const [playing, setPlaying] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [playingSummary, setPlayingSummary] = useState(null);
   const ctx = useMemo(() => ({ openLecture: setLecture, play: setPlaying }), []);
+  const sctx = useMemo(() => ({ openSummary: setSummary, playSummary: setPlayingSummary }), []);
 
   let page;
   const m = /^\/classes\/(\d+)/.exec(route);
+  const sm = /^\/summaries(?:\/(\d+))?/.exec(route);
   if (!s.ready) {
     page = <div className="boot">{s.error ? <><WifiOff size={28} /><div>Can't reach the central service — retrying…</div><div className="muted small">{s.error}</div></> : <><Loader2 className="spin" size={28} /><div>Loading…</div></>}</div>;
   } else if (m) page = <ClassDetail classNo={Number(m[1])} />;
@@ -68,13 +75,14 @@ export default function App() {
   else if (route.startsWith('/queue')) page = <QueuePage />;
   else if (route.startsWith('/attention')) page = <AttentionPage />;
   else if (route.startsWith('/library')) page = <LibraryPage />;
+  else if (sm) page = <SummariesPage classNo={sm[1] ? Number(sm[1]) : null} />;
   else if (route.startsWith('/workers')) page = <WorkersPage />;
   else if (route.startsWith('/source')) page = <SourcePage />;
   else page = <Overview />;
 
   return (
     <ToastProvider>
-      <AppCtx.Provider value={ctx}>
+      <AppCtx.Provider value={ctx}><SummaryCtx.Provider value={sctx}>
         <div className="app">
           <Sidebar route={route} />
           <main className="main">
@@ -86,7 +94,9 @@ export default function App() {
         </div>
         {lecture && <LectureDrawer id={lecture} onClose={() => setLecture(null)} />}
         {playing && <PlayerModal id={playing} onClose={() => setPlaying(null)} />}
-      </AppCtx.Provider>
+        {summary && <SummaryDrawer id={summary} onClose={() => setSummary(null)} />}
+        {playingSummary && <SummaryPlayer id={playingSummary} onClose={() => setPlayingSummary(null)} />}
+      </SummaryCtx.Provider></AppCtx.Provider>
     </ToastProvider>
   );
 }

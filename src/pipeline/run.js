@@ -16,13 +16,13 @@ import path from 'node:path';
 import { gateReport } from '../contracts/index.js';
 import { buildTemplates, loadPacks, packFor } from '../templates.js';
 import { slideTypes } from '../slides.js';
-import { BAND_NOTES } from '../curriculum/index.js';
+import { BAND_NOTES, VOICE_LANGUAGE_NAME, slideLanguageName } from '../curriculum/index.js';
 import { createLLM } from '../llm/index.js';
 import { prepareChapter, prepareLecture, imageSizeCache } from '../generation/prepare.js';
 import { planChapter } from '../generation/layers/chapter-plan.js';
 import { planLecture } from '../generation/layers/slide-plan.js';
 import { writeSlides } from '../generation/layers/slide-write.js';
-import { narrateSlides, narrationLanguage } from '../generation/layers/narrate.js';
+import { narrateSlides, needsConversion } from '../generation/layers/narrate.js';
 import { toHinglish } from '../generation/layers/hinglish.js';
 import { reviewLecture } from '../generation/layers/review.js';
 import { assembleLecture } from '../generation/assemble.js';
@@ -79,6 +79,9 @@ function layerContext(prepared, { cfg, llm, build, packs, lectures }) {
     lectures, lecture_minutes: prepared.budget.minutes ?? cfg.curriculum.lecture_minutes,
     band_note: BAND_NOTES[prepared.band], pack: prepared.chapter.pack, variant: prepared.chapter.variant, pack_name: pack.name,
     slide_min: prepared.budget.min, slide_max: prepared.budget.max, slide_language: prepared.chapter.slide_language || 'english',
+    narration_language: prepared.chapter.narration_language || 'hinglish',
+    slide_language_name: slideLanguageName(prepared.chapter.slide_language),
+    voice_language_name: VOICE_LANGUAGE_NAME[prepared.chapter.narration_language || 'hinglish'],
   };
   const sectionText = Object.fromEntries(prepared.sections.map((x) => [x.id, `${x.heading}\n${x.text}`]));
   return { cfg, llm, prepared, pack, packId: prepared.chapter.pack, types, sectionText, lectures, vars };
@@ -251,9 +254,10 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
   if (!plan) return;
   const slides = await step('slide-write', 'slides.json', () => writeSlides(G, plan));
   if (!slides) return;
-  // direct (default): the narrator writes Hinglish itself — one LLM step.
-  // via-english: English draft, then the Hinglish conversion step.
-  const direct = narrationLanguage(cfg) === 'hinglish';
+  // The narrator writes the voiced language itself (Hinglish direct, Hindi,
+  // English) — one LLM step. Hinglish via-english: English draft, then the
+  // Hinglish conversion step.
+  const direct = !needsConversion(cfg, G.prepared.chapter);
   let english = null;
   let hinglish;
   if (direct) {

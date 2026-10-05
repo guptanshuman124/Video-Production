@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 
 const DIR = fileURLToPath(new URL('./', import.meta.url));
-export const CONTRACTS = ['chapter-input', 'lecture-input', 'chapter-plan', 'lecture-plan', 'content-v1', 'gate-report'];
+export const CONTRACTS = ['chapter-input', 'lecture-input', 'chapter-plan', 'lecture-plan', 'content-v1', 'summary-content-v1', 'gate-report'];
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 const schemas = {};

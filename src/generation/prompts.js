@@ -28,8 +28,9 @@ export const LAYERS = {
                  'pack:slide-usage.md', 'pack:flow.md', 'steps/slide-planner.md'],
   'slide-write': ['_base/role.md', 'profiles/cbse.md', 'pack:role.md', 'pack:notation.md', 'steps/slide-writer.md'],
   // narration.mode direct (default): Hinglish straight away.
+  // Voiced narration in the course's language (lang:narration → language/<narration_language>.md).
   narrate: ['_base/role.md', 'profiles/cbse.md', '_base/continuity.md', '_base/narration.md', '_base/narration-style.md',
-            'language/hinglish.md', 'pack:role.md', 'steps/narrator.md'],
+            'lang:narration', 'pack:role.md', 'steps/narrator.md'],
   // narration.mode via-english: English draft, converted by the hinglish layer.
   'narrate-english': ['_base/role.md', 'profiles/cbse.md', '_base/continuity.md', '_base/narration.md', '_base/narration-style.md',
                       'language/english.md', 'pack:role.md', 'steps/narrator.md'],
@@ -37,7 +38,12 @@ export const LAYERS = {
   review: ['_base/role.md', 'profiles/cbse.md', 'pack:role.md', 'pack:notation.md', 'steps/reviewer.md'],
 };
 
-function resolve(entry, { pack, variant }) {
+// lang:narration — the voiced-language module: Hinglish, Hindi (Hindi courses)
+// or spoken English (English courses).
+const NARRATION_MODULE = { hinglish: 'language/hinglish.md', hindi: 'language/hindi.md', english: 'language/english-spoken.md' };
+
+function resolve(entry, { pack, variant, narration_language: lang }) {
+  if (entry === 'lang:narration') return [read(NARRATION_MODULE[lang] || NARRATION_MODULE.hinglish)];
   if (!entry.startsWith('pack:')) return [read(entry)];
   const name = entry.slice(5);
   return [read(`packs/${pack}/${name}`), variant ? read(`packs/${pack}/variants/${variant}/${name}`) : null];
@@ -50,8 +56,15 @@ const SLIDE_TEXT_LAYERS = new Set(['slide-plan', 'slide-write', 'narrate', 'narr
 export function systemPrompt(layer, vars, extra = []) {
   const mods = LAYERS[layer];
   if (!mods) throw new Error(`no prompt layer "${layer}"`);
+  return composePrompt(mods, vars, extra, { slideText: SLIDE_TEXT_LAYERS.has(layer) });
+}
+
+// A system prompt from a list of modules (paths under prompts/, `pack:<name>`,
+// `lang:narration`), filled with `vars`. Other pipelines (src/summary/) keep
+// their own module lists and use this to assemble them.
+export function composePrompt(mods, vars, extra = [], { slideText = false } = {}) {
   const parts = mods.flatMap((m) => resolve(m, vars)).filter(Boolean);
-  if (vars.slide_language === 'hindi' && SLIDE_TEXT_LAYERS.has(layer)) parts.push(read('language/slides-hindi.md'));
+  if (vars.slide_language === 'hindi' && slideText) parts.push(read('language/slides-hindi.md'));
   return fill([...parts, ...extra.filter(Boolean)].join('\n\n---\n\n'), vars);
 }
 
@@ -103,26 +116,32 @@ function limits(lim) {
   return b.join('; ');
 }
 
+// A slide type's prompt example: the variant's own (e.g. Hindi data for Hindi
+// courses, prompts/packs/<pack>/variants/<variant>/examples/) before the pack's.
+const exampleOf = (pack, variant, type) => (variant && read(`packs/${pack}/variants/${variant}/examples/${type}.json`)) || read(`packs/${pack}/examples/${type}.json`);
+
 // Full field spec + example for the slide types in one batch.
-export function typeSpecs(types, pack) {
+export function typeSpecs(types, pack, variant = null) {
   return Object.values(types).map((st) => {
     const s = st.spec;
     const fields = Object.entries({ title: { required: true, words: 8 }, ...s.fields }).map(([k, l]) => `  - \`${k}\`: ${limits(l)}`).join('\n');
-    const ex = read(`packs/${pack}/examples/${st.type}.json`);
+    const ex = exampleOf(pack, variant, st.type);
     const example = ex ? `\n  Example data:\n\`\`\`json\n${JSON.stringify(JSON.parse(ex).data, null, 1)}\n\`\`\`` : '';
     return `## ${st.type} — ${s.name}\n${s.use}\n${fields}${example}`;
   }).join('\n\n');
 }
 
 // Narration examples in the language being written: `narration_hinglish`
-// for direct mode, `narration` (English) for via-english.
-export function narrationExamples(types, pack, language = 'hinglish') {
+// (Hinglish), `narration_hindi` (Hindi courses), `narration` (English: English
+// courses and the via-english draft).
+const EXAMPLE_KEY = { hinglish: 'narration_hinglish', hindi: 'narration_hindi', english: 'narration' };
+export function narrationExamples(types, pack, language = 'hinglish', variant = null) {
   const out = [];
   for (const st of Object.values(types)) {
-    const ex = read(`packs/${pack}/examples/${st.type}.json`);
+    const ex = exampleOf(pack, variant, st.type);
     if (!ex) continue;
     const j = JSON.parse(ex);
-    const text = language === 'hinglish' ? j.narration_hinglish : j.narration;
+    const text = j[EXAMPLE_KEY[language] || 'narration_hinglish'];
     if (text) out.push(`## Example — ${st.type}\n${text}`);
   }
   return out.length

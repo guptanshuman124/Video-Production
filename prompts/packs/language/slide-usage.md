@@ -1,0 +1,24 @@
+# WHICH SLIDE TYPE FOR WHICH LANGUAGE CONTENT
+
+- **intro** — every lecture, first slide only: a title card filled in by code. Nothing to write; the narration is a ~10-second welcome.
+- **hook** — lecture 1 only, second slide: what the text is about and a question to wonder about while reading.
+- **author** — the writer or poet (कवि / लेखक परिचय), once, where the textbook introduces them.
+- **story_summary** — the story or poem in brief (सारांश): before the close reading, or as a recap of the whole text.
+- **passage** — the core: read the text closely, 1–6 lines at a time, quoted exactly, each with its meaning. Take the lecture's part of the text in order across several passage slides; long prose is read in its key sentences.
+- **word_meanings** — the difficult words and idioms of the part just read (शब्दार्थ / मुहावरे), with meaning and an example sentence.
+- **character** — a character sketch proved from the text (चरित्र-चित्रण).
+- **literary_device** — devices and poetic beauty (अलंकार, काव्य-सौंदर्य, imagery, metaphor, rhyme scheme), each with its line.
+- **central_idea** — the theme, message or feeling of the text (मूल भाव / केंद्रीय भाव), after it has been read.
+- **source_extract** — one important line or stanza with its context and meaning (संदर्भ-प्रसंग-भाव), the kind the board asks about.
+- **grammar_rule** — one grammar rule with its pattern and example sentences.
+- **grammar_practice** — 2–5 exercise items in the board's form; the answers are revealed after the student tries.
+- **definition** — a grammar term with its kinds (संज्ञा and its भेद, kinds of sentences).
+- **comparison** — two forms or two characters side by side (active vs passive, तत्सम vs तद्भव).
+- **writing_format** — the format of a letter, notice, report or article (पत्र, सूचना, विज्ञापन).
+- **misconception** — common mistakes: the wrong sentence or spelling vs the correct one.
+- **try_this** — a reading or speaking activity before an idea is named.
+- **process_flow** — the order of events in a story, or the steps of a writing task.
+- **practice_problem** — board-style questions on the text for the student to answer, answers withheld.
+- **mcq** — a question on the text's meaning, a word, or grammar, with one trap option.
+- **quick_revision** — end of the lecture: key points + words learnt.
+- **illustration** — at most one everyday scene from the story's world (a village well, a seashore, a crowded market) — never a famous person, never text in the picture.

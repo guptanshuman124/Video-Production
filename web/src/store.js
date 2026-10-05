@@ -17,6 +17,22 @@ export const STAGES = [
 ];
 export const stageLabel = (id) => STAGES.find((s) => s.id === id)?.label || id || '—';
 
+// The summary-video pipeline (src/summary/run.js); plan → review run per part.
+export const SUMMARY_STAGES = [
+  { id: 'prepare', label: 'Gather the chapter', gate: 'S0' },
+  { id: 'outline', label: 'Outline the summary', gate: 'S1' },
+  { id: 'plan', label: 'Plan each part', gate: 'S2', perPart: true },
+  { id: 'write', label: 'Write slides', gate: 'S3', perPart: true },
+  { id: 'narrate', label: 'Narration', gate: 'S4', perPart: true },
+  { id: 'review', label: 'Fact & coverage review', gate: 'S5', perPart: true },
+  { id: 'assemble', label: 'Assemble', gate: 'C1' },
+  { id: 'voice', label: 'Voice-over', gate: 'A1' },
+  { id: 'build', label: 'Sync timeline', gate: 'A2' },
+  { id: 'render', label: 'Render video', gate: 'R1' },
+  { id: 'qa', label: 'Video QA', gate: 'V1' },
+];
+export const summaryStageLabel = (id) => SUMMARY_STAGES.find((s) => s.id === id)?.label || id || '—';
+
 export async function api(method, url, body) {
   const res = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
   const text = await res.text();
@@ -32,6 +48,9 @@ const state = {
   catalog: null,          // { classes, lectures: {id: lecture} }
   jobs: {}, videos: {}, queues: {}, workers: { workers: [], scale: null, k8s: false },
   sync: {}, library: '', storage: { provider: 'local' }, activity: [], version: 0,
+  // Summary videos: their own queue and library (factory/summaries.js).
+  roots: { lectures: 'CBSE Lectures', summaries: 'CBSE Summaries' },
+  summaries: {}, summaryVideos: {}, summaryQueue: 'running', summaryRoot: 'Summaries', summaryActivity: [],
 };
 const listeners = new Set();
 let snapshot = { ...state };
@@ -51,10 +70,18 @@ async function loadState() {
   state.workers = s.workers;
   state.sync = s.sync;
   state.library = s.library;
+  state.roots = s.roots || { lectures: 'CBSE Lectures', summaries: 'CBSE Summaries' };
   state.storage = s.storage || { provider: 'local' };
 }
 async function loadActivity() {
   state.activity = await api('GET', '/api/activity');
+}
+async function loadSummaries() {
+  const s = await api('GET', '/api/summaries');
+  state.summaries = Object.fromEntries(s.summaries.map((j) => [j.module_id, j]));
+  state.summaryVideos = Object.fromEntries(s.videos.map((v) => [v.module_id, v]));
+  state.summaryQueue = s.queue;
+  state.summaryRoot = s.root;
 }
 
 let started = false;
@@ -63,7 +90,7 @@ function start() {
   started = true;
   const boot = async () => {
     try {
-      await Promise.all([loadCatalog(), loadState(), loadActivity()]);
+      await Promise.all([loadCatalog(), loadState(), loadActivity(), loadSummaries()]);
       state.ready = true; state.error = null;
     } catch (e) { state.error = e.message; setTimeout(boot, 3000); }
     emit();
@@ -97,13 +124,35 @@ function start() {
     es.addEventListener('log', (e) => { state.activity = [JSON.parse(e.data), ...state.activity].slice(0, 120); emitSoon(); });
     es.addEventListener('refresh', async (e) => {
       const { what } = JSON.parse(e.data);
-      try { if (what === 'catalog') await loadCatalog(); await loadState(); } catch { /* next event */ }
+      try {
+        if (what === 'summaries') await loadSummaries();
+        else { if (what === 'catalog') await loadCatalog(); await loadState(); }
+      } catch { /* next event */ }
       emit();
     });
+    es.addEventListener('summary', (e) => {
+      const j = JSON.parse(e.data);
+      if (j.status == null) delete state.summaries[j.module_id]; else state.summaries[j.module_id] = j;
+      state.summaries = { ...state.summaries };
+      emitSoon();
+    });
+    es.addEventListener('summary-video', (e) => {
+      const v = JSON.parse(e.data);
+      if (v.deleted) delete state.summaryVideos[v.module_id]; else state.summaryVideos[v.module_id] = v;
+      state.summaryVideos = { ...state.summaryVideos };
+      emitSoon();
+    });
+    es.addEventListener('summary-upload', (e) => {
+      const u = JSON.parse(e.data);
+      const v = state.summaryVideos[u.module_id];
+      if (v) { state.summaryVideos = { ...state.summaryVideos, [u.module_id]: { ...v, storage: 'uploading', upload: { done: u.done, total: u.total } } }; emitSoon(); }
+    });
+    es.addEventListener('summary-queue', (e) => { state.summaryQueue = JSON.parse(e.data).state; emitSoon(); });
+    es.addEventListener('summary-log', (e) => { state.summaryActivity = [JSON.parse(e.data), ...state.summaryActivity].slice(0, 120); emitSoon(); });
   };
   connect();
   // Belt and braces: a full refresh every 30 s in case an event was missed.
-  setInterval(async () => { try { await loadState(); emit(); } catch { /* offline */ } }, 30000);
+  setInterval(async () => { try { await Promise.all([loadState(), loadSummaries()]); emit(); } catch { /* offline */ } }, 30000);
 }
 
 export function useStore() {
@@ -134,6 +183,47 @@ export function countLectures(s, lectures) {
     const st = lectureStatus(s, l.lecture_id);
     if (st === 'done') { c.done++; c.minutes += (s.videos[l.lecture_id]?.duration_s || 0) / 60; }
     else if (st === 'running' || st === 'validating' || st === 'cancelling') c.running++;
+    else if (st === 'queued') c.queued++;
+    else if (st === 'failed') c.failed++;
+    else if (st === 'idle') c.idle++;
+  }
+  return c;
+}
+
+// ---- summary videos --------------------------------------------------------------------------
+
+// Every chapter, flat: { module_id, class_no, subject, book, chapter_no, title, lectures, supported, why, pack }.
+export function allChapters(s) {
+  const out = [];
+  for (const cls of s.catalog?.classes || []) {
+    for (const subj of cls.subjects) {
+      for (const b of subj.books) {
+        for (const ch of b.chapters) {
+          out.push({ module_id: ch.module_id, class_no: cls.class_no, subject: subj.subject, book: b.title, multiBook: subj.books.length > 1,
+                     chapter_no: ch.no, title: ch.title, lectures: ch.lectures.length, supported: ch.supported, why: ch.why, pack: ch.pack });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// A chapter summary's state: done | running | validating | queued | failed | cancelling | idle | unsupported
+export function summaryStatus(s, ch) {
+  const j = s.summaries[ch.module_id];
+  const v = s.summaryVideos[ch.module_id];
+  if (j && ['running', 'rendering', 'validating', 'cancelling', 'queued', 'failed'].includes(j.status)) return j.status;
+  if (v || j?.status === 'done') return 'done';
+  return ch.supported ? 'idle' : 'unsupported';
+}
+export function countSummaries(s, chapters) {
+  const c = emptyCounts();
+  for (const ch of chapters) {
+    c.total++;
+    if (ch.supported) c.supported++;
+    const st = summaryStatus(s, ch);
+    if (st === 'done') { c.done++; c.minutes += (s.summaryVideos[ch.module_id]?.duration_s || 0) / 60; }
+    else if (st === 'running' || st === 'rendering' || st === 'validating' || st === 'cancelling') c.running++;
     else if (st === 'queued') c.queued++;
     else if (st === 'failed') c.failed++;
     else if (st === 'idle') c.idle++;

@@ -3,8 +3,8 @@
 /* Picture on the left (3:2), points stacked on the right. */
 .art {
   position: absolute; left: 84px; top: 236px; width: 1086px; height: 724px; margin: 0;
-  border-radius: 22px; overflow: hidden; background: rgba(255, 255, 255, .06);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .14), 0 24px 60px rgba(0, 0, 0, .5);
+  border-radius: 22px; overflow: hidden; background: var(--art-bg);
+  box-shadow: var(--art-shadow);
 }
 .art img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 58% 45%; }
 .tag {
@@ -24,7 +24,7 @@
 }
 .n {
   flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--brand-orange); color: #1a1030; font: 700 21px/1 var(--font-body); margin-top: 1px;
+  background: var(--brand-orange); color: var(--on-accent); font: 700 21px/1 var(--font-body); margin-top: 1px;
 }
 .t { font: 400 28px/1.36 var(--font-card); color: var(--brand-ink); }
 .points.wide .t { font-size: 32px; }

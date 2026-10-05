@@ -1,0 +1,23 @@
+--brand-bg: var(--bg-lavender);
+
+/* 1–3 stacked cards: device name on the left (300 wide), then the quoted
+   line and its effect side by side. */
+.cards {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px; height: 740px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.card {
+  flex: 0 1 calc((100% - (var(--n) - 1) * 20px) / var(--n)); max-height: 330px; min-height: 0; overflow: hidden;
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 26px; align-items: center;
+  padding: 18px 26px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+}
+.dname { font: 700 34px/1.2 var(--font-heading, var(--font-display)); color: var(--brand-heading); }
+.body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.label { font: 700 20px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .04em; }
+.line {
+  margin: 8px 0 0; padding: 10px 16px; border-radius: var(--radius-row);
+  background: var(--brand-cream); border-left: 5px solid var(--brand-orange);
+  font: italic 500 27px/1.38 var(--font-body); color: var(--brand-ink);
+}
+.effect { margin-top: 8px; font: 400 26px/1.38 var(--font-body); color: var(--brand-ink); }

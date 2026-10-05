@@ -10,6 +10,8 @@
 //     OneDrive / SharePoint in the same folders (onedrive.js), and
 //     records it in the `videos` table; the worker then deletes its files
 //   - serves the dashboard (web/dist) and live updates (Server-Sent Events)
+//   - summary videos (one per chapter): their own queue, rows, library root and
+//     routes in summaries.js; a worker's claim gets a lecture or a summary
 //
 // env: PORT, FACTORY_DB_URL, TEXTBOOK_DB_URL, SOURCE_DB_URL, LIBRARY_DIR, WEB_DIR
 
@@ -24,11 +26,22 @@ import { syncSource } from './sync.js';
 import { probeAll } from '../qa.js';
 import * as k8s from './k8s.js';
 import * as onedrive from './onedrive.js';
+import { summaryService } from './summaries.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const PORT = Number(process.env.PORT || 8080);
 const LIBRARY = path.resolve(process.env.LIBRARY_DIR || path.join(ROOT, 'library'));
 const WEB = path.resolve(process.env.WEB_DIR || path.join(ROOT, 'web', 'dist'));
+// The library holds two trees, named as on OneDrive: lecture videos (SHAREPOINT_ROOT,
+// "CBSE Lectures") and summary videos (SHAREPOINT_SUMMARY_ROOT, "CBSE Summaries"), each
+// Class N/Subject/[Book/]Chapter K - Title/…. Lecture files from before 2026-10-05 sat at
+// the library root; they are still found there.
+const LECTURES = path.join(LIBRARY, onedrive.ROOT);
+const lectureFile = (rel) => {
+  const file = path.join(LECTURES, ...rel.split('/'));
+  const old = path.join(LIBRARY, ...rel.split('/'));
+  return !fs.existsSync(file) && fs.existsSync(old) ? old : file;
+};
 const WORKER_LOST_S = 120;     // no heartbeat for this long → the lecture goes back to the queue
 const WORKER_OFFLINE_S = 45;
 const MAX_CRASH_RETRIES = 2;   // automatic requeues after a crash / lost worker; gate failures wait for a person
@@ -48,7 +61,7 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 const now = () => new Date();
 
 let db;
-let catalog = { classes: [], lectures: new Map(), at: null };
+let catalog = { classes: [], lectures: new Map(), chapters: new Map(), at: null };
 let sync = { running: false, progress: null, error: null, last: null };
 
 // ---- live updates -------------------------------------------------------------------------
@@ -141,9 +154,23 @@ async function setQueue(classNo, state, { quiet = false } = {}) {
 let claiming = Promise.resolve();
 function claim(worker) {
   const run = claiming.then(async () => {
-    const [[j]] = await db.query(`SELECT j.lecture_id FROM jobs j LEFT JOIN class_queues q ON q.class_no = j.class_no
+    const [[j]] = await db.query(`SELECT j.lecture_id, j.priority, j.queued_at FROM jobs j LEFT JOIN class_queues q ON q.class_no = j.class_no
       WHERE j.status = 'queued' AND COALESCE(q.state, 'running') = 'running'
       ORDER BY j.priority DESC, j.queued_at ASC, j.seq ASC LIMIT 1`);
+    // Render pieces of a summary already rendering come first (a started summary
+    // finishes before new work begins), then a queued summary video when it has
+    // the higher priority, or the same priority and was queued earlier.
+    const piece = await summaries.nextPiece();
+    if (piece) {
+      const job = await summaries.claimPiece(piece, worker);
+      if (job) { pushWorkers(); return job; }
+    }
+    const s = await summaries.next();
+    if (s && (!j || s.priority > j.priority || (s.priority === j.priority && new Date(s.queued_at) < new Date(j.queued_at)))) {
+      const job = await summaries.claim(s.module_id, worker);
+      if (job) pushWorkers();
+      return job;
+    }
     if (!j) return null;
     const lecture = catalog.lectures.get(j.lecture_id);
     if (!lecture) {
@@ -162,7 +189,7 @@ function claim(worker) {
     // from_stage is used once: a lecture requeued after a crash resumes instead of starting over again.
     await db.query("UPDATE jobs SET status='running', worker=?, attempts=attempts+1, from_stage=NULL, started_at=?, heartbeat_at=?, finished_at=NULL, error_code=NULL, error_stage=NULL, error_message=NULL WHERE lecture_id=?",
       [worker, now(), now(), j.lecture_id]);
-    await db.query("UPDATE workers SET status='busy', lecture_id=? WHERE name=?", [j.lecture_id, worker]);
+    await db.query("UPDATE workers SET status='busy', lecture_id=?, summary_id=NULL, task=NULL WHERE name=?", [j.lecture_id, worker]);
     await event(j.lecture_id, 'info', null, `assigned to ${worker}${row.from_stage ? ` (from ${row.from_stage})` : ''} · attempt ${row.attempts + 1}`);
     await pushJob(j.lecture_id);
     pushWorkers();
@@ -189,7 +216,7 @@ async function pushWorkers(force = false) {
   broadcast('workers', await workersState());
 }
 async function workersState() {
-  const [rows] = await db.query('SELECT name, status, lecture_id, started_at, last_seen, jobs_done, jobs_failed FROM workers ORDER BY name');
+  const [rows] = await db.query('SELECT name, status, lecture_id, summary_id, task, started_at, last_seen, jobs_done, jobs_failed FROM workers ORDER BY name');
   const cutoff = Date.now() - WORKER_OFFLINE_S * 1000;
   let scale = null;
   try { scale = await getScaleCached(); } catch { scale = null; }
@@ -286,7 +313,7 @@ async function receiveVideo(req, id, worker) {
   }
   // Into the library. A regenerated lecture replaces its old file (also when its title changed).
   const rel = lecture.library_path;
-  const dest = path.join(LIBRARY, ...rel.split('/'));
+  const dest = path.join(LECTURES, ...rel.split('/'));
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   const [[old]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [id]);
   if (old && old.path !== rel) {
@@ -338,7 +365,7 @@ function pumpUploads() {
 async function uploadOne(id) {
   const v = await videoRow(id);
   if (!v) return;
-  const file = path.join(LIBRARY, ...v.path.split('/'));
+  const file = lectureFile(v.path);
   if (!fs.existsSync(file)) {
     if (v.storage !== 'onedrive') await setStorage(id, 'failed', { remote_error: 'the local file is missing — regenerate this lecture' });
     return;
@@ -442,6 +469,7 @@ async function sweep() {
   }
   await db.query("UPDATE workers SET status='offline', lecture_id=NULL WHERE last_seen < ? AND status <> 'offline'", [new Date(Date.now() - WORKER_OFFLINE_S * 1000)]);
   await db.query('DELETE FROM workers WHERE last_seen < ?', [new Date(Date.now() - 10 * 60e3)]);
+  await summaries.sweep();
   pushWorkers(true);
 }
 
@@ -532,6 +560,12 @@ function serveStatic(req, res, pathname) {
 const routes = [];
 const route = (method, pattern, fn) => routes.push({ method, re: new RegExp(`^${pattern.replace(/:(\w+)/g, '(?<$1>[^/]+)')}$`), fn });
 
+// Summary videos: queue, worker API, library and routes of their own (summaries.js).
+const summaries = summaryService({
+  getDb: () => db, broadcast, route, getCatalog: () => catalog, library: LIBRARY, keepLocal: KEEP_LOCAL,
+  onedrive, validateVideo, streamFile, log,
+});
+
 // Dashboard data
 route('GET', '/api/catalog', async () => ({ classes: catalog.classes, at: catalog.at, lectures: Object.fromEntries(catalog.lectures) }));
 route('GET', '/api/state', async () => {
@@ -540,7 +574,7 @@ route('GET', '/api/state', async () => {
   const [queues] = await db.query('SELECT class_no, state FROM class_queues');
   return {
     jobs: jobs.map(compact), videos, queues, workers: await workersState(),
-    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT, storage: storageInfo,
+    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT, roots: { lectures: onedrive.ROOT, summaries: onedrive.SUMMARY_ROOT }, storage: storageInfo,
   };
 });
 route('GET', '/api/jobs/:id', async ({ id }) => {
@@ -607,7 +641,7 @@ route('POST', '/api/jobs/:id/cancel', async ({ id }) => {
 });
 // Removes a library file and the chapter/subject/class folders it leaves empty.
 function removeFromLibrary(rel) {
-  const file = path.join(LIBRARY, ...rel.split('/'));
+  const file = lectureFile(rel);
   fs.rmSync(file, { force: true });
   for (let d = path.dirname(file); d.startsWith(LIBRARY) && d !== LIBRARY; d = path.dirname(d)) {
     try { fs.rmdirSync(d); } catch { break; }   // not empty
@@ -669,13 +703,21 @@ const server = http.createServer(async (req, res) => {
       // Local copy while it exists (before / without the OneDrive upload); otherwise a
       // redirect to OneDrive's short-lived download URL (the player follows it, seeking works).
       const [[v]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [Number(m[1])]);
-      const file = v && path.join(LIBRARY, ...v.path.split('/'));
+      const file = v && lectureFile(v.path);
       if (file && fs.existsSync(file)) return streamFile(req, res, file, 'video/mp4');
       if (v?.remote_id && onedrive.configured()) {
         res.writeHead(302, { location: await onedrive.downloadUrl(v.remote_id), 'cache-control': 'no-store' });
         return res.end();
       }
       return send(res, 404, { error: 'video not found' });
+    }
+    m = /^\/api\/summary-videos\/(\d+)\/file$/.exec(url.pathname);
+    if (m && req.method === 'GET') return summaries.serveFile(req, res, Number(m[1]), send);
+    m = /^\/api\/worker\/summary-video\/(\d+)$/.exec(url.pathname);
+    if (m && req.method === 'PUT') {
+      await db.query('UPDATE workers SET last_seen=? WHERE name=?', [now(), worker]);
+      const r = await summaries.receiveVideo(req, Number(m[1]), worker);
+      return send(res, r.status, r.body);
     }
     m = /^\/api\/worker\/video\/(\d+)$/.exec(url.pathname);
     if (m && req.method === 'PUT') {
@@ -717,6 +759,7 @@ export async function runCentral() {
   // Videos stored while OneDrive was unreachable (or the central restarted mid-upload) go up now.
   const [pending] = await db.query("SELECT lecture_id FROM videos WHERE storage IN ('local','uploading')");
   for (const p of pending) queueUpload(p.lecture_id);
+  await summaries.resumeUploads();
   server.listen(PORT, () => log(`central listening on :${PORT} · library ${LIBRARY} · storage ${storageInfo.provider}${storageInfo.ok === false ? ' (unreachable)' : ''}`));
 }
 

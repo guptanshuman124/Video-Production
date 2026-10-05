@@ -155,10 +155,23 @@ export function createVoice(cfg, { cacheDir = null, provider = null, usage = nul
   };
 }
 
-// Voice a whole lecture into <dir>/voice/sNN.wav.
+// The voice settings for a narration language: tts.voices.<language> (e.g.
+// Hindi courses: a Hindi-teacher prompt; English courses: en-IN and an
+// English-teacher prompt) laid over each provider's own settings. Hinglish
+// (the default) uses tts.<provider> as it is.
+export function voiceConfig(cfg, language = 'hinglish') {
+  const v = cfg.tts.voices?.[language];
+  if (!v) return cfg;
+  const tts = { ...cfg.tts };
+  for (const [k, over] of Object.entries(v)) tts[k] = over && typeof over === 'object' && !Array.isArray(over) ? { ...(cfg.tts[k] || {}), ...over } : over;
+  return { ...cfg, tts };
+}
+
+// Voice a whole lecture into <dir>/voice/sNN.wav, in content.narration_language.
 // logFile: the lecture's call log (llm.jsonl) — one 'tts' row with the
 // characters actually sent, so the per-video cost can price the voice.
-export async function synthesizeLecture(content, cfg, { dir, cacheDir = null, provider = null, onSlide, logFile = null } = {}) {
+export async function synthesizeLecture(content, cfg0, { dir, cacheDir = null, provider = null, onSlide, logFile = null } = {}) {
+  const cfg = voiceConfig(cfg0, content.narration_language || 'hinglish');
   const usage = { requests: 0, chars: 0, seconds: 0 };
   const voice = createVoice(cfg, { cacheDir, provider, usage });
   const outDir = path.join(dir, 'voice');

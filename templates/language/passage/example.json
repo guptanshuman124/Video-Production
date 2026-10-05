@@ -1,0 +1,11 @@
+{
+  "lecture": "Fire and Ice",
+  "title": "Fire and Ice — Lines 1–4",
+  "source": "Fire and Ice · Robert Frost",
+  "lines": [
+    { "text": "Some say the world will end in fire,", "meaning": "Some people believe the world will be destroyed by *fire* — here, a symbol of desire and greed." },
+    { "text": "Some say in ice.", "meaning": "Others believe it will end in *ice* — a symbol of hatred and coldness." },
+    { "text": "From what I’ve tasted of desire", "meaning": "The poet says that, from his own experience of desire," },
+    { "text": "I hold with those who favour fire.", "meaning": "he agrees with those who think fire — desire — will end the world." }
+  ]
+}

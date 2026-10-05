@@ -2,11 +2,15 @@
 // (the `tutorai` copy), grouped class → subject → book → chapter → lecture,
 // with the same inclusion rules, titles and numbering as the pipeline
 // (sources/textbook.js). No lecture content is read here — that happens when
-// a lecture is handed to a worker (inputFor).
+// a lecture is handed to a worker (inputFor). Every chapter is also a possible
+// summary video (catalog.chapters, summaryInputFor), filed in its own tree
+// (OneDrive / library root "CBSE Summaries") with the same folders as the
+// lectures: Class N/Subject/[Book/]Chapter K - Title/Chapter K - Title - Summary.mp4.
 
 import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { exclusionOf, titleCase, loadRows, lectureInputs } from '../sources/textbook.js';
+import { summaryInput } from '../summary/input.js';
 import { courseLookup } from '../curriculum/courses.js';
 import { loadPacks } from '../templates.js';
 
@@ -23,7 +27,7 @@ const SELECT = `SELECT t.lecture_id, t.course_id, t.module_id, CHAR_LENGTH(t.con
 const SUBJECT_ORDER = ['Science', 'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Accountancy', 'Business Studies', 'Economics',
   'Social Science', 'History', 'Geography', 'Political Science', 'Sociology', 'English', 'Hindi'];
 const subjectRank = (s) => { const i = SUBJECT_ORDER.indexOf(s); return i < 0 ? 99 : i; };
-const PACK_NAMES = { theory: 'Theory', mathematics: 'Mathematics', commerce: 'Commerce', science: 'Science' };
+const PACK_NAMES = { theory: 'Theory', mathematics: 'Mathematics', commerce: 'Commerce', language: 'Language', science: 'Science' };
 
 const byOrder = (a, b) => (Number(a.lecture_order ?? 1e9) - Number(b.lecture_order ?? 1e9)) || (Number(a.lecture_id) - Number(b.lecture_id));
 
@@ -95,11 +99,20 @@ export function buildCatalog(rows, { meta = courseLookup(), packs = loadPacks() 
     return { ...cls, subjects };
   });
   let seq = 0;
+  const chapters = new Map();          // module_id -> chapter record (summary videos)
   for (const cls of out) {
     for (const s of cls.subjects) {
       const multiBook = s.books.length > 1;
       for (const b of s.books) {
         for (const ch of b.chapters) {
+          const chDir = [cls.name, safeName(s.subject), ...(multiBook ? [safeName(b.title)] : [])];
+          chapters.set(ch.module_id, {
+            module_id: ch.module_id, course_id: b.course_id, class_no: cls.class_no, subject: s.subject, book: b.title,
+            chapter_no: ch.no, chapter_title: ch.title, lecture_count: ch.lectures.length, lecture_ids: ch.lectures.map((l) => l.lecture_id),
+            pack: ch.pack, supported: ch.supported, why: ch.why, seq: seq + 1,
+            // Same folders as the chapter's lectures, under the summary root.
+            summary_path: path.posix.join(...chDir, `Chapter ${ch.no} - ${safeName(ch.title)}`, `Chapter ${ch.no} - ${safeName(ch.title)} - Summary.mp4`),
+          });
           for (const lec of ch.lectures) {
             const dir = [cls.name, safeName(s.subject), ...(multiBook ? [safeName(b.title)] : []), `Chapter ${ch.no} - ${safeName(ch.title)}`];
             lectures.set(lec.lecture_id, {
@@ -114,7 +127,15 @@ export function buildCatalog(rows, { meta = courseLookup(), packs = loadPacks() 
       }
     }
   }
-  return { classes: out, lectures, at: new Date().toISOString() };
+  return { classes: out, lectures, chapters, at: new Date().toISOString() };
+}
+
+// The summary pipeline's input for one chapter: all of its lectures, in order.
+export async function summaryInputFor(chapter) {
+  const rows = await loadRows('db', { course: [chapter.course_id] });
+  const inputs = lectureInputs(rows, courseLookup()).filter((i) => i.module_id === chapter.module_id);
+  if (!inputs.length) throw new Error(`chapter ${chapter.module_id} has no active lectures in the source tables`);
+  return summaryInput(inputs);
 }
 
 // The pipeline input for one lecture. The whole course is loaded so chapter

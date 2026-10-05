@@ -18,11 +18,11 @@ import { parseContent } from './content.js';
 // theory pack in every stream.
 export const SUBJECT_PACK = {
   'social-science': 'theory', geography: 'theory', 'political-science': 'theory', economics: 'theory',
-  sociology: 'theory', history: 'theory', english: 'theory', hindi: 'theory',
+  sociology: 'theory', history: 'theory', english: 'language', hindi: 'language',
   mathematics: 'mathematics', science: null, biology: 'biology', physics: 'physics', chemistry: 'chemistry',
   'business-studies': 'commerce', accountancy: 'commerce',
 };
-const SUBJECT_VARIANT = { 'business-studies': 'business-studies', accountancy: 'accountancy' };
+const SUBJECT_VARIANT = { 'business-studies': 'business-studies', accountancy: 'accountancy', english: 'english', hindi: 'hindi' };
 
 // ---- loading the catalog ------------------------------------------------------------
 
@@ -137,6 +137,7 @@ export function buildCourses(catalog, textbookRows) {
       pack: neet ? null : (SUBJECT_PACK[r.subject_slug] === undefined ? null : SUBJECT_PACK[r.subject_slug]),
       variant: SUBJECT_VARIANT[r.subject_slug] ?? null,
       slide_language: r.subject_slug === 'hindi' ? 'hindi' : 'english',
+      narration_language: r.subject_slug === 'hindi' ? 'hindi' : r.subject_slug === 'english' ? 'english' : 'hinglish',
       streams: [...new Set(use.map((x) => x.class_slug))],
       enabled: !neet,
     };

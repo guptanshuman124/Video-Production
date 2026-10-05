@@ -9,6 +9,10 @@
 //   workers       worker pods seen by the central (heartbeats)
 //   class_queues  per-class queue switch: running | paused
 //   settings      small key/value store (desired worker count, last sync, …)
+//   summaries        one row per chapter summary video ever queued (like jobs; keyed by module_id)
+//   summary_events   a summary's activity log
+//   summary_videos   finished, validated summary videos (library root Summaries/, own OneDrive root)
+//   render_pieces    a summary's render, cut into pieces any worker can render
 
 import mysql from 'mysql2/promise';
 
@@ -56,6 +60,46 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS settings (
     k VARCHAR(60) PRIMARY KEY, v JSON
   ) CHARACTER SET utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS summaries (
+    module_id INT PRIMARY KEY,
+    course_id INT NOT NULL, class_no INT NOT NULL,
+    subject VARCHAR(100), book VARCHAR(200), chapter_no INT, chapter_title VARCHAR(300), lecture_count INT,
+    seq BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    stage VARCHAR(30), progress FLOAT NOT NULL DEFAULT 0,
+    from_stage VARCHAR(30),
+    priority INT NOT NULL DEFAULT 0,
+    attempts INT NOT NULL DEFAULT 0,
+    worker VARCHAR(120),
+    error_code VARCHAR(60), error_stage VARCHAR(30), error_message TEXT,
+    stages JSON, issues JSON,
+    cost_usd DOUBLE NOT NULL DEFAULT 0, cost_detail JSON NULL,
+    queued_at DATETIME(3), started_at DATETIME(3), finished_at DATETIME(3), heartbeat_at DATETIME(3),
+    INDEX by_queue (status, priority, seq), INDEX by_class (class_no)
+  ) CHARACTER SET utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS summary_events (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    module_id INT NOT NULL, at DATETIME(3) NOT NULL,
+    level VARCHAR(10) NOT NULL, stage VARCHAR(30), message TEXT,
+    INDEX by_module (module_id, id)
+  ) CHARACTER SET utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS render_pieces (
+    module_id INT NOT NULL, idx INT NOT NULL,
+    frame_from INT NOT NULL, frame_to INT NOT NULL, label VARCHAR(60),
+    status VARCHAR(20) NOT NULL, worker VARCHAR(120), attempts INT NOT NULL DEFAULT 0,
+    frames_done INT NOT NULL DEFAULT 0, error TEXT,
+    started_at DATETIME(3), finished_at DATETIME(3), heartbeat_at DATETIME(3),
+    PRIMARY KEY (module_id, idx), INDEX by_status (status)
+  ) CHARACTER SET utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS summary_videos (
+    module_id INT PRIMARY KEY,
+    course_id INT, class_no INT,
+    path VARCHAR(700) NOT NULL, bytes BIGINT, duration_s DOUBLE, width INT, height INT,
+    slides INT, parts INT, cost_usd DOUBLE, cost_detail JSON NULL, qa JSON,
+    created_at DATETIME(3) NOT NULL,
+    storage VARCHAR(20) NOT NULL DEFAULT 'local', remote_id VARCHAR(200) NULL, remote_url VARCHAR(1000) NULL,
+    remote_error TEXT NULL, uploaded_at DATETIME(3) NULL
+  ) CHARACTER SET utf8mb4`,
 ];
 
 export async function openDb(url) {
@@ -79,6 +123,8 @@ export async function openDb(url) {
     remote_error: 'TEXT NULL',
     uploaded_at: 'DATETIME(3) NULL',
   });
+  // A worker busy with a summary video (module_id) instead of a lecture.
+  await addColumns(pool, name, 'workers', { summary_id: 'INT NULL', task: 'VARCHAR(160) NULL' });
   return pool;
 }
 

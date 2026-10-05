@@ -4,6 +4,8 @@
 #
 # modules: per-chapter pack (Science) or variant (Chemistry), auto-classified from the chapter text.
 #          `review: true` = low confidence — check these first. Courses not listed are blocked at G0.
+# narration_language: what the voice-over is spoken in — hinglish (default), hindi (Hindi courses: taught in
+#          Hindi) or english (English courses: taught in English). English and Hindi use the `language` pack.
 #
 # Not in the catalog (blocked): 6 (28), 22 (32), 23 (41), 26 (29), 27 (11), 32 (107), 33 (51), 34 (21), 35 (21), 36 (45), 37 (26), 38 (13), 68 (31), 71 (33), 74 (38), 76 (50), 77 (57), 79 (64), 81 (51), 86 (32), 146 (1)
 
@@ -610,8 +612,9 @@ courses:
   "67":
     class: 6
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-6
@@ -619,8 +622,9 @@ courses:
   "69":
     class: 10
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-10
@@ -628,8 +632,9 @@ courses:
   "70":
     class: 12
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-12-pcm
@@ -640,8 +645,9 @@ courses:
   "72":
     class: 11
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-11-pcm
@@ -652,8 +658,9 @@ courses:
   "73":
     class: 12
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-12-pcm
@@ -664,8 +671,9 @@ courses:
   "75":
     class: 12
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-12-pcm
@@ -712,8 +720,9 @@ courses:
   "85":
     class: 11
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-11-pcm
@@ -724,8 +733,9 @@ courses:
   "87":
     class: 10
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-10
@@ -796,8 +806,9 @@ courses:
   "100":
     class: 11
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-11-pcb
@@ -1000,8 +1011,9 @@ courses:
   "112":
     class: 7
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-7
@@ -1009,8 +1021,9 @@ courses:
   "113":
     class: 8
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-8
@@ -1067,8 +1080,9 @@ courses:
   "119":
     class: 9
     subject: English
-    pack: theory
-    variant: null
+    pack: language
+    variant: english
+    narration_language: english
     slide_language: english
     streams:
       - class-9
@@ -1158,8 +1172,9 @@ courses:
   "123":
     class: 12
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-12-pcm
@@ -1170,8 +1185,9 @@ courses:
   "124":
     class: 12
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-12-pcm
@@ -1182,8 +1198,9 @@ courses:
   "125":
     class: 12
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-12-pcm
@@ -1194,8 +1211,9 @@ courses:
   "126":
     class: 11
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-11-pcm
@@ -1206,8 +1224,9 @@ courses:
   "127":
     class: 11
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-11-pcm
@@ -1218,8 +1237,9 @@ courses:
   "128":
     class: 11
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-11-pcm
@@ -1231,8 +1251,9 @@ courses:
   "129":
     class: 10
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-10
@@ -1240,8 +1261,9 @@ courses:
   "130":
     class: 10
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-10
@@ -1249,8 +1271,9 @@ courses:
   "131":
     class: 9
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-9
@@ -1258,8 +1281,9 @@ courses:
   "132":
     class: 8
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-8
@@ -1267,8 +1291,9 @@ courses:
   "133":
     class: 7
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-7
@@ -1276,8 +1301,9 @@ courses:
   "134":
     class: 6
     subject: Hindi
-    pack: theory
-    variant: null
+    pack: language
+    variant: hindi
+    narration_language: hindi
     slide_language: hindi
     streams:
       - class-6

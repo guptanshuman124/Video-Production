@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Play, RotateCcw, RefreshCw, XCircle, ChevronsUp, PlusCircle, Trash2, FolderOpen, AlertTriangle, CheckCircle2, CircleDot, Loader2, Circle, Download, Cloud, CloudUpload, CloudOff, HardDrive, ExternalLink } from 'lucide-react';
 import { api, STAGES, lectureStatus, stageLabel, useStore, useTick } from '../store.js';
-import { Btn, Drawer, Modal, Progress, StatusChip, fmtAgo, fmtDur, fmtBytes, fmtElapsed, fmtUsd, useAction, useToast } from './ui.jsx';
+import { Btn, Drawer, Modal, Progress, StatusChip, ActivityLog, fmtAgo, fmtDur, fmtBytes, fmtElapsed, fmtUsd, useAction, useToast } from './ui.jsx';
 
 // The library path as it looks on this PC (Windows paths use backslashes).
 const BS = String.fromCharCode(92);
@@ -77,7 +77,7 @@ const fmtNum = (x) => (x || 0).toLocaleString('en-IN');
 
 // What this video cost, from its call log: every OpenAI call (text + pictures)
 // and the characters sent to the voice engine, including retries and repairs.
-function CostBreakdown({ cost }) {
+export function CostBreakdown({ cost }) {
   const detail = (i) => (i.note ? i.note : i.key === 'voice'
     ? `${fmtNum(i.chars)} characters · ${fmtNum(i.calls)} requests`
     : `${fmtNum(i.calls)} call${i.calls === 1 ? '' : 's'} · ${fmtNum(i.input_tokens)} in / ${fmtNum(i.output_tokens)} out tokens`);
@@ -188,7 +188,7 @@ export function LectureDrawer({ id, onClose }) {
             </div>
             <div className="mono small">{video.storage === 'onedrive'
               ? `${s.storage?.site || 'SharePoint'} › ${s.storage?.library || 'Documents'} › ${s.storage?.root || 'CBSE Lectures'}/${video.path}`
-              : hostPath(s.library, video.path)}</div>
+              : hostPath(s.library, `${s.roots.lectures}/${video.path}`)}</div>
             {video.storage === 'failed' && video.remote_error && <div className="t-red small">{video.remote_error}</div>}
             <div className="muted small">{fmtDur(video.duration_s)} · {fmtBytes(video.bytes)} · {video.slides ?? '—'} slides · made {fmtAgo(video.created_at)}{video.uploaded_at ? ` · uploaded ${fmtAgo(video.uploaded_at)}` : ''}</div>
           </div>
@@ -231,17 +231,7 @@ export function LectureDrawer({ id, onClose }) {
         })}
       </ol>
 
-      <h4 className="section-title">Activity</h4>
-      <div className="log">
-        {(detail?.events || []).slice().reverse().map((e, k) => (
-          <div key={k} className={`log-line lv-${e.level}`}>
-            <span className="log-time">{new Date(e.at).toLocaleTimeString()}</span>
-            {e.stage && <span className="log-stage">{e.stage}</span>}
-            <span className="log-msg">{e.message}</span>
-          </div>
-        ))}
-        {!detail?.events?.length && <div className="muted small">Nothing yet.</div>}
-      </div>
+      <ActivityLog events={detail?.events} />
     </Drawer>
   );
 }

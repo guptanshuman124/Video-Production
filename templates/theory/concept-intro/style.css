@@ -8,5 +8,5 @@
 }
 .body p { margin: 0; font: 400 32px/1.4 var(--font-body); color: var(--brand-ink); }
 .body.with-image p { font-size: 30px; }
-.side { left: 960px; top: 157px; width: 856px; height: 833px; }
+.side { left: 960px; top: 236px; width: 856px; height: 754px; }   /* below the title band (was top 157: long titles ran under it) */
 .side .panel-caption { padding-bottom: 15px; }

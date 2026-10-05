@@ -1,0 +1,29 @@
+--brand-bg: var(--bg-white);
+
+/* A paper card (the format, top to bottom) with an optional tip card to its right. */
+.wrap {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; height: 744px;
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+  &.with-tip { grid-template-columns: minmax(0, 1fr) 460px; }
+}
+.paper {
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  padding: 18px 28px 20px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+}
+.kind {
+  padding-bottom: 10px; margin-bottom: 8px; border-bottom: 2px solid var(--brand-rule);
+  font: 700 30px/1.2 var(--font-heading, var(--font-display)); color: var(--brand-heading);
+}
+.parts { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; }
+.part {
+  display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 22px; align-items: baseline;
+  padding: 6px 0; border-bottom: 1px dashed var(--brand-rule);
+  font-size: calc(27px - var(--n) * 0.6px);
+}
+.part:last-child { border-bottom: 0; }
+.pname { font: 700 1em/1.3 var(--font-body); color: var(--brand-navy); }
+.psample { font: 400 1em/1.38 var(--font-body); color: var(--brand-ink); }
+.tip { align-self: start; padding: 18px 24px 20px; border-radius: var(--radius-card); background: var(--brand-cream); }
+.label { font: 700 21px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .04em; }
+.ttext { margin-top: 8px; font: 400 26px/1.4 var(--font-body); color: var(--brand-ink); }

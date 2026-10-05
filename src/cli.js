@@ -183,12 +183,14 @@ async function showTemplate(name) {
     const dataFile = typeof dataArg === 'string' ? path.resolve(dataArg) : null;
     const data = dataFile ? JSON.parse(fs.readFileSync(dataFile, 'utf8')) : structuredClone(t.example || {});
     const dir = dataFile ? path.dirname(dataFile) : path.join(TEMPLATES_DIR, id);
+    // --theme dark: the summary-video theme (default sky, the lecture theme).
+    const theme = String(flag('theme', 'sky'));
     const project = await normalizeProject({
-      title: id, fadeIn: 0, fadeOut: 0,
+      title: id, fadeIn: 0, fadeOut: 0, theme,
       scenes: [{ template: id, data, transition: { name: 'cut', duration: 0 } }],
     }, dir, dataFile ? path.relative(process.cwd(), dataFile) : `templates/${id}/example.json`);
     const snapArg = flag('snap', true);
-    const out = path.resolve(typeof snapArg === 'string' ? snapArg : `out/template-${id.replaceAll('/', '-')}.png`);
+    const out = path.resolve(typeof snapArg === 'string' ? snapArg : `out/template-${id.replaceAll('/', '-')}${theme === 'sky' ? '' : `-${theme}`}.png`);
     console.log();
     await snapScenes(project, 0, parseAts(), out);
     return;
@@ -225,6 +227,8 @@ const usage = `
   TEXTBOOK LECTURES (tutorai.textbook_raw: one row = one video)
   hvr lectures  --source <export.jsonl | db> [--course 58] [--module 338] [--lecture 1717]
                 [--as "class=12,subject=Biology,pack=biology"] [--shard 2/8] [run flags below]
+  hvr summary   --source <export.jsonl | db> --module 338 [--course 58] [run flags below]
+                chapter summary video (~1 h, all lectures at once, dark theme) -> jobs/summaries/
   hvr source audit  --source <export.jsonl | db> [--course …]   parse every row, G0 precheck, hours
   hvr source courses --catalog <db | catalog.jsonl> --source <db | export.jsonl>   -> config/courses.yaml
   hvr source export --out f.jsonl [--catalog-out c.jsonl] [--course …]   TEXTBOOK_DB_URL -> JSONL
@@ -252,7 +256,7 @@ const usage = `
 
   hvr templates                                  list registered templates
   hvr template  <id>                             fields + example scene JSON
-  hvr template  <id> --snap [f.png] [--at ms[,ms…]] [--data f.json]
+  hvr template  <id> --snap [f.png] [--at ms[,ms…]] [--data f.json] [--theme sky|dark]
                                                  render example (or given) data to PNG
   hvr new-template <id>                          scaffold templates/<id>/
 `;
@@ -266,6 +270,7 @@ const COMMANDS = {
   generate: () => product.run(file, flag, has, { to: 'assemble' }),
   batch: () => product.batch(file, flag, has),
   lectures: () => product.lectures(flag, has),
+  summary: () => product.summaries(flag, has),
   source: () => (file === 'audit' ? product.sourceAudit(flag, has) : file === 'export' ? product.sourceExport(flag) : file === 'courses' ? product.sourceCourses(flag) : Promise.reject(new Error('hvr source audit | courses | export'))),
   status: () => product.status(file, flag, has),
   packs: () => product.packs(),
@@ -275,7 +280,7 @@ const COMMANDS = {
 };
 
 try {
-  const needsArg = !['templates', 'packs', 'lectures', 'central', 'worker'].includes(cmd);
+  const needsArg = !['templates', 'packs', 'lectures', 'summary', 'central', 'worker'].includes(cmd);
   if (!COMMANDS[cmd] || (needsArg && !file)) { console.log(usage); process.exit(1); }
   await COMMANDS[cmd]();
 } catch (e) {

@@ -1,6 +1,6 @@
 # CBSE lecture pipeline
 
-One NCERT chapter goes in; five validated Hinglish lecture videos (~20 min, 1080p25) come out. Every step is followed by a gate — code that checks the step's output. Failures are repaired or sent to a review queue, and nothing unchecked reaches the renderer.
+One NCERT chapter goes in; five validated lecture videos (~20 min, 1080p25) come out — narrated in Hinglish, except English and Hindi lessons, which are taught in their own language (see *Language subjects* below). **Chapter summary videos** (~1 hour each, dark theme) are a separate pipeline: [SUMMARIES.md](SUMMARIES.md). Every step is followed by a gate — code that checks the step's output. Failures are repaired or sent to a review queue, and nothing unchecked reaches the renderer.
 
 ```
 chapter.json ─► prepare ─► chapter-plan ─┬─► L1 … L5, each:
@@ -76,8 +76,14 @@ hvr lectures … --as "class=12,subject=Biology,pack=biology"   # try a course b
 - The slide budget and the A1 audio band (±30%) come from that target.
 - Long sources are summarised to fit, never padded.
 
+**Language subjects** (English, Hindi — the `language` pack, 2026-10-05):
+- Taught as languages, not as theory subjects: read the text closely (`passage`: quoted lines, each read then explained), word meanings, character sketches, literary devices, the central idea, grammar rules with practice (answers revealed), writing formats.
+- **Narration language per course** (`courses.yaml narration_language`, default by subject): Hindi courses are narrated in **Hindi** (Devanagari throughout; English only where a Hindi teacher would really say it — G4 `NOT_HINDI` below 80 % Devanagari), English courses in **English** (no Hindi — G4 `NOT_ENGLISH`). Everything else stays Hinglish. The prompt module (`prompts/language/hindi.md`, `english-spoken.md`), the narration examples (`narration_hindi`, `narration`), the word factor (`narration.word_factors`) and the voice (`tts.voices.<language>`: hi-IN / en-IN with a Hindi- or English-teacher style prompt) all follow it.
+- Fixed on-screen labels follow the slide language (`meta.slide.labels.hindi`: "Question" → "प्रश्न", "Meaning" → "अर्थ").
+- Hindi variant examples: `prompts/packs/language/variants/hindi/examples/` (Hindi slide data + Hindi narration) take precedence over the pack's English ones.
+
 **Hindi-subject courses** (`slide_language: hindi`):
-- Slide text is Devanagari; the voice-over stays Hinglish.
+- Slide text is Devanagari; the voice-over is Hindi (above).
 - Noto Sans Devanagari is in every template's font stack.
 - G3 requires Devanagari slides for these courses and forbids Devanagari on English courses.
 
@@ -191,6 +197,10 @@ prompts/                        _base · language · profiles/cbse · steps · p
 templates/<pack>/               pack.json + one folder per slide template (meta.slide spec)
 config/default.yaml             every tunable, overridable in config/local.yaml
 ```
+
+## Slide themes
+
+Lecture videos use the **sky-blue** theme (`templates/_shared/global.css`, the soft-horizon palette). Summary videos use the **dark** theme (`templates/_shared/theme-dark.css`, laid over it for scenes with class `theme-dark`). The project's `theme` field picks one (`buildProject(…, { theme })`; the stage adds the class; JS colours such as MCQ answer states read `globalThis.HVR_THEME`). Templates use tokens (`--on-accent`, `--good-line`, `--art-bg` …) for anything theme-dependent. AI pictures get a matching house style per theme (`generation/art.js STYLES`). Preview either: `hvr template <id> --snap [--theme dark]`.
 
 ## Installed packs: biology, physics, chemistry
 

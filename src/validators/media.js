@@ -73,7 +73,7 @@ export function gateSync(project, cues, required, cfg, { trackDuration = null } 
 
 // probe: ffprobe JSON (all streams); expected: { duration (s), fps, width, height };
 // black: [[start, end]] from blackdetect; reveals: [{ where, changed }].
-export function gateVideo(probe, expected, { black = [], reveals = [], fadeIn = 0, fadeOut = 0 } = {}) {
+export function gateVideo(probe, expected, { black = [], reveals = [], layout = reveals.layout || [], fadeIn = 0, fadeOut = 0 } = {}) {
   const issues = [];
   const v = probe.streams.find((s) => s.codec_type === 'video');
   const a = probe.streams.find((s) => s.codec_type === 'audio');
@@ -89,5 +89,7 @@ export function gateVideo(probe, expected, { black = [], reveals = [], fadeIn = 
     if (!inFade && e - s > 0.5) issues.push(issue('BLACK_FRAMES', 'error', '/', `${(e - s).toFixed(1)}s of black at ${s.toFixed(1)}s`));
   }
   for (const r of reveals) if (!r.changed) issues.push(issue('REVEAL_NOT_VISIBLE', 'error', r.where, `${r.where}: nothing changed on screen at this cue`));
+  // Wrapping and shrinking already ran on the stage; what still overflows is flagged for a look.
+  for (const l of layout) issues.push(issue('LAYOUT_OVERFLOW', 'warning', l.where, `${l.where}: ${l.what}`));
   return issues;
 }

@@ -17,7 +17,9 @@ import fs from 'node:fs';
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const CHUNK = 10 * 1024 * 1024;          // a multiple of 320 KiB, as Graph requires
 const env = process.env;
-const ROOT = (env.SHAREPOINT_ROOT || 'CBSE Lectures').replace(/^\/+|\/+$/g, '');
+export const ROOT = (env.SHAREPOINT_ROOT || 'CBSE Lectures').replace(/^\/+|\/+$/g, '');
+// Summary videos go under their own root folder (SHAREPOINT_SUMMARY_ROOT, default "CBSE Summaries").
+export const SUMMARY_ROOT = (env.SHAREPOINT_SUMMARY_ROOT || 'CBSE Summaries').replace(/^\/+|\/+$/g, '');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const configured = () => !!(env.MS_TENANT_ID && env.MS_CLIENT_ID && env.MS_CLIENT_SECRET && env.SHAREPOINT_SITE_URL);
@@ -65,13 +67,14 @@ export async function drive() {
 }
 
 const encodePath = (rel) => rel.split('/').map(encodeURIComponent).join('/');
-export const remotePath = (rel) => `${ROOT}/${rel}`;
+export const remotePath = (rel, root = ROOT) => `${root}/${rel}`;
 
 // Uploads a local file to ROOT/<rel>, replacing what is there. Returns { id, webUrl, size }.
-export async function upload(file, rel, { onProgress = () => {} } = {}) {
+// opts.root: the library root folder (default SHAREPOINT_ROOT; summaries use SUMMARY_ROOT).
+export async function upload(file, rel, { onProgress = () => {}, root = ROOT } = {}) {
   const { driveId } = await drive();
   const size = fs.statSync(file).size;
-  const session = await graph('POST', `/drives/${driveId}/root:/${encodePath(remotePath(rel))}:/createUploadSession`, {
+  const session = await graph('POST', `/drives/${driveId}/root:/${encodePath(remotePath(rel, root))}:/createUploadSession`, {
     body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }),
   });
   const url = session.json.uploadUrl;

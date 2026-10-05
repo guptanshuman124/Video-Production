@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { Pause, Play, ChevronsUp, XCircle, RotateCcw, AlertTriangle, Film, Search, Server, Minus, Plus, Database, RefreshCw, FolderOpen, CheckCircle2, Layers, Cloud, CloudUpload, ExternalLink } from 'lucide-react';
 import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Card, Empty, Progress, StageDots, StatusChip, fmtAgo, fmtBytes, fmtDur, fmtElapsed, fmtMin, useAction, useToast } from '../components/ui.jsx';
-import { LectureButtons, useApp, useLectureActions, StorageBadge } from '../components/lecture.jsx';
+import { LectureButtons, useApp, useLectureActions, StorageBadge, hostPath } from '../components/lecture.jsx';
 import { WorkerCard, RecentVideo } from './Overview.jsx';
+import { SummaryCtx } from './Summaries.jsx';
+import { allChapters, summaryStageLabel } from '../store.js';
 
 // ---- Queue ----------------------------------------------------------------------------------
 
@@ -14,6 +16,10 @@ export function QueuePage() {
   const [run] = useAction();
   useTick(1000);
   const running = Object.values(s.jobs).filter((j) => ['running', 'validating', 'cancelling'].includes(j.status));
+  const { openSummary } = useContext(SummaryCtx);
+  const chapters = useMemo(() => new Map(allChapters(s).map((c) => [c.module_id, c])), [s.catalog]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sumRunning = Object.values(s.summaries).filter((j) => ['running', 'rendering', 'validating', 'cancelling'].includes(j.status));
+  const sumQueued = Object.values(s.summaries).filter((j) => j.status === 'queued').sort((a, b) => (b.priority - a.priority) || (new Date(a.queued_at) - new Date(b.queued_at)));
   const queued = queuedInOrder(s);
   const byClass = new Map();
   for (const j of queued) {
@@ -48,6 +54,28 @@ export function QueuePage() {
           </table>
         ) : <Empty Icon={Layers} title="Nothing is being made right now" />}
       </Card>
+
+      {(sumRunning.length > 0 || sumQueued.length > 0) && (
+        <Card title={<>Summary videos <span className="muted">· {sumRunning.length} in production · {sumQueued.length} queued</span>{s.summaryQueue === 'paused' && <span className="pill pill-amber" style={{ marginLeft: 8 }}>Paused</span>}</>} pad={false}>
+          <table className="table">
+            <thead><tr><th>Chapter</th><th>Worker</th><th>Stage</th><th style={{ width: 220 }}>Progress</th><th>Elapsed</th></tr></thead>
+            <tbody>
+              {[...sumRunning, ...sumQueued.slice(0, 50)].map((j) => {
+                const ch = chapters.get(j.module_id);
+                return (
+                  <tr key={j.module_id} className="clickable" onClick={() => openSummary(j.module_id)}>
+                    <td><div className="cell-title">Ch {ch?.chapter_no} · {ch?.title} — summary</div><div className="muted small">Class {ch?.class_no} · {ch?.subject}</div></td>
+                    <td className="mono small">{j.status === 'rendering' ? `${j.stages?.render?.done ?? 0}/${j.stages?.render?.count ?? '?'} pieces · all workers` : j.worker || '—'}</td>
+                    <td>{j.status === 'queued' ? <span className="pill pill-violet">Queued</span> : summaryStageLabel(j.stage)}</td>
+                    <td>{j.status !== 'queued' && <><Progress value={j.progress} striped /><span className="muted small">{Math.round(j.progress)}%</span></>}</td>
+                    <td className="small">{j.status !== 'queued' ? fmtElapsed(j.started_at) : ''}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
 
       {[...byClass.entries()].sort((x, y) => x[0] - y[0]).map(([classNo, items]) => {
         const paused = s.queues[classNo] === 'paused';
@@ -139,7 +167,73 @@ export function AttentionPage() {
 
 // ---- Library ----------------------------------------------------------------------------------
 
+// Lecture videos and summary videos: one library, two collections (a toggle),
+// each in its own folder tree (OneDrive: CBSE Lectures / CBSE Summaries).
 export function LibraryPage() {
+  const [kind, setKind] = useState(() => (window.location.hash.includes('summaries') ? 'summaries' : 'lectures'));
+  const toggle = (
+    <div className="seg seg-lg">
+      <button className={kind === 'lectures' ? 'on' : ''} onClick={() => setKind('lectures')}>Lecture videos</button>
+      <button className={kind === 'summaries' ? 'on' : ''} onClick={() => setKind('summaries')}>Summary videos</button>
+    </div>
+  );
+  return kind === 'summaries' ? <SummaryLibrary toggle={toggle} /> : <LectureLibrary toggle={toggle} />;
+}
+
+function SummaryLibrary({ toggle }) {
+  const s = useStore();
+  const { openSummary, playSummary } = useContext(SummaryCtx);
+  const [cls, setCls] = useState('all');
+  const [q, setQ] = useState('');
+  const chapters = useMemo(() => new Map(allChapters(s).map((c) => [c.module_id, c])), [s.catalog]); // eslint-disable-line react-hooks/exhaustive-deps
+  const vids = Object.values(s.summaryVideos).map((v) => ({ v, ch: chapters.get(v.module_id) })).filter((x) => x.ch)
+    .filter((x) => (cls === 'all' || x.ch.class_no === Number(cls)) && (!q || `${x.ch.title} ${x.ch.subject}`.toLowerCase().includes(q.toLowerCase())))
+    .sort((a, b) => (a.ch.class_no - b.ch.class_no) || a.ch.subject.localeCompare(b.ch.subject) || a.ch.book.localeCompare(b.ch.book) || (a.ch.chapter_no - b.ch.chapter_no));
+  const total = vids.reduce((a, x) => a + (x.v.duration_s || 0), 0);
+  const bytes = vids.reduce((a, x) => a + (x.v.bytes || 0), 0);
+  const groups = new Map();
+  for (const x of vids) {
+    const k = `Class ${x.ch.class_no} · ${x.ch.subject}${x.ch.multiBook ? ` · ${x.ch.book}` : ''}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(x);
+  }
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div><h1>Library</h1><p className="muted">{vids.length} summary videos · {fmtMin(total / 60)} · {fmtBytes(bytes)} · {s.storage?.provider === 'onedrive' ? <>stored on OneDrive: <span className="mono">{s.storage.site} › {s.storage.library} › {s.summaryRoot}</span></> : <>stored in <span className="mono">{hostPath(s.library, s.roots.summaries)}</span></>}</p></div>
+        <div className="head-actions">
+          {toggle}
+          <div className="search"><Search size={15} /><input placeholder="Search summaries" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+          <select className="select" value={cls} onChange={(e) => setCls(e.target.value)}>
+            <option value="all">All classes</option>
+            {(s.catalog?.classes || []).map((c) => <option key={c.class_no} value={c.class_no}>{c.name}</option>)}
+          </select>
+        </div>
+      </div>
+      {!vids.length && <Card><Empty Icon={Film} title="No summary videos yet">Make them on the Summary videos page; they appear here after final validation.</Empty></Card>}
+      {[...groups.entries()].map(([k, items]) => (
+        <section key={k} className="lib-group">
+          <h3 className="lib-head"><FolderOpen size={16} />{k}<span className="muted small">{items.length} summar{items.length > 1 ? 'ies' : 'y'}</span></h3>
+          <Card pad={false}>
+            <table className="table">
+              <tbody>
+                {items.map(({ v, ch }) => (
+                  <tr key={ch.module_id} className="clickable" onClick={() => playSummary(ch.module_id)}>
+                    <td style={{ width: 70 }}>Ch {ch.chapter_no}</td><td className="cell-title">{ch.title}<div className="muted small">{v.parts ?? '—'} parts · {ch.lectures} lectures</div></td>
+                    <td><StorageBadge v={v} provider={s.storage?.provider} /></td><td className="small muted">{fmtDur(v.duration_s)}</td><td className="small muted">{fmtBytes(v.bytes)}</td><td className="small muted">{fmtAgo(v.created_at)}</td>
+                    <td onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => openSummary(ch.module_id)}>Details</Btn></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function LectureLibrary({ toggle }) {
   const s = useStore();
   const { play, openLecture } = useApp();
   const [cls, setCls] = useState('all');
@@ -160,8 +254,9 @@ export function LibraryPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <div><h1>Library</h1><p className="muted">{vids.length} videos · {fmtMin(total / 60)} · {fmtBytes(bytes)} · {s.storage?.provider === 'onedrive' ? <>stored on OneDrive: <span className="mono">{s.storage.site} › {s.storage.library} › {s.storage.root}</span>{s.storage.rootUrl && <> · <a href={s.storage.rootUrl} target="_blank" rel="noreferrer">open</a></>}</> : <>stored in <span className="mono">{s.library}</span></>}</p></div>
+        <div><h1>Library</h1><p className="muted">{vids.length} videos · {fmtMin(total / 60)} · {fmtBytes(bytes)} · {s.storage?.provider === 'onedrive' ? <>stored on OneDrive: <span className="mono">{s.storage.site} › {s.storage.library} › {s.storage.root}</span>{s.storage.rootUrl && <> · <a href={s.storage.rootUrl} target="_blank" rel="noreferrer">open</a></>}</> : <>stored in <span className="mono">{hostPath(s.library, s.roots.lectures)}</span></>}</p></div>
         <div className="head-actions">
+          {toggle}
           <div className="search"><Search size={15} /><input placeholder="Search videos" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <select className="select" value={cls} onChange={(e) => setCls(e.target.value)}>
             <option value="all">All classes</option>
@@ -248,13 +343,13 @@ function StorageCard() {
                 <dt>Uploading / waiting</dt><dd>{n('uploading') + n('local')}</dd>
                 <dt>Upload failed</dt><dd className={n('failed') ? 't-red' : ''}>{n('failed')}</dd>
               </dl>}
-          <pre className="path">{st.root || 'CBSE Lectures'}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Lecture 3 - Types of Chemical Reactions.mp4</pre>
+          <pre className="path">{s.roots.lectures}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Lecture 3 - Types of Chemical Reactions.mp4{'\n'}{s.roots.summaries}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Chapter 1 - Chemical Reactions and Equations - Summary.mp4</pre>
           <Btn Icon={CloudUpload} disabled={!n('failed') && !n('local')} busy={busy === 'up'} onClick={() => run('up', () => api('POST', '/api/uploads/retry'), (r) => `Uploading ${r.queued} video(s)`)}>Retry failed uploads</Btn>
         </>
       ) : (
         <>
           <p className="muted small">OneDrive is not configured (MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, SHAREPOINT_SITE_URL in .env, then <span className="mono">npm run factory -- deploy</span>). Videos are saved on this PC as</p>
-          <pre className="path">{s.library}\Class 10\Science\Chapter 1 - Chemical Reactions and Equations\Lecture 3 - Types of Chemical Reactions.mp4</pre>
+          <pre className="path">{hostPath(s.library, `${s.roots.lectures}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Lecture 3 - Types of Chemical Reactions.mp4`)}{'\n'}{hostPath(s.library, `${s.roots.summaries}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Chapter 1 - Chemical Reactions and Equations - Summary.mp4`)}</pre>
         </>
       )}
       <p className="muted small">Subjects with more than one book (e.g. Physics Part I / Part II) get a book folder between subject and chapter, because chapter numbers restart in each book.</p>

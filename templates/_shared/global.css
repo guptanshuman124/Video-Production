@@ -2,6 +2,9 @@
    the shared header / slide-title components from hvr/shared. Not scoped —
    loaded once, before any template's own style.css.
    Measurements are 1920x1080 CSS px.
+   Themes: this file is the default "soft horizon" sky-blue theme (lecture
+   videos). theme-dark.css lays the deep-navy theme (summary videos) over it
+   for scenes with class `theme-dark` (project.theme: dark, stage/runtime.js).
    Specificity: the root rule is .scene:where(.tpl) (0,1,0) so it beats the
    base .scene rule in theme.css by source order, and a template's own
    [data-template] rules (0,1,0, loaded later) beat it in turn. */
@@ -53,52 +56,64 @@
 @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 700; font-style: normal; font-display: block; src: url('./fonts/noto-sans-devanagari-devanagari-700-normal.woff2') format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
 
 .scene:where(.tpl) {
-  /* ---- colour: "light lab" palette (2026-10-02) ----
-     The dark showcase theme the team liked, now the product default: deep
-     navy-to-indigo slides with soft amber and cyan glows, white titles over a
-     glowing amber bar, frosted translucent cards, and one colour per role —
-     gold section headings, amber key terms and badges, cyan formulas and
-     labels, violet table heads. NCERT figures sit on a white mat, so the
-     textbook drawings stay clean and legible. Token names are kept from the
-     Prepzy PDF so every template picks the values up. */
-  --brand-navy:         #7fd9ff;   /* cyan: labels, lecture name, formulas, option letters */
-  --brand-orange:       #ffbf47;   /* amber: title bar, number badges */
-  --brand-teal:         #5ee6c4;   /* mint: highlights, success, arrows */
-  --brand-violet:       #a99bff;   /* violet: table heads, secondary accents */
-  --brand-title:        #ffffff;   /* slide titles */
-  --brand-heading:      #ffd27a;   /* section / card headings: warm gold */
-  --brand-ink:          #eef3ff;   /* running text */
-  --brand-body:         #c3cdec;   /* secondary text, table cells */
-  --brand-muted:        #8f9cc6;   /* small caps labels (PROBLEM, Question) */
-  --brand-highlight:    #ffd166;   /* *key terms*: amber … */
-  --brand-marker:       rgba(255, 191, 71, .24);   /* … over a soft amber glow stroke */
-  --brand-rule:         rgba(255, 255, 255, .12);   /* header divider */
-  --brand-surface:      rgba(255, 255, 255, .075);  /* frosted cards */
-  --brand-surface-alt:  rgba(255, 255, 255, .05);   /* panels, alt rows */
-  --brand-surface-head: rgba(169, 155, 255, .22);   /* table heads, section bars: violet tint */
-  --brand-panel-line:   rgba(255, 255, 255, .14);   /* card / panel border */
-  --brand-image-line:   rgba(255, 255, 255, .55);   /* frame around a figure's white mat */
-  --brand-cream:        rgba(255, 191, 71, .13);    /* answer / description boxes */
-  --brand-myth:         rgba(255, 122, 122, .17);   /* misconception (wrong idea) */
-  --brand-fact:         rgba(94, 230, 168, .16);    /* misconception (correct idea) */
-  --brand-shadow:       0 1px 0 rgba(255, 255, 255, .06) inset, 0 12px 32px rgba(0, 0, 0, .35);
+  /* ---- colour: "soft horizon" palette ----
+     The middle ground between the plain near-white slides (felt dull) and the
+     deep-navy showcase (too loud): every slide sits on a clearly tinted,
+     light sky / sage / periwinkle background with a gentle top-to-bottom
+     gradient, white cards stand out on it, titles are deep navy instead of
+     black, and the accents are a little richer. Still light and low-glare
+     for a 20-minute lecture, and NCERT figures (white) sit on white mats.
+     Names are kept from the original Prepzy PDF tokens so every template
+     picks the new values up. */
+  --brand-navy:         #1f4a86;   /* primary accent: labels, lecture name, formulas, option letters */
+  --brand-orange:       #e8892e;   /* warm accent: title bar, number badges */
+  --brand-teal:         #1f8a7e;   /* secondary accent: highlights, success, arrows */
+  --brand-title:        #12305f;   /* slide titles: deep navy, complements the sky backgrounds */
+  --brand-highlight:    #0d6e74;   /* *key terms* in slide text: deep teal … */
+  --brand-marker:       rgba(240, 160, 60, .32);   /* … over a soft amber highlighter stroke */
+  --brand-ink:          #1a2433;   /* running text */
+  --brand-body:         #3d4a5c;   /* secondary text, table cells */
+  --brand-muted:        #6c7a8e;   /* small caps labels (PROBLEM, Question) */
+  --brand-rule:         rgba(31, 74, 134, .20);   /* header divider */
+  --brand-surface:      #ffffff;
+  --brand-surface-alt:  #f6f9fc;   /* panels, cards, alt rows */
+  --brand-surface-head: #cfe0f2;   /* table heads, section bars */
+  --brand-panel-line:   rgba(31, 74, 134, .14);   /* image panel border */
+  --brand-image-line:   #b9c6d8;   /* frame around a figure: darker than the slide and the panel, so white figures stand out */
+  --brand-cream:        #fdeed6;   /* answer / description boxes */
+  --brand-myth:         #f8dad4;   /* misconception (wrong idea) */
+  --brand-fact:         #cfeadd;   /* misconception (correct idea) */
+  --brand-shadow:       0 1px 2px rgba(23, 48, 92, .06), 0 10px 28px rgba(23, 48, 92, .10);
 
-  /* slide backgrounds: the middle stop of each slide's navy gradient */
-  --bg-white:    #101a47;   /* navy */
-  --bg-grey:     #0f2142;   /* teal-navy */
-  --bg-lavender: #17184a;   /* indigo */
-  --bg-teal:     #0d2342;   /* deep teal */
-  --bg-mist:     #121c48;   /* blue-navy */
+  /* Roles added with the dark theme (2026-10-02) and used by newer templates;
+     the sky theme gives each one a value that reads on light slides. */
+  --brand-heading:      #1f4a86;   /* section / card headings */
+  --brand-violet:       #5b6fb8;   /* table heads, dividers */
+  --on-accent:          #ffffff;   /* text on an amber badge */
+  --on-navy:            #ffffff;   /* text on a navy badge */
+  --accent-glow:        none;      /* glow around navy badges */
+  --chip-bg:            #ffffff;   /* small pill chips (marks) */
+  --good-line: #1f8a6a; --good-ink: #17694f; --good-bg: rgba(31, 138, 106, .07);
+  --bad-line:  #c8553d; --bad-ink:  #a3412c; --bad-bg:  rgba(200, 85, 61, .07);
+  --art-bg:             #dfe5ea;   /* illustration frame */
+  --art-shadow:         0 2px 4px rgba(29, 39, 51, .06), 0 22px 54px rgba(29, 39, 51, .16);
+  --font-heading: 'Baloo 2', 'Noto Sans Devanagari', 'Nunito', system-ui, sans-serif;
+
+  /* slide backgrounds used across the deck: one tinted family (light, never white) */
+  --bg-white:    #c8dbee;   /* sky */
+  --bg-grey:     #c3d9e7;   /* sky-teal */
+  --bg-lavender: #cdd5ee;   /* sky-periwinkle */
+  --bg-teal:     #c1dce2;   /* sky-aqua */
+  --bg-mist:     #cfdfee;   /* pale sky */
 
   /* MCQ answer states */
-  --mcq-correct-bg:     rgba(94, 230, 168, .18);
-  --mcq-correct-border: #5ee6a8;
-  --mcq-wrong-bg:       rgba(255, 122, 122, .18);
-  --mcq-wrong-border:   #ff7a7a;
+  --mcq-correct-bg:     #def2e8;
+  --mcq-correct-border: #1f8a6a;
+  --mcq-wrong-bg:       #fbe5e1;
+  --mcq-wrong-border:   #c8553d;
 
   /* ---- type ---- */
-  --font-display: 'Fredoka', 'Baloo 2', 'Noto Sans Devanagari', system-ui, sans-serif;            /* slide titles */
-  --font-heading: 'Baloo 2', 'Noto Sans Devanagari', 'Nunito', system-ui, sans-serif;              /* section headings, labels */
+  --font-display: 'Baloo 2', 'Poppins', 'Noto Sans Devanagari', system-ui, sans-serif;            /* slide titles, headings */
   --font-body:    'Nunito', 'Noto Sans Devanagari', 'Inter', system-ui, -apple-system, sans-serif;  /* running text */
   --font-card:    'Nunito', 'Noto Sans Devanagari', 'Arimo', Arial, sans-serif;                     /* card / option text */
 
@@ -114,9 +129,10 @@
   /* A light-to-deeper wash and a soft glow of the two accents over the slide
      tint: depth and colour without drawing the eye (baked gradients, no blur). */
   background:
-    radial-gradient(1100px 620px at 8% -8%, rgba(255, 170, 60, .20), transparent 62%),
-    radial-gradient(900px 700px at 105% 110%, rgba(82, 216, 255, .16), transparent 60%),
-    linear-gradient(160deg, #0a1030 0%, var(--brand-bg, #101a47) 55%, #0c1538 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, .42) 0%, rgba(255, 255, 255, 0) 46%, rgba(23, 48, 92, .06) 100%),
+    radial-gradient(1200px 720px at 100% 0%, rgba(31, 138, 126, .13), transparent 62%),
+    radial-gradient(1000px 640px at 0% 100%, rgba(232, 137, 46, .10), transparent 62%),
+    var(--brand-bg, var(--bg-grey));
   color: var(--brand-ink);
   font-family: var(--font-body);
   font-kerning: normal;
@@ -125,24 +141,15 @@
 /* *emphasis* in slide text (rich()): a key term, highlighter-pen style. */
 .scene.tpl .accent {
   color: var(--brand-highlight); font-weight: 700;
-  background: linear-gradient(transparent 58%, var(--brand-marker) 58%, var(--brand-marker) 94%, transparent 94%);
-  text-shadow: 0 0 14px rgba(255, 191, 71, .35);
+  background: linear-gradient(transparent 60%, var(--brand-marker) 60%, var(--brand-marker) 92%, transparent 92%);
   padding: 0 .08em; border-radius: 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
 .scene.tpl strong { color: var(--brand-title); font-weight: 800; }
-/* Type roles: Fredoka titles, Baloo 2 headings and labels, Nunito body —
-   three faces and a clear size scale, each role in its own colour. These
-   beat the templates' own font-family (same sizes, new faces and colours). */
-.scene.tpl h2, .scene.tpl h3, .scene.tpl .main, .scene.tpl .td.label, .scene.tpl .shead, .scene.tpl .pname, .scene.tpl .date {
-  font-family: var(--font-heading); color: var(--brand-heading); letter-spacing: .005em;
-}
-.scene.tpl .label, .scene.tpl .qlabel, .scene.tpl .tlabel, .scene.tpl .glabel, .scene.tpl .eyebrow {
-  font-family: var(--font-heading); color: var(--brand-orange); letter-spacing: .06em;
-}
-.scene.tpl .th { font-family: var(--font-heading); color: var(--brand-title); }
-.scene.tpl .qtext { color: var(--brand-ink); }
-.scene.tpl .letter { color: var(--brand-navy); }
+:where(.scene.tpl) h1, :where(.scene.tpl) h2, :where(.scene.tpl) h3 { font-family: var(--font-display); }
 .scene.tpl .katex { color: var(--brand-navy); font-size: 1.15em; }
+
+/* Small caps labels in templates that leave their colour to the theme. */
+:where(.scene.tpl) .label { color: var(--brand-muted); }
 
 /* ---- <Header> -------------------------------------------------------------- */
 :where(.scene.tpl) .brand-header {
@@ -150,17 +157,17 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 108px 0 var(--frame-left);
   border-bottom: 1px solid var(--brand-rule);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0));
 }
 :where(.scene.tpl) .brand-header::after {
   content: ''; position: absolute; left: var(--frame-left); bottom: -2px; width: 180px; height: 3px;
-  border-radius: 2px; background: linear-gradient(90deg, var(--brand-orange), var(--brand-navy)); box-shadow: 0 0 12px rgba(255, 191, 71, .55);
+  border-radius: 2px; background: linear-gradient(90deg, var(--brand-orange), var(--brand-teal));
 }
 /* Uses only the space left of the logo; long names are shrunk (down to 16px)
    and then wrapped onto two lines by fitHeaderText() in stage/index.html. */
 :where(.scene.tpl) .brand-lecture {
   font: 700 21.3px/1.2 var(--font-body);
-  text-transform: uppercase; color: var(--brand-body); letter-spacing: .04em;
+  text-transform: uppercase; color: var(--brand-navy);
   flex: 1 1 auto; min-width: 0; margin-right: 48px;
   white-space: nowrap; overflow: hidden;
 }
@@ -168,10 +175,7 @@
   white-space: normal;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-:where(.scene.tpl) .brand-logo {
-  height: 58px; width: auto; display: block; margin-top: 3px; box-sizing: border-box;
-  background: #fff; padding: 7px 18px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
-}
+:where(.scene.tpl) .brand-logo { height: 49px; width: auto; display: block; margin-top: 3px; }
 :where(.scene.tpl) .brand-wordmark {
   font: 700 40px/1 Georgia, 'Times New Roman', serif; letter-spacing: .02em; color: #3b2f7a;
 }
@@ -184,14 +188,16 @@
 }
 :where(.scene.tpl) .brand-title::before {
   content: ''; flex: 0 0 auto; width: 10px; height: 77px;
-  border-radius: 5px; background: linear-gradient(180deg, #ffd27a, #ff9a3c);
-  box-shadow: 0 0 22px rgba(255, 191, 71, .75);
+  border-radius: 5px; background: linear-gradient(180deg, #f2ad55, var(--brand-orange));
+  box-shadow: 0 4px 14px rgba(232, 150, 58, .35);
 }
 :where(.scene.tpl) .brand-title h1 {
-  font: 600 64px/1.2 var(--font-display); letter-spacing: .002em;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, .35);
+  font: 700 62px/1.25 var(--font-display); letter-spacing: -.005em;
   color: var(--brand-title); white-space: nowrap;
 }
+
+/* A title too long for its room (stage/index.html fitSlideTitles) wraps onto two lines, from the same top. */
+:where(.scene.tpl) .brand-title.wrap { height: auto; min-height: 77px; }
 
 /* ---- <Panel>: image placeholder box with caption --------------------------- */
 :where(.scene.tpl) .panel {
@@ -213,15 +219,15 @@
 :where(.scene.tpl) .panel-media img { width: 100%; height: 100%; object-fit: contain; display: block; }
 :where(.scene.tpl) .panel-media img.fitted {
   box-sizing: border-box; max-width: 100%; max-height: 100%; object-fit: contain;
-  padding: 12px; background: #fff;
-  border: 2px solid var(--brand-image-line); border-radius: 12px;
-  box-shadow: 0 0 0 6px rgba(255, 255, 255, .06), 0 14px 34px rgba(0, 0, 0, .45);
+  padding: 10px; background: #fff;
+  border: 2px solid var(--brand-image-line); border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(20, 24, 31, .08);
 }
 :where(.scene.tpl) .panel.cover .panel-media { padding: 0; }
 :where(.scene.tpl) .panel.cover .panel-media img { width: 100%; height: 100%; object-fit: cover; max-width: none; max-height: none; }
 :where(.scene.tpl) .panel-caption {
   flex: 0 0 auto; padding: 0 24px 22px; text-align: center;
-  font: 400 24px/1.2 var(--font-body); color: var(--brand-body); font-style: italic;
+  font: 400 24px/1.2 var(--font-body); color: var(--brand-body);
 }
 
 /* ---- <Bullets> ------------------------------------------------------------- */

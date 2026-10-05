@@ -119,10 +119,47 @@ export function cx(...args) {
 // would otherwise break the whole equation into red raw text. \$ (a literal dollar) is kept.
 export const unwrapDollars = (src) => String(src ?? '').replace(/(?<!\\)\$/g, '').trim();
 
-export function tex(src, { display = false } = {}) {
+export function tex(src, { display = false, breakable = false } = {}) {
   const span = document.createElement('span');
   span.innerHTML = katex.renderToString(unwrapDollars(src), { throwOnError: false, displayMode: display, output: 'html' });
-  return span.firstChild;
+  const el = span.firstChild;
+  if (breakable && el) makeBreakable(el);
+  return el;
+}
+
+// KaTeX draws an expression as unbreakable boxes (.base); a chemical equation
+// (\ce{…}) is a single one, so a long reaction ran straight out of its card.
+// For maths inside running text, each box is split after its top-level
+// relations and operators (→, =, +, −), so the line can wrap there like text.
+function makeBreakable(root) {
+  // Class names: .base / .strut (KaTeX ≤ 0.16) or .katex-base / .katex-strut (newer).
+  for (const base of [...root.querySelectorAll('.katex-html > .base, .katex-html > .katex-base')]) {
+    const strut = base.querySelector(':scope > .strut, :scope > .katex-strut');
+    // The flow is the base's own children, or those of its single wrapper (\ce, \mathrm{…}).
+    const kids = [...base.children].filter((c) => c !== strut);
+    const wrapper = kids.length === 1 && kids[0].children.length > 1 ? kids[0] : null;
+    const flow = wrapper ? [...wrapper.children] : kids;
+    const isBreak = (c) => c.classList?.contains('mrel') || c.classList?.contains('mbin');
+    if (!flow.some(isBreak)) continue;
+    const groups = [[]];
+    flow.forEach((c, i) => {
+      groups.at(-1).push(c);
+      // Break after an operator and the space that follows it.
+      const next = flow[i + 1];
+      if (isBreak(c) && !(next && next.classList?.contains('mspace'))) groups.push([]);
+      else if (c.classList?.contains('mspace') && isBreak(flow[i - 1] || {})) groups.push([]);
+    });
+    const parts = groups.filter((g) => g.length).map((g) => {
+      const b = document.createElement('span');
+      b.className = base.className;
+      if (strut) b.appendChild(strut.cloneNode(true));
+      const holder = wrapper ? wrapper.cloneNode(false) : b;
+      for (const c of g) holder.appendChild(c);
+      if (wrapper) b.appendChild(holder);
+      return b;
+    });
+    base.replaceWith(...parts);
+  }
 }
 
 function emphasis(frag, s, accentClass) {
@@ -146,7 +183,7 @@ export function rich(text = '', accentClass = 'accent') {
   let last = 0, m;
   while ((m = re.exec(s))) {
     emphasis(frag, s.slice(last, m.index).replace(/\\\$/g, '$'), accentClass);
-    frag.appendChild(tex(m[1]));
+    frag.appendChild(tex(m[1], { breakable: true }));   // maths in running text wraps like text
     last = re.lastIndex;
   }
   emphasis(frag, s.slice(last).replace(/\\\$/g, '$'), accentClass);

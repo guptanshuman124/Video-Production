@@ -26,6 +26,7 @@
 import fs from 'node:fs';
 import readline from 'node:readline';
 import { parseContent } from './content.js';
+import { narrationLanguageOf } from '../curriculum/index.js';
 
 const SELECT = `SELECT t.content_id, t.course_id, t.module_id, t.lecture_id, t.content, t.keywords, t.mini_lecture,
   l.title AS lecture_title, l.orders AS lecture_order, l.is_active AS lecture_active,
@@ -228,6 +229,7 @@ export function lectureInputs(rows, courseMeta, filter = {}, { includeInactive =
         ...(meta ? {
           class: meta.class, subject: meta.subject, pack, variant: mod?.variant ?? meta.variant ?? null,
           slide_language: meta.slide_language || 'english',
+          narration_language: narrationLanguageOf(meta),
           ...(mod?.review ? { pack_review: true } : {}),
         } : {}),
         course_title: first.course_title ? String(first.course_title).trim() : null,

@@ -40,8 +40,8 @@ export class JobStore {
 
   // Records a gate report for a stage and updates status + review queue.
   record(unit, stage, report, extra = {}) {
-    // 'chapter' and 'lecture' units report into the job dir itself.
-    const prefix = unit === 'chapter' || unit === 'lecture' ? '' : `${unit}/`;
+    // 'chapter', 'lecture' and 'summary' units report into the job dir itself.
+    const prefix = unit === 'chapter' || unit === 'lecture' || unit === 'summary' ? '' : `${unit}/`;
     this.write(`${prefix}reports/${stage}.json`, report);
     const status = this.readOr('status.json', {});
     const counts = { errors: report.issues.filter((i) => i.severity === 'error').length, warnings: report.issues.filter((i) => i.severity === 'warning').length };

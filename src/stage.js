@@ -71,16 +71,25 @@ export function resolveBrowser({ headed = false } = {}) {
   throw new Error('No Chrome/Chromium found. Set HVR_CHROME to a browser executable.');
 }
 
-export async function openStage(project, { headed = false, scale, fps } = {}) {
-  const { width, height } = project.video;
-  const deviceScaleFactor = scale ?? project.video.scale;
-  const server = await serveStage(project.dir, await buildTemplates());
-  const browser = await chromium.launch({
+// One Chromium for the stage. Summary render pieces share one between their
+// pages (render.js renderPiece); everything else launches its own per stage.
+export function launchBrowser({ headed = false } = {}) {
+  return chromium.launch({
     executablePath: resolveBrowser({ headed }),
     headless: !headed,
     args: ['--force-color-profile=srgb', '--disable-lcd-text',
            '--hide-scrollbars', '--font-render-hinting=none'],
   });
+}
+
+// opts.browser: an already launched browser to open this stage in (it is left
+// running on close); without it the stage launches — and closes — its own.
+// opts.window = [fromMs, toMs]: build only the scenes on screen in that span (runtime prepare).
+export async function openStage(project, { headed = false, scale, fps, browser: shared = null, window: win = null } = {}) {
+  const { width, height } = project.video;
+  const deviceScaleFactor = scale ?? project.video.scale;
+  const server = await serveStage(project.dir, await buildTemplates());
+  const browser = shared || await launchBrowser({ headed });
   const context = await browser.newContext({
     viewport: { width, height },
     deviceScaleFactor,
@@ -94,11 +103,14 @@ export async function openStage(project, { headed = false, scale, fps } = {}) {
   await page.waitForFunction(() => window.__ready === true);
   const info = await page.evaluate(
     ([p, o]) => window.__prepare(p, o),
-    [project, { fps: fps ?? project.video.fps }],
+    [project, { fps: fps ?? project.video.fps, ...(win ? { window: win } : {}) }],
   );
 
   return {
     page, info,
-    async close() { await browser.close(); server.close(); },
+    async close() {
+      if (shared) await context.close(); else await browser.close();
+      server.close();
+    },
   };
 }

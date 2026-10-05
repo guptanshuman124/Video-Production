@@ -1,0 +1,17 @@
+{
+  "data": {
+    "title": "Practice",
+    "instruction": "Fill in the blanks with the present perfect form of the verb.",
+    "items": [
+      {
+        "question": "Ravi ______ (lose) his pen.",
+        "answer": "Ravi has lost his pen."
+      },
+      {
+        "question": "We ______ (visit) Agra twice.",
+        "answer": "We have visited Agra twice."
+      }
+    ]
+  },
+  "narration": "Now it is your turn. Fill in each blank with the present perfect form of the verb in brackets. Try both sentences on your own first. Ready? {{b1.1}} The first answer is: Ravi has lost his pen. Ravi is singular, so has, and lost is the third form of lose. {{b1.2}} And the second: We have visited Agra twice. We is plural, so have, and visited is the third form of visit. How many did you get right?"
+}

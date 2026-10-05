@@ -35,6 +35,12 @@ test('catalog: course-table order, numbering and library folders', () => {
   // Queue order: Physics before English, Part I before Part II, lecture order inside a chapter.
   const bySeq = [...c.lectures.values()].sort((a, b) => a.seq - b.seq).map((l) => l.lecture_id);
   assert.deepEqual(bySeq, [11, 12, 21, 31]);
+  // Every chapter can have a summary video, filed in its own library tree (Summaries/…).
+  const ch = c.chapters.get(2);
+  assert.equal(ch.lecture_count, 2);
+  assert.deepEqual(ch.lecture_ids, [11, 12]);
+  assert.equal(ch.summary_path, 'Class 12/Physics/Physics Part I/Chapter 1 - Electric Charges and Fields/Chapter 1 - Electric Charges and Fields - Summary.mp4');
+  assert.equal(c.chapters.get(5).supported, false);
 });
 
 test('library names are safe on Windows', () => {

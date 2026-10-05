@@ -1,0 +1,234 @@
+{
+  "$id": "summary-content-v1",
+  "title": "Summary Content v1: one validated chapter summary video (src/summary/), ready for TTS and render. Slides use the subject pack's templates plus summary/title and summary/part; data is checked per slide type as for lectures.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "chapter_id",
+    "pack",
+    "class",
+    "subject",
+    "title",
+    "parts",
+    "slides"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "summary"
+    },
+    "chapter_id": {
+      "type": "string"
+    },
+    "course_id": {
+      "type": "integer"
+    },
+    "module_id": {
+      "type": "integer"
+    },
+    "pack": {
+      "type": "string"
+    },
+    "variant": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "class": {
+      "type": "integer",
+      "minimum": 6,
+      "maximum": 12
+    },
+    "subject": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "chapter_number": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "slide_language": {
+      "enum": [
+        "english",
+        "hindi"
+      ]
+    },
+    "narration_language": {
+      "enum": [
+        "hinglish",
+        "hindi",
+        "english"
+      ],
+      "description": "what narration.hinglish (the voiced text) is spoken in"
+    },
+    "minutes": {
+      "type": "number",
+      "description": "target length"
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "title",
+          "first_slide",
+          "slide_count"
+        ],
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "first_slide": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "slide_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "lectures": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slide_number",
+          "slide_type",
+          "template",
+          "title",
+          "data",
+          "narration",
+          "markers"
+        ],
+        "properties": {
+          "slide_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "slide_type": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string",
+            "description": "registry id, e.g. biology/definition"
+          },
+          "title": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "description": "template data without image and cues"
+          },
+          "image": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "url"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https?://"
+              },
+              "caption": {
+                "type": "string"
+              }
+            }
+          },
+          "narration": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hinglish"
+            ],
+            "properties": {
+              "english": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "only in narration.mode via-english"
+              },
+              "hinglish": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "markers": {
+            "type": "array",
+            "description": "marker ids in spoken order, e.g. [\"b1\", \"b2.1\", \"b2.2\", \"b3.1.2\"]",
+            "items": {
+              "type": "string",
+              "pattern": "^b[0-9]+(\\.[0-9]+){0,2}$"
+            }
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "part": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "0 = the title card, else the part number"
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "prompt_hashes": {
+          "type": "object"
+        },
+        "gates": {
+          "type": "object"
+        },
+        "created_at": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -29,6 +29,7 @@
 //     derive: [{ cue: 'cues.table', from: 'cues.rows', index: 0, offset: -0.6 }],
 //     narrationWords: [220, 320], question: false,
 //     defaults: { problemLabel: 'QUESTION' }, rules: ['tableShape'],
+//     labels: { hindi: { questionLabel: 'प्रश्न' } },   // fixed labels per slide language
 //   }
 
 import { validate } from './templates.js';
@@ -63,7 +64,7 @@ export function slideTypes(build) {
 function normSpec(s) {
   return {
     name: s.type, use: '', image: 'none', ratios: [], fields: {}, reveal: [], derive: [],
-    narrationWords: [200, 320], question: false, noHighlight: false, defaults: {}, rules: [], ...s,
+    narrationWords: [200, 320], question: false, noHighlight: false, defaults: {}, labels: {}, rules: [], ...s,
   };
 }
 
@@ -225,12 +226,15 @@ function walkStrings(v, path, fn) {
 // formulaFields hold bare LaTeX (no $…$); every other string is text in which
 // maths must sit inside $…$ — LaTeX left outside is wrapped here (LATEX_WRAPPED)
 // when KaTeX can render it, otherwise it is an error the writer must fix.
-export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula', 'symbol'] } = {}) {
+// opts.slideLanguage: the course's slide language; the spec's `labels` for it
+// (on-screen labels such as "Question" → "प्रश्न") are applied like defaults.
+export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula', 'symbol'], slideLanguage = 'english' } = {}) {
   const issues = [];
+  const fixed = { ...st.spec.defaults, ...(st.spec.labels?.[slideLanguage] || {}) };
   // Plus every field the template marks `latex: true` (e.g. derivation `goal`), at any depth.
   const keys = [...formulaFields, ...latexFields(st.spec.fields)];
   const isFormula = (p) => keys.some((f) => p.endsWith(`.${f}`) || new RegExp(`\\.${f}\\[\\d+\\]$`).test(p));
-  const data = mapStrings({ ...st.spec.defaults, ...stripNulls(raw || {}) }, where, (s, p) => {
+  const data = mapStrings({ ...fixed, ...stripNulls(raw || {}) }, where, (s, p) => {
     if (isFormula(p)) {
       // Bare LaTeX by design: drop stray $ delimiters (a literal \$ stays).
       const bare = s.replace(/(?<!\\)\$/g, '').trim();
@@ -251,7 +255,7 @@ export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['for
     return r.text;
   });
   for (const k of Object.keys(data)) {
-    if (k !== 'title' && !(k in st.spec.fields) && !(k in st.spec.defaults)) {
+    if (k !== 'title' && !(k in st.spec.fields) && !(k in fixed)) {
       issues.push({ code: 'UNKNOWN_FIELD', severity: 'error', path: `${where}.${k}`, message: `${where}: "${k}" is not a field of ${st.type}` });
     }
   }

@@ -1,23 +1,36 @@
-import { useMemo } from 'react';
+import { useMemo, useContext } from 'react';
 import { Film, Timer, Cpu, ListOrdered, AlertTriangle, Wallet, Play, Pause, PlayCircle, ChevronRight, Server, Radio } from 'lucide-react';
-import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick } from '../store.js';
+import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick, allChapters, summaryStageLabel } from '../store.js';
+import { SummaryCtx } from './Summaries.jsx';
 import { Btn, Card, Empty, Progress, StackBar, StageDots, Stat, fmtAgo, fmtElapsed, fmtMin, fmtUsd, pct, useAction } from '../components/ui.jsx';
 import { useApp, StorageBadge } from '../components/lecture.jsx';
 
 export function WorkerCard({ w }) {
   const s = useStore();
   const { openLecture } = useApp();
-  const job = w.lecture_id ? s.jobs[w.lecture_id] : null;
+  const { openSummary } = useContext(SummaryCtx);
+  const summaryJob = w.summary_id ? s.summaries[w.summary_id] : null;
+  const job = w.lecture_id ? s.jobs[w.lecture_id] : summaryJob;
   const lec = w.lecture_id ? s.catalog?.lectures[w.lecture_id] : null;
-  const busy = w.online && job && ['running', 'validating', 'cancelling'].includes(job.status);
+  const ch = w.summary_id ? allChapters(s).find((x) => x.module_id === w.summary_id) : null;
+  const busy = w.online && job && ['running', 'rendering', 'validating', 'cancelling'].includes(job.status);
   return (
-    <div className={`worker ${busy ? 'busy' : w.online ? 'idle' : 'offline'}`} onClick={() => busy && openLecture(w.lecture_id)}>
+    <div className={`worker ${busy ? 'busy' : w.online ? 'idle' : 'offline'}`} onClick={() => { if (!busy) return; if (lec) openLecture(w.lecture_id); else if (ch) openSummary(w.summary_id); }}>
       <div className="worker-head">
         <span className={`dot ${busy ? 'dot-blue pulse' : w.online ? 'dot-green' : 'dot-gray'}`} />
         <span className="worker-name mono">{w.name.replace(/^worker-/, '')}</span>
         <span className="worker-state">{busy ? fmtElapsed(job.started_at) : w.online ? 'Idle' : 'Offline'}</span>
       </div>
-      {busy && lec ? (
+      {busy && ch && !lec ? (
+        <>
+          <div className="worker-lec">
+            <div className="crumbs">Class {ch.class_no} · {ch.subject} · {w.task || 'Summary video'}</div>
+            <div className="worker-title">Ch {ch.chapter_no} · {ch.title}</div>
+          </div>
+          <Progress value={job.progress} striped />
+          <div className="worker-foot"><span>{summaryStageLabel(job.stage)}</span><span>{Math.round(job.progress)}%</span></div>
+        </>
+      ) : busy && lec ? (
         <>
           <div className="worker-lec">
             <div className="crumbs">Class {lec.class_no} · {lec.subject} · Ch {lec.chapter_no}</div>

@@ -16,6 +16,41 @@ duration:                      # textbook lectures: video length follows the sou
   max_minutes: 25              # longer sources are summarised to fit, never padded
   band: 0.3                    # the voiced lecture may land ±30% around its target (A1 gate)
 
+# Summary videos (src/summary/): one per chapter, ~1 hour, the whole chapter as a revision —
+# a separate pipeline from the lecture videos (own prompts, gates, queue and library folder),
+# drawn with the same subject templates in the dark theme. 2026-10-05.
+summary:
+  target_minutes: 60           # the length asked for …
+  min_minutes: 15              # … but a summary is never longer than the chapter's lectures together
+  max_share_of_lectures: 1.0   # (their target minutes, config duration) × this share, nor shorter than min_minutes
+  band: 0.25                   # the voiced summary may land ±25% around its target (A1)
+  parts: [3, 8]                # the outline splits the chapter into this many parts …
+  part_minutes: [5, 16]        # … of about this length each
+  # Screen time per slide, for each part's slide budget — measured on the first real summary
+  # (2026-10-05): ~2.1 min a slide at lecture-length narration, so 40 slides ran 87 min for a
+  # 60-min target. Summary narration is also kept tighter (narration_scale × the lecture ranges).
+  slide_minutes: [1.7, 2.1]
+  narration_scale: 0.85
+  theme: dark                  # slide theme (templates/_shared/theme-dark.css); lectures stay sky
+  part_concurrency: 3          # parts planned / written / narrated at the same time
+  art_max: 4                   # AI pictures per summary video
+  # Slide types a summary never uses (openers, pause-and-try slides, activities); every other type
+  # of the subject's pack is available, at most its per-lecture max in each part.
+  exclude_types: [intro, chapter_index, hook, try_this, practice_problem, concept_intro, story_summary]
+  # Every part closes on a recap or a check; the last part ends on at least 2 question slides.
+  part_end_types: [quick_revision, formula_sheet, mcq, assertion_reason, case_study, grammar_practice]
+  final_questions: 2
+  render_piece_seconds: 300    # the render is cut into pieces this long, spread over the workers, then joined
+  # Pages per piece fit the worker's memory limit: (limit × 0.85 − base) ÷ per page, at most
+  # piece_max_pages (default video.jobs = WORKER_RENDER_JOBS). Measured on summary 86: two separate
+  # browsers + encoders peaked ~1.85 GB at a piece's start and OOM-killed 2.5 GiB workers.
+  piece_base_mb: 800           # one browser + the worker's Node processes
+  piece_page_mb: 450           # each page with its x264 encoder (piece encoder settings below)
+  piece_encode_threads: 2      # pieces are joined by stream copy: same quality (crf), smaller buffers
+  piece_lookahead: 10
+  review_rounds: 3             # review → repair rounds per part; then coverage findings stay warnings and a
+                               # slide still wrong is dropped (if the part still closes properly)
+
 language:
   slides: english              # on-screen text and all internal content
   voice: hinglish              # the only language that is voiced
@@ -25,6 +60,9 @@ narration:
                                # via-english: English draft, then a Hinglish conversion step (~25-30% more LLM cost)
   hinglish_word_factor: 1.1    # Hinglish runs ~10% longer than English for the same content;
                                # scales each slide type's narrationWords range
+  # The voice-over language is per course (courses.yaml narration_language): Hinglish for every
+  # subject except Hindi (taught in Hindi) and English (taught in English) — 2026-10-05.
+  word_factors: { hinglish: 1.1, hindi: 1.2, english: 1.0 }
 
 llm:
   provider: openai
@@ -95,6 +133,27 @@ tts:
     # inline tags are optional. For Chirp 3 HD use short at all three (it otherwise runs on).
     pauses: { comma: none, dash: none, sentence: none }
     gap_ms: 450                # silence where a slide reveals its next point (default 200)
+  # Per narration language (courses.yaml narration_language), laid over each provider's settings.
+  # Hinglish uses the settings above as they are.
+  voices:
+    hindi:
+      google:
+        language: hi-IN
+        prompt: >-
+          Read this as a warm, lively Indian Hindi teacher teaching a Hindi lesson to a class of
+          school students, in clear, correct Hindi. Read quoted lines of poems and stories with
+          feeling and good expression, then explain them in a natural, engaging classroom voice.
+          Take short natural pauses between ideas. Keep a moderate, steady pace.
+    english:
+      google:
+        language: en-IN
+        prompt: >-
+          Read this as a warm, lively Indian English teacher teaching an English lesson to a class
+          of school students, in clear, well-pronounced Indian English. Read quoted lines of poems
+          and stories with feeling and good expression, then explain them in a natural, engaging
+          classroom voice. Take short natural pauses between ideas. Keep a moderate, steady pace.
+      sarvam:
+        language: en-IN
   elevenlabs:
     voice_id: null
     model: null
@@ -124,11 +183,12 @@ art:
   prices: { text_input: 5.00, image_output: 30.00 }   # USD per 1M tokens, for the cost log
 
 images:
-  enhance:                     # NCERT figures: Lanczos resample + light sharpening (never redrawn)
-    enabled: true
-    min_side: 1400             # figures whose long side is already this big are left as they are
-    target: 1800               # long side after resampling (wide figures span up to 1,752 px on the slide)
-    max_scale: 3
+  enhance:                     # EVERY NCERT figure, before it is placed: denoise (JPEG/WebP) + Lanczos resample
+    enabled: true              # + unsharp mask — deterministic, never redrawn (AI pictures are not processed)
+    target: 2000               # long side after resampling (wide figures span up to 1,752 px on the slide)
+    max_scale: 4               # small figures are enlarged at most this much
+    sharpen: 0.8               # unsharp amount for enlarged figures …
+    sharpen_large: 0.45        # … and for figures already at full size (kept at their size)
 
 timing:                         # ms, shared by the audio track and slide cues
   transition: 800

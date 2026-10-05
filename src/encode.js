@@ -48,6 +48,11 @@ export function startEncoder({ out, fps, crf = 18, preset = 'slow', tune = null,
         proc.stdin.on('error', done);
       });
     },
+    // Stops the encoder at once (a failed segment): the partial file is discarded.
+    abort() {
+      if (proc.exitCode != null) return Promise.resolve();
+      return new Promise((res) => { proc.once('close', () => res()); try { proc.stdin.destroy(); } catch { /* closed */ } proc.kill('SIGKILL'); });
+    },
     finish() {
       return new Promise((res, rej) => {
         proc.on('close', (code) => code === 0

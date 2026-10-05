@@ -46,7 +46,7 @@ export async function writeSlides(G, plan, opts = {}) {
 
     const res = await llm.call({
       task: 'slide-write', unit: `${unit}/s${batch.join(',')}`,
-      system: systemPrompt('slide-write', G.vars, [`# SLIDE TYPE SPECS\n\n${typeSpecs(batchTypes, packId)}`]),
+      system: systemPrompt('slide-write', G.vars, [`# SLIDE TYPE SPECS\n\n${typeSpecs(batchTypes, packId, G.vars.variant)}`]),
       user, schema, schemaName: 'slides', salt: attempt,
       context: { slides: batch.map((i) => ({ index: i, st: types[plan.slides[i - 1].slide_type], plan: plan.slides[i - 1] })),
                  words: batch.flatMap((i) => plan.slides[i - 1].source_refs.map((r) => sectionText[r])).join(' ').split(/\s+/) },

@@ -1,0 +1,31 @@
+--brand-bg: var(--bg-lavender);
+
+/* Source under the title; two columns from y≈250: the quoted line (cream,
+   accent bar) and its meaning (card). Rows share the height evenly. */
+.source {
+  position: absolute; left: var(--frame-left); top: 212px; width: 1752px;
+  font: italic 600 25px/1.2 var(--font-body); color: var(--brand-muted);
+}
+.rows {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; height: 750px;
+  display: flex; flex-direction: column; gap: 14px;
+  &.with-source { top: 262px; height: 724px; }
+}
+.heads { display: grid; grid-template-columns: 52fr 48fr; gap: 22px; padding: 0 6px; }
+.heads .label { font: 700 20px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .05em; }
+.row {
+  flex: 0 1 calc((100% - 40px - (var(--n) - 1) * 14px) / var(--n)); max-height: 200px; min-height: 0;
+  display: grid; grid-template-columns: 52fr 48fr; gap: 22px;
+}
+.text {
+  margin: 0; padding: 14px 22px; border-radius: var(--radius-card); overflow: hidden;
+  background: var(--brand-cream); border-left: 6px solid var(--brand-orange);
+  display: flex; align-items: center;
+  font: italic 500 calc(31px - var(--n) * 0.8px)/1.38 var(--font-body); color: var(--brand-ink);
+}
+.meaning {
+  padding: 14px 22px; border-radius: var(--radius-card); overflow: hidden;
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line);
+  display: flex; align-items: center;
+  font: 400 calc(28px - var(--n) * 0.7px)/1.38 var(--font-body); color: var(--brand-body);
+}

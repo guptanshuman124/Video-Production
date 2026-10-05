@@ -1,0 +1,17 @@
+--brand-bg: var(--bg-teal);
+
+/* Idea card across the top, points under it, the quote card at the foot. */
+.col {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px; height: 740px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.idea {
+  flex: none; padding: 20px 28px 22px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+  border-left: 8px solid var(--brand-orange);
+}
+.label { font: 700 22px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .04em; }
+.itext { margin-top: 8px; font: 700 33px/1.35 var(--font-body); color: var(--brand-title); }
+.pts { margin: 0; padding: 0 0 0 4px; font: 400 28px/1.38 var(--font-body); color: var(--brand-ink); }
+.quote { margin-top: auto; padding: 16px 26px 18px; border-radius: var(--radius-card); background: var(--brand-cream); }
+.qline { margin: 8px 0 0; font: italic 500 29px/1.4 var(--font-body); color: var(--brand-ink); }

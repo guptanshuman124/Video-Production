@@ -44,6 +44,84 @@
         if (el.scrollWidth > el.clientWidth) el.classList.add('wrap');
       }
     }
+    // Slide titles never run under a picture or panel, nor off the slide:
+    // the room is the frame's right edge, or the left edge of anything that
+    // sits in the title's band. A title too long for it shrinks (down to 46 px),
+    // then wraps onto two lines. Positions come from the offset chain, so the
+    // entrance transforms do not disturb the measure.
+    function posIn(el, root) {
+      let x = 0, y = 0;
+      for (let e = el; e && e !== root; e = e.offsetParent) { x += e.offsetLeft; y += e.offsetTop; }
+      return { x, y };
+    }
+    function fitSlideTitles() {
+      for (const box of document.querySelectorAll('.scene.tpl .brand-title')) {
+        const h1 = box.querySelector('h1');
+        if (!h1 || !h1.textContent.trim()) continue;
+        const scene = box.closest('.scene');
+        const t = posIn(box, scene);
+        const top = t.y, bottom = t.y + box.offsetHeight;
+        let right = scene.clientWidth - 84;
+        for (const el of scene.querySelectorAll('.panel, .side, figure, .art, .toc')) {
+          if (box.contains(el)) continue;
+          const p = posIn(el, scene);
+          if (p.x > t.x + 200 && p.y < bottom + 8 && p.y + el.offsetHeight > top) right = Math.min(right, p.x - 28);
+        }
+        const room = right - t.x - (h1.offsetLeft || 38);
+        h1.style.maxWidth = `${room}px`;
+        if (h1.scrollWidth <= room) continue;
+        let size = parseFloat(getComputedStyle(h1).fontSize);
+        while (h1.scrollWidth > room && size > 46) { size = Math.max(46, size - 2); h1.style.fontSize = `${size}px`; }
+        if (h1.scrollWidth > room) {
+          box.classList.add('wrap');
+          h1.style.whiteSpace = 'normal';
+          h1.style.lineHeight = '1.08';
+          h1.style.fontSize = `${Math.min(size, 50)}px`;
+        }
+      }
+    }
+    // Nothing may run out of its box. After every slide is laid out:
+    //  1. a formula wider than the block it sits in is scaled to fit (down to 55%);
+    //  2. a card that clips its content (overflow hidden) has that content
+    //     scaled down step by step (to 70%) until it fits.
+    // `zoom` scales layout as well as paint, so the shrunk content reflows.
+    // What still does not fit is reported by __layoutIssues() (the video QA).
+    const blockOf = (el) => { let b = el.parentElement; while (b && getComputedStyle(b).display.startsWith('inline')) b = b.parentElement; return b; };
+    const overflows = (el) => el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
+    const SKIP = '.panel, .panel-media, .art, .brand-header, .brand-title, figure, img, svg';
+    function fitOverflow() {
+      for (const k of document.querySelectorAll('.scene.tpl .katex')) {
+        if (k.closest('.katex .katex')) continue;
+        const box = blockOf(k);
+        if (!box) continue;
+        const room = box.clientWidth - parseFloat(getComputedStyle(box).paddingLeft) - parseFloat(getComputedStyle(box).paddingRight);
+        const w = k.getBoundingClientRect().width;
+        if (room > 0 && w > room + 1) k.style.zoom = String(Math.max(0.55, Math.floor((room / w) * 100) / 100));
+      }
+      for (const box of document.querySelectorAll('.scene.tpl *')) {
+        if (box.matches(SKIP) || box.closest(SKIP) || getComputedStyle(box).overflow !== 'hidden' || !box.children.length) continue;
+        for (let z = 0.95; overflows(box) && z >= 0.7; z = Math.round((z - 0.05) * 100) / 100) {
+          for (const c of box.children) c.style.zoom = String(z);
+        }
+      }
+    }
+    // [{ scene, what }]: content still outside its box after fitting.
+    function layoutIssues() {
+      const out = [];
+      for (const sec of document.querySelectorAll('section.scene.tpl')) {
+        const scene = Number(sec.dataset.scene);
+        for (const k of sec.querySelectorAll('.katex')) {
+          if (k.closest('.katex .katex')) continue;
+          const box = blockOf(k);
+          if (box && k.getBoundingClientRect().width > box.getBoundingClientRect().width + 2) out.push({ scene, what: `formula wider than its box: ${k.textContent.slice(0, 50)}` });
+        }
+        for (const box of sec.querySelectorAll('*')) {
+          if (box.matches(SKIP) || box.closest(SKIP)) continue;
+          if (getComputedStyle(box).overflow === 'hidden' && box.children.length && overflows(box)) out.push({ scene, what: `text clipped in .${String(box.className).split(' ')[0] || box.tagName.toLowerCase()}: ${box.textContent.trim().slice(0, 60)}` });
+        }
+      }
+      return out;
+    }
     // The renderer injects the project + options, then drives everything
     // through these globals. No autoplay, ever.
     window.__prepare = async (project, opts) => {
@@ -60,12 +138,15 @@
         })));
       fitPanelImages();
       fitHeaderText();
+      fitSlideTitles();
+      fitOverflow();
       seek(0);
       return info;
     };
     window.__seek = (t) => seek(t);
     window.__motionIntervals = (pad) => motionIntervals(pad);
     window.__duration = () => duration();
+    window.__layoutIssues = () => layoutIssues();
     window.__sceneTime = (i) => sceneTime(i);
     window.__ready = true;
   </script>

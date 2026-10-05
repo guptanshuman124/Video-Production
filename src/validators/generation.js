@@ -397,7 +397,7 @@ export function gateSlides(written, planSlides, types, sectionText, { slideLangu
     if (!p) { issues.push(issue('EXTRA_SLIDE', 'error', where, `${where}: not in the plan`)); return w; }
     if (w.slide_type !== p.slide_type) issues.push(issue('TYPE_CHANGED', 'error', where, `${where}: planned ${p.slide_type}, written as ${w.slide_type}`));
     const st = types[p.slide_type];
-    const { data, issues: di } = checkSlideData(st, w.data, { where });
+    const { data, issues: di } = checkSlideData(st, w.data, { where, slideLanguage });
     issues.push(...di);
     langCheck(data, where);
     const src = p.source_refs.map((r) => sectionText[r] || '').join('\n');
@@ -425,12 +425,91 @@ const BANNED = [
   [/\bslide (number|\d+)\b/i, 'slide numbering'],
 ];
 
-// opts.language: 'hinglish' | 'english'; opts.wordFactor scales the slide
-// type's English word range (Hinglish runs a little longer for the same content).
+// ---- What the narration may say about pictures and about the video ------------------------
+
+// The one picture a slide shows: an NCERT figure (picked by the planner) or a
+// generated illustration (art_prompt), else none. `parts`: the figure itself
+// holds several drawings ((a)/(b), "two …"), so "both diagrams" is right there.
+export function pictureOf(img, data = {}) {
+  if (img) {
+    const description = String(img.description || '').trim();
+    return { kind: 'figure', description, parts: /\((?:a|b|i|ii)\)|\b(?:two|both|three|pair of|and its)\b|दो|दोनों/i.test(description) };
+  }
+  if (data?.art_prompt) return { kind: 'art', description: String(data.art_prompt).trim(), parts: false };
+  return { kind: 'none', description: '', parts: false };
+}
+
+// The line the narrator gets for each slide.
+export function pictureNote(pic) {
+  if (pic.kind === 'figure') return `Picture on screen: ONE NCERT figure${pic.description ? ` — ${pic.description}` : ''}. Talk about this one figure and only what it shows${pic.parts ? '' : '; never "two diagrams", "both figures" or "these images"'}.`;
+  if (pic.kind === 'art') return 'Picture on screen: ONE illustration (an everyday scene, no labels) — you may point to it as "this picture", but teach from the points, not from details in the picture.';
+  return 'Picture on screen: NONE — do not mention any figure, diagram, image or picture ("this diagram", "look at the figure", "चित्र में देखिए"); just explain the content. (Telling the student to draw a diagram in the exam is fine.)';
+}
+
+const PIC = String.raw`(?:diagrams?|figures?|fig\.|images?|pictures?|illustrations?|photos?|photographs?|sketch(?:es)?|चित्रों|चित्र|आरेख|आकृति|तस्वीर(?:ों|ें)?)`;
+// Pointing at a picture on screen: "this diagram", "look at the figure", "Figure 4.2", "इस चित्र में", "diagram में देखिए".
+const POINTS_AT = new RegExp([
+  String.raw`\b(?:this|these|that|those|above|following|here)\s+(?:\w+\s+)?${PIC}`,
+  String.raw`\b(?:look at|see|observe|notice|study|in|on|from)\s+(?:the|this|our)\s+(?:\w+\s+)?${PIC}`,
+  String.raw`\bthe\s+${PIC}\s+(?:here|above|on (?:the )?screen|shows|shown|we see|you see|in front)`,
+  String.raw`\b(?:fig\.?|figure)\s*\d+(?:\.\d+)?`,
+  String.raw`(?:यह|ये|इस|इन|ऊपर\s+(?:के|दिए|दिखाए)?\s*(?:गए)?|स्क्रीन\s+पर)\s*(?:\S+\s+)?${PIC}`,
+  String.raw`${PIC}\s+(?:में|को|पर)\s+(?:\S+\s+){0,2}(?:देख|दिख|ध्यान)`,
+].join('|'), 'i');
+// More than one picture: "two diagrams", "both figures", "these images", "दोनों चित्र".
+const COUNTS_MANY = new RegExp([
+  String.raw`\b(?:two|three|both|these|those|several|multiple|the)\s+(?:\w+\s+)?(?:diagrams|figures|images|pictures|illustrations|photos|sketches)\b`,
+  String.raw`(?:दो|दोनों|तीन|इन)\s+(?:\S+\s+)?(?:चित्रों|चित्र|आरेखों|आरेख|आकृतियों|आकृतियाँ|तस्वीरें|तस्वीरों|diagrams|figures|images|pictures)`,
+].join('|'), 'i');
+// Stating the video's length: "this 60-minute video", "in the next hour", "इस एक घंटे के वीडियो में".
+const STATES_LENGTH = new RegExp([
+  String.raw`\b\d+\s*-?\s*(?:minutes?|mins?|hours?)\s*(?:-?\s*long\s+)?(?:video|summary|session|lecture|class|revision)`,
+  String.raw`\b(?:an?|one|half an?|this|the)\s+hour(?:-long)?\s+(?:video|summary|session|lecture|class|revision)`,
+  String.raw`\b(?:in|over|for|during)\s+the\s+next\s+(?:\w+\s+)?(?:minutes?|hours?)\b`,
+  String.raw`\b(?:this|the)\s+(?:video|summary|lecture|session)\s+(?:is|runs|lasts|takes)\s+(?:about\s+|around\s+|roughly\s+)?(?:\w+\s+)?(?:minutes?|hours?)`,
+  String.raw`(?:\d+|एक|दो|आधे|इस)\s*(?:मिनट|घंटे|घंटा)\s*(?:के|का|की)?\s*(?:इस\s+)?(?:video|वीडियो|summary|सारांश|lecture|class|session)`,
+  String.raw`(?:अगले|इन)\s+(?:\d+|एक|कुछ)?\s*(?:मिनटों|मिनट|घंटे|घंटों)\s+में`,
+].join('|'), 'i');
+
+// In optics an "image" is what a mirror or lens forms, not a picture on the slide.
+const OPTICS = /\b(?:mirrors?|lens(?:es)?|focal|focus|virtual|inverted|erect|magnifi\w*|refract\w*|reflect\w*|object distance)\b|प्रतिबिंब|दर्पण|लेंस/i;
+const firstMatch = (re, text) => {
+  const optics = OPTICS.test(text);
+  for (const m of text.matchAll(new RegExp(re.source, 'gi'))) {
+    if (optics && /image|photo/i.test(m[0]) && !/figure|diagram|fig\.|चित्र|आरेख/i.test(m[0])) continue;
+    if (/^the\s/i.test(m[0]) && re === COUNTS_MANY) continue;   // "the diagrams of …" in general talk
+    return m[0];
+  }
+  return null;
+};
+
+export function pictureIssues(text, pic, where = 'slide') {
+  const out = [];
+  if (pic.kind === 'none') {
+    const m = firstMatch(POINTS_AT, text);
+    if (m) out.push(issue('PICTURE_NOT_ON_SLIDE', 'error', where, `${where}: refers to a picture ("${m}") but this slide shows none — explain without pointing at a figure`));
+  } else if (!pic.parts) {
+    const m = firstMatch(COUNTS_MANY, text);
+    if (m) out.push(issue('PICTURE_COUNT', 'error', where, `${where}: talks of several pictures ("${m}") but this slide shows one ${pic.kind === 'art' ? 'illustration' : 'figure'}${pic.description ? ` (${pic.description.slice(0, 80)})` : ''}`));
+  }
+  return out;
+}
+
+export function lengthIssues(text, where = 'slide') {
+  const m = text.match(STATES_LENGTH);
+  return m ? [issue('STATES_VIDEO_LENGTH', 'error', where, `${where}: never state how long the video is ("${m[0]}")`)] : [];
+}
+
+// opts.language: 'hinglish' | 'hindi' (Hindi courses) | 'english' (English
+// courses, and the via-english draft); opts.wordFactor scales the slide type's
+// English word range (Hinglish and Hindi run a little longer for the same content).
 // opts.hindiSubject: Hindi-literature lectures quote Hindi lines, so a
 // Devanagari-heavy mix is expected.
-export function gateNarration(text, st, data, where = 'slide', { language = 'hinglish', wordFactor = 1, hindiSubject = false } = {}) {
+// opts.picture (pictureOf): what the slide shows; narration may only point at that.
+export function gateNarration(text, st, data, where = 'slide', { language = 'hinglish', wordFactor = 1, hindiSubject = false, picture = null } = {}) {
   const issues = [];
+  if (picture) issues.push(...pictureIssues(text, picture, where));
+  issues.push(...lengthIssues(text, where));
   const expected = requiredMarkers(st.spec, data);
   const got = markersIn(text);
   const dup = got.filter((m, i) => got.indexOf(m) !== i);
@@ -455,7 +534,8 @@ export function gateNarration(text, st, data, where = 'slide', { language = 'hin
     const before = pieces[0];
     if (!before.includes('?')) issues.push(issue('NO_QUESTION_PAUSE', 'error', where, `${where}: pose the question (a "?") and let the student think before {{${got[0]}}}`));
   }
-  if (language === 'english' && /\p{Script=Devanagari}/u.test(text)) issues.push(issue('NOT_ENGLISH', 'error', where, `${where}: the English narration contains Devanagari`));
+  if (language === 'english') issues.push(...englishScript(text, where));
+  if (language === 'hindi') issues.push(...hindiScript(text, where));
   if (language === 'hinglish') issues.push(...hinglishScript(text, where, hindiSubject ? { maxShare: 0.97, warnShare: 0.92 } : {}));
   for (const [re, what] of BANNED) if (re.test(text)) issues.push(issue('BANNED_CONTENT', 'error', where, `${where}: ${what} is not allowed in narration`));
   const run = longestSharedRun(slideStrings(data).join(' . '), text);
@@ -505,6 +585,41 @@ export function hinglishScript(hinglish, where = 'slide', { maxShare = 0.9, warn
   const bad = sentences(hinglish).filter((s) => !/[.!?।…]["'”’)]*$/.test(s));
   if (bad.length) issues.push(issue('SENTENCE_END', 'warning', where, `${where}: ${bad.length} sentence(s) without an ending mark (। . ! ?)`));
   return issues;
+}
+
+// ---- Hindi and English narration (the language courses) -------------------------------------
+
+// Things no voice engine can say, and sentences without an ending mark.
+function speakability(text, where) {
+  const issues = [];
+  const bare = text.replace(/\{\{b\d+(?:\.\d+){0,2}\}\}/g, '');
+  const odd = [...new Set(bare.match(/[$\\{}<>[\]#*_|~^]/g) || [])];
+  if (odd.length) issues.push(issue('UNSPEAKABLE', 'error', where, `${where}: TTS cannot speak ${odd.join(' ')} — write it in words`));
+  const bad = sentences(text).filter((s) => !/[.!?।…]["'”’)]*$/.test(s));
+  if (bad.length) issues.push(issue('SENTENCE_END', 'warning', where, `${where}: ${bad.length} sentence(s) without an ending mark (। . ! ?)`));
+  return issues;
+}
+
+// Hindi courses are taught in Hindi: Devanagari throughout, an English word
+// only where a Hindi teacher really says one (a name, "lecture 2", a term the
+// textbook itself gives in English) — not Hinglish.
+export function hindiScript(text, where = 'slide', { minShare = 0.8, warnShare = 0.9 } = {}) {
+  const issues = [];
+  const roman = romanHindiHits(text);
+  if (roman.length >= 2) issues.push(issue('ROMANIZED_HINDI', 'error', where, `${where}: Hindi written in Latin script (${[...new Set(roman)].slice(0, 6).join(', ')}) — write Hindi in Devanagari`));
+  const share = scriptShare(text);
+  if (share < minShare) issues.push(issue('NOT_HINDI', 'error', where, `${where}: only ${(share * 100).toFixed(0)}% Devanagari — this is a Hindi lesson: teach in Hindi, with an English word only where a Hindi teacher would really use one`));
+  else if (share < warnShare) issues.push(issue('NOT_HINDI', 'warning', where, `${where}: ${(share * 100).toFixed(0)}% Devanagari — keep English to a word or two`));
+  return [...issues, ...speakability(text, where)];
+}
+
+// English courses (and the via-english draft) are spoken in English only.
+export function englishScript(text, where = 'slide') {
+  const issues = [];
+  if (/\p{Script=Devanagari}/u.test(text)) issues.push(issue('NOT_ENGLISH', 'error', where, `${where}: the English narration contains Devanagari`));
+  const roman = romanHindiHits(text);
+  if (roman.length >= 2) issues.push(issue('NOT_ENGLISH', 'error', where, `${where}: Hindi words in the English narration (${[...new Set(roman)].slice(0, 6).join(', ')}) — explain in simple English`));
+  return [...issues, ...speakability(text, where)];
 }
 
 // ---- G6 reviewer findings ----------------------------------------------------------------

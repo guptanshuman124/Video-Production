@@ -1,0 +1,10 @@
+{
+  "lecture": "Tenses",
+  "title": "Practice",
+  "instruction": "Fill in the blanks with the present perfect form of the verb.",
+  "items": [
+    { "question": "Ravi ______ (lose) his pen.", "answer": "Ravi has lost his pen." },
+    { "question": "We ______ (visit) Agra twice.", "answer": "We have visited Agra twice." },
+    { "question": "The train ______ just ______ (leave).", "answer": "The train has just left." }
+  ]
+}

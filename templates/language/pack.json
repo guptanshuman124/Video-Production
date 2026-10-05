@@ -1,0 +1,66 @@
+{
+  "name": "Language",
+  "subjects": [
+    "English",
+    "Hindi"
+  ],
+  "variants": [
+    "english",
+    "hindi"
+  ],
+  "types": {
+    "intro": { "min": 1, "max": 1 },
+    "hook": { "max": 1 },
+    "author": { "max": 1 },
+    "story_summary": { "max": 1 },
+    "concept_intro": { "max": 2 },
+    "passage": { "max": 8 },
+    "word_meanings": { "max": 2 },
+    "character": { "max": 2 },
+    "literary_device": { "max": 2 },
+    "central_idea": { "max": 1 },
+    "source_extract": { "max": 2 },
+    "definition": { "max": 3 },
+    "grammar_rule": { "max": 4 },
+    "grammar_practice": { "max": 3 },
+    "writing_format": { "max": 2 },
+    "comparison": { "max": 2 },
+    "misconception": { "max": 1 },
+    "try_this": { "max": 1 },
+    "process_flow": { "max": 1 },
+    "labeled_diagram": { "max": 2 },
+    "illustration": { "max": 1 },
+    "practice_problem": { "max": 2 },
+    "mcq": { "min": 1, "max": 3 },
+    "quick_revision": { "max": 1 }
+  },
+  "questionTypes": [
+    "mcq",
+    "practice_problem",
+    "grammar_practice"
+  ],
+  "flow": {
+    "firstLecture": {
+      "opening": ["intro", "hook"]
+    },
+    "otherLectures": {
+      "notAt": { "hook": "any" }
+    },
+    "everyLecture": {
+      "opening": ["intro"],
+      "endsWithAnyOf": ["mcq", "practice_problem", "grammar_practice"],
+      "includesAnyOf": ["quick_revision"]
+    },
+    "lastLecture": {
+      "minTrailingQuestions": 2
+    },
+    "maxConsecutiveSameType": 3
+  },
+  "fallbacks": {
+    "labeled_diagram": "concept_intro"
+  },
+  "images": {
+    "minUsed": 0,
+    "note": "literature lessons have few figures that teach; pictures are optional here"
+  }
+}

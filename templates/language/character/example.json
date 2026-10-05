@@ -1,0 +1,11 @@
+{
+  "lecture": "Two Stories about Flying",
+  "title": "The Young Seagull",
+  "name": "The young seagull",
+  "role": "the youngest of the family, afraid to fly",
+  "traits": [
+    { "trait": "Fearful", "evidence": "He stood alone on the ledge, sure that his wings would not support him." },
+    { "trait": "Lonely", "evidence": "His family flew around him, but he stayed behind, calling plaintively." },
+    { "trait": "Courageous at last", "evidence": "Driven by hunger, he dived for the fish and found that he could fly." }
+  ]
+}

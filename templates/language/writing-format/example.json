@@ -1,0 +1,15 @@
+{
+  "lecture": "Letter Writing",
+  "title": "Letter to the Editor",
+  "kind": "Formal letter — to the editor",
+  "parts": [
+    { "part": "Sender’s address", "sample": "24, Gandhi Nagar, Jaipur" },
+    { "part": "Date", "sample": "5 October 2026" },
+    { "part": "Receiver’s address", "sample": "The Editor, The Daily News, Jaipur" },
+    { "part": "Subject", "sample": "Need for more public parks in our city" },
+    { "part": "Salutation", "sample": "Sir / Madam," },
+    { "part": "Body", "sample": "Three short paragraphs: the problem, its effects, your suggestions" },
+    { "part": "Complimentary close", "sample": "Yours faithfully, Riya Sharma" }
+  ],
+  "tip": "120–150 words; the subject line and a formal tone carry marks."
+}

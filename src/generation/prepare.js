@@ -4,7 +4,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { slideBudget, classBand, lectureMinutes, lectureBudget } from '../curriculum/index.js';
+import { slideBudget, classBand, lectureMinutes, lectureBudget, narrationLanguageOf } from '../curriculum/index.js';
 
 const words = (s) => String(s).trim().split(/\s+/).filter(Boolean).length;
 
@@ -173,7 +173,7 @@ export async function prepareChapter(chapter, cfg, { offline = false, fetchImpl 
   const { source_text, images: _drop, ...meta } = chapter;
   return {
     prepared: {
-      chapter: meta,
+      chapter: { ...meta, narration_language: meta.narration_language || narrationLanguageOf(meta) },
       band: classBand(chapter.class),
       budget: slideBudget(cfg),
       totalWords: words(text),
@@ -283,6 +283,7 @@ export async function prepareLecture(input, cfg, { offline = false, fetchImpl, s
         chapter_id: `c${input.course_id}-m${input.module_id}`,
         title: input.chapter_title, class: input.class, subject: input.subject,
         pack: input.pack, variant: input.variant ?? null, slide_language: input.slide_language || 'english',
+        narration_language: input.narration_language || narrationLanguageOf(input),
       },
       lecture: {
         lecture_id: input.lecture_id, module_id: input.module_id, course_id: input.course_id,

@@ -285,7 +285,9 @@ h3 { font-size: 15px; font-weight: 600; }
 .issue { font-size: 12.5px; padding: 6px 10px; border-radius: 7px; background: var(--surface-2); border-left: 3px solid var(--line); }
 .issue-error { border-left-color: var(--red); } .issue-warning { border-left-color: #eab308; }
 .issue .mono { font-weight: 600; margin-right: 4px; }
-.log { background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; max-height: 320px; overflow-y: auto; font-size: 12.5px; display: flex; flex-direction: column; gap: 4px; }
+.log { background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; flex: none; min-height: 180px; height: 320px; max-height: 70vh; overflow-y: auto; resize: vertical; font-size: 12.5px; display: flex; flex-direction: column; gap: 4px; }
+.log.tall { height: auto; max-height: none; resize: none; }
+.section-title.with-action { display: flex; align-items: center; justify-content: space-between; }
 .log-line { display: flex; gap: 8px; align-items: baseline; }
 .log-time { font-family: var(--mono); font-size: 11px; color: var(--muted); flex: none; }
 .log-stage { font-size: 11px; color: var(--accent); flex: none; }
@@ -331,3 +333,12 @@ h3 { font-size: 15px; font-weight: 600; }
 .cost-table tfoot td { color: var(--text-2); border-bottom: none; padding-top: 6px; padding-bottom: 2px; }
 .cost-table tfoot tr:first-child td { border-top: 1px solid var(--line); padding-top: 10px; }
 .cost-table .cost-total td { font-weight: 700; color: var(--text); font-size: 15px; padding-top: 8px; }
+
+/* ---- summary videos ---- */
+a.tab { text-decoration: none; }
+.tabs-sub { margin-top: -6px; }
+.tabs-sub .tab { padding: 8px 12px; font-size: 13px; }
+.part-dots { display: inline-flex; gap: 3px; align-items: center; }
+.part-dots .sd { width: 14px; height: 6px; border-radius: 3px; background: var(--line); display: inline-block; }
+
+.seg-lg button { padding: 7px 14px; font-weight: 600; }

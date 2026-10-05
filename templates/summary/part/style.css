@@ -1,0 +1,20 @@
+--brand-bg: var(--bg-lavender);
+
+/* Centred divider card below the header. */
+.card {
+  position: absolute; left: 160px; right: 160px; top: 95px; bottom: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
+.eyebrow {
+  font: 700 30px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--brand-orange); margin-bottom: 26px;
+}
+.ptitle { margin: 0; max-width: 1500px; font: 700 86px/1.12 var(--font-display); color: var(--brand-title); text-wrap: balance; }
+.bar { width: 132px; height: 8px; border-radius: 4px; background: var(--brand-orange); margin: 42px 0 34px; }
+.covers { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 1500px; }
+.covers .label { font: 700 22px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .08em; }
+.list { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.c {
+  padding: 8px 20px; border-radius: 999px; background: var(--brand-surface); border: 1px solid var(--brand-panel-line);
+  font: 600 26px/1.25 var(--font-body); color: var(--brand-body);
+}

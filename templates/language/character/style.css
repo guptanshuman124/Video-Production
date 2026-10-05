@@ -1,0 +1,25 @@
+--brand-bg: var(--bg-mist);
+
+/* Image panel 578×740 on the left at (84,236) when there is one; the name,
+   role and trait cards to its right (or full width). */
+.side { left: var(--frame-left); top: 236px; width: 578px; height: 740px; }
+.side .panel-caption { padding-bottom: 15px; }
+.col {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; height: 740px;
+  display: flex; flex-direction: column; gap: 18px;
+  &.with-image { left: 690px; width: 1146px; }
+}
+.who { flex: none; }
+.pname { font: 700 40px/1.2 var(--font-heading, var(--font-display)); color: var(--brand-heading); }
+.role { margin-top: 4px; font: italic 400 26px/1.3 var(--font-body); color: var(--brand-muted); }
+.traits { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.trait {
+  flex: 0 1 calc((100% - (var(--n) - 1) * 14px) / var(--n)); max-height: 170px; min-height: 0; overflow: hidden;
+  display: flex; align-items: center; gap: 22px; padding: 14px 24px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+}
+.tname {
+  flex: 0 0 230px; padding: 8px 14px; border-radius: 999px; text-align: center;
+  background: var(--brand-orange); color: var(--on-accent); font: 700 24px/1.2 var(--font-body);
+}
+.tev { font: 400 26px/1.38 var(--font-body); color: var(--brand-ink); }

@@ -1,0 +1,18 @@
+{
+  "data": {
+    "title": "The Present Perfect Tense",
+    "rule": "Use the present perfect for an action completed in the recent past whose result matters now.",
+    "pattern": "Subject + has / have + V3 (past participle)",
+    "examples": [
+      {
+        "sentence": "She *has finished* her homework.",
+        "note": "has — with he / she / it"
+      },
+      {
+        "sentence": "They *have gone* to the market.",
+        "note": "have — with I / you / we / they"
+      }
+    ]
+  },
+  "narration": "Now let us learn a tense we use every single day. {{b1}} We use the present perfect tense when an action is complete, but its result still matters now. If I say my homework is done, the doing is over, but the result is with me right now. {{b2}} Here is the pattern to remember: the subject, then has or have, then the third form of the verb, the past participle. {{b3.1}} Look at the first example. She has finished her homework. She is singular, so we use has, and finished is the third form. {{b3.2}} And the second: They have gone to the market. They is plural, so we use have, and gone is the third form of go. Remember: has for he, she and it, and have for everyone else."
+}
