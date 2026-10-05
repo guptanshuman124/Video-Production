@@ -60,6 +60,22 @@ export function loadPacks() {
   return packs;
 }
 
+// A pack as one variant sees it: pack.json `variantRules.<variant>` laid over
+// the pack's own per-type limits, flow and fallbacks (Business Studies
+// switches off the bookkeeping slides with `max: 0`, so the planner is never
+// offered them). Packs without rules for the variant come back unchanged.
+export function packFor(pack, variant) {
+  const r = variant ? pack?.variantRules?.[variant] : null;
+  if (!r) return pack;
+  return {
+    ...pack,
+    types: { ...pack.types, ...r.types },
+    flow: { ...pack.flow, ...r.flow },
+    fallbacks: { ...pack.fallbacks, ...r.fallbacks },
+    ...(r.questionTypes ? { questionTypes: r.questionTypes } : {}),
+  };
+}
+
 // A template may reuse another pack's template by re-exporting it
 // (`export { default } from '../../biology/mcq/template.jsx'`). With no
 // style.css of its own, it then gets that template's styles, scoped to itself.

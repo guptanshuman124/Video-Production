@@ -1,0 +1,26 @@
+{
+  "lecture": "Partnership: Basic Concepts",
+  "title": "A Firm’s First Year",
+  "events": [
+    {
+      "date": "1 April 2024",
+      "title": "Firm formed",
+      "text": "Rohan and Meera bring in capital"
+    },
+    {
+      "date": "1 October 2024",
+      "title": "Loan by partner",
+      "text": "Rohan lends ₹50,000 to the firm"
+    },
+    {
+      "date": "1 January 2025",
+      "title": "Drawings",
+      "text": "Meera withdraws ₹10,000 for personal use"
+    },
+    {
+      "date": "31 March 2025",
+      "title": "Accounts closed",
+      "text": "profit shared in the agreed ratio"
+    }
+  ]
+}

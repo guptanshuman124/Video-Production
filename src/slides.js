@@ -54,7 +54,7 @@ export function slideTypes(build) {
       if (out[pack][spec.type]) {
         throw new Error(`slide type "${spec.type}" is declared by both ${out[pack][spec.type].templateId} and ${t.id}`);
       }
-      out[pack][spec.type] = { type: spec.type, templateId: t.id, spec: normSpec(spec), schema: t.schema, check: t.check };
+      out[pack][spec.type] = { type: spec.type, templateId: t.id, spec: normSpec(spec), schema: t.schema, check: t.check, example: t.example };
     }
   }
   return out;
@@ -305,10 +305,12 @@ export function markerGuide(spec, data) {
     const v = data[r.field];
     if (isEmpty(v)) return;
     const id = `b${k + 1}`;
-    const brief = (x) => (typeof x === 'string' ? x : Array.isArray(x) ? x.map(brief).join(' | ') : Object.values(x).filter((y) => typeof y === 'string').join(' — '));
+    // Strings and amounts (accounting rows carry numbers), nested rows included.
+    const brief = (x) => (typeof x === 'string' ? x : typeof x === 'number' ? String(x) : Array.isArray(x) ? x.map(brief).join(' | ')
+      : x && typeof x === 'object' ? Object.values(x).filter((y) => y != null && typeof y !== 'boolean').map(brief).filter(Boolean).join(' — ') : '');
     if (!r.each) { out.push({ id, what: `${r.field}: ${brief(v)}${r.hint ? ` — ${r.hint}` : ''}` }); return; }
     v.forEach((item, i) => {
-      if (r.parts) r.parts.forEach((part, p) => out.push({ id: `${id}.${i + 1}.${p + 1}`, what: `${r.field}[${i + 1}].${part}: ${item[part] ?? ''}` }));
+      if (r.parts) r.parts.forEach((part, p) => out.push({ id: `${id}.${i + 1}.${p + 1}`, what: `${r.field}[${i + 1}].${part}: ${brief(item[part] ?? '')}` }));
       else out.push({ id: `${id}.${i + 1}`, what: `${r.field}[${i + 1}]: ${brief(item)}` });
     });
   });

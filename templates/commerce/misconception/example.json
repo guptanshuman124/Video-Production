@@ -1,0 +1,20 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "rows": [
+    {
+      "myth": "Drawings are a business expense",
+      "fact": "Drawings reduce capital",
+      "factDetail": "Money taken for personal use is not spent to run the business, so it never goes to the P&L Account."
+    },
+    {
+      "myth": "Every cash receipt is income",
+      "fact": "Only revenue receipts are income",
+      "factDetail": "A loan received or capital introduced brings in cash but is a liability, not income."
+    },
+    {
+      "myth": "Debit always means a decrease",
+      "fact": "Debit is the left side of an account",
+      "factDetail": "A debit increases assets and expenses but decreases liabilities, capital and income."
+    }
+  ]
+}

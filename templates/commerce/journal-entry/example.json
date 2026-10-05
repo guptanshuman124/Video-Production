@@ -1,0 +1,28 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "title": "Journal Entry",
+  "entries": [
+    {
+      "date": "01-04-2024",
+      "lines": [
+        { "account": "Furniture A/c", "side": "Dr", "amount": 25000 },
+        { "account": "Cash A/c", "side": "Cr", "amount": 25000 }
+      ],
+      "narration": "Being furniture purchased for cash"
+    },
+    {
+      "date": "05-04-2024",
+      "lines": [
+        { "account": "Purchases A/c", "side": "Dr", "amount": 40000 },
+        { "account": "Cash A/c", "side": "Cr", "amount": 15000 },
+        { "account": "Mohan’s A/c", "side": "Cr", "amount": 25000 }
+      ],
+      "narration": "Being goods purchased, partly for cash and partly on credit from Mohan"
+    }
+  ],
+  "checks": [
+    "Furniture A/c → Real Account: debit what comes in",
+    "Cash A/c → Real Account: credit what goes out",
+    "Mohan’s A/c → Personal Account: credit the giver"
+  ]
+}

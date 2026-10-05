@@ -12,7 +12,7 @@ import { lectureMinutes } from './curriculum/index.js';
 import { sectionsFromBlocks } from './generation/prepare.js';
 import { gateLectureInput, gatePreparedLecture } from './validators/generation.js';
 import { JobStore } from './pipeline/store.js';
-import { buildTemplates, loadPacks } from './templates.js';
+import { buildTemplates, loadPacks, packFor } from './templates.js';
 import { slideTypes, catalogLine, llmSchema } from './slides.js';
 import { systemPrompt, LAYERS, slideCatalog, flowRules, typeSpecs } from './generation/prompts.js';
 import { BAND_NOTES, PACKS } from './curriculum/index.js';
@@ -258,13 +258,16 @@ export async function prompt(layer, flag, has) {
   if (!LAYERS[layer]) throw new Error(`layers: ${Object.keys(LAYERS).join(', ')}`);
   const packId = String(flag('pack', 'biology'));
   const build = await buildTemplates();
-  const types = slideTypes(build)[packId];
-  const pack = loadPacks()[packId];
-  if (!types || !pack) throw new Error(`pack "${packId}" is not installed`);
+  const variant = flag('variant', null);
+  const pack = packFor(loadPacks()[packId], variant);
+  const all = slideTypes(build)[packId];
+  if (!all || !pack) throw new Error(`pack "${packId}" is not installed`);
+  // As the planner sees them: types switched off for this pack / variant (max 0) are left out.
+  const types = Object.fromEntries(Object.entries(all).filter(([k]) => pack.types?.[k]?.max !== 0));
   const cls = Number(flag('class', 11));
   const vars = {
     class: cls, subject: pack.subjects?.[0] || packId, chapter_title: '<chapter title>', lectures: 5, lecture_minutes: 20,
-    band_note: BAND_NOTES[cls <= 8 ? '6-8' : cls <= 10 ? '9-10' : '11-12'], pack: packId, variant: flag('variant', null),
+    band_note: BAND_NOTES[cls <= 8 ? '6-8' : cls <= 10 ? '9-10' : '11-12'], pack: packId, variant,
     pack_name: pack.name, lecture: 2, lecture_title: '<lecture title>', slide_min: 10, slide_max: 14,
   };
   const extra = layer === 'slide-plan' ? [slideCatalog(types), flowRules(pack)]

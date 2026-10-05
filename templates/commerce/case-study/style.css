@@ -1,0 +1,22 @@
+--brand-bg: var(--bg-teal);
+
+/* PDF p22: scenario card 1752 wide at (84,240), at least 219 tall; question
+   cards 1752×98 from y≈501, 19px apart. The column flows with the text. */
+.col {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px; height: 740px;
+  display: flex; flex-direction: column; gap: 26px;
+}
+.scenario { flex: none; min-height: 219px; padding: 18px 26px 22px; border-radius: var(--radius-card); background: var(--brand-cream); }
+.label { font: 700 24px/1.2 var(--font-body); text-transform: uppercase; }
+.stext { margin-top: 10px; font: 400 29px/1.45 var(--font-body); color: var(--brand-ink); }
+.questions { display: flex; flex-direction: column; gap: 19px; }
+.q {
+  display: flex; align-items: baseline; gap: 18px; min-height: 98px; box-sizing: border-box;
+  padding: 24px 26px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line);
+}
+.qnum {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--brand-orange); color: #1a1030; font: 700 22px/1 var(--font-body); transform: translateY(-2px);
+}
+.qtext { font: 700 28px/1.35 var(--font-body); color: var(--brand-navy); }

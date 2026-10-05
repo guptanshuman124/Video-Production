@@ -1,0 +1,23 @@
+{
+  "data": {
+    "title": "Golden Rules of Accounting",
+    "cards": [
+      {
+        "label": "Personal Account",
+        "rule": "Debit the receiver, credit the giver",
+        "example": "Cash paid to Ramesh — Ramesh’s A/c is debited (he is the receiver)"
+      },
+      {
+        "label": "Real Account",
+        "rule": "Debit what comes in, credit what goes out",
+        "example": "Furniture bought for cash — Furniture A/c debited, Cash A/c credited"
+      },
+      {
+        "label": "Nominal Account",
+        "rule": "Debit all expenses and losses, credit all incomes and gains",
+        "example": "Rent paid — Rent A/c debited; commission received — Commission A/c credited"
+      }
+    ]
+  },
+  "narration_hinglish": "अब आते हैं accounting के तीन golden rules पर — हर account के type के लिए एक rule. {{b1.1}} पहला, personal account — यानी किसी व्यक्ति या firm का account. Rule है: जो receive करता है उसे debit करो, जो देता है उसे credit करो। जैसे Ramesh को cash दिया, तो Ramesh receiver है, इसलिए Ramesh का account debit होगा। {{b1.2}} दूसरा, real account — यानी assets जैसे cash, furniture, machinery. Rule है: जो अंदर आए उसे debit करो, जो बाहर जाए उसे credit करो। Furniture cash में खरीदा — furniture अंदर आया, तो Furniture account debit; cash बाहर गया, तो Cash account credit. {{b1.3}} तीसरा, nominal account — यानी expenses, losses, incomes और gains. सारे expenses और losses debit, सारी incomes और gains credit. Rent दिया तो Rent account debit, commission मिला तो Commission account credit. हर journal entry से पहले बस यह पूछो — यह account किस type का है?"
+}

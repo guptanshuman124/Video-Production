@@ -58,9 +58,12 @@ function lecturePlan({ lecture, lectures, sections, images, types, budget }) {
   };
   const head = first && has('hook') ? ['hook'] : first && has('chapter_index') ? ['chapter_index'] : [];
   // Closing slides the pack has (theory / maths have practice_problem instead of descriptive_answer).
-  const answer = has('descriptive_answer') ? 'descriptive_answer' : 'practice_problem';
+  // Commerce closes on a case study (its practice_problem must be followed by a solution slide).
+  const answer = has('descriptive_answer') ? 'descriptive_answer' : has('case_study') ? 'case_study' : 'practice_problem';
   const tail = (last ? ['quick_revision', 'mcq', answer, 'mcq'] : ['quick_revision', 'mcq']).filter(has);
-  const body = ['concept_intro', 'illustration', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
+  // Pack-specific formats first (only packs that have them pick them), so mock runs exercise them.
+  const body = ['concept_intro', 'illustration', 'journal_entry', 'ledger', 'practice_problem', 'trial_balance', 'final_accounts', 'balance_sheet',
+                'adjustment', 'principle', 'rule_cards', 'case_study', 'definition', 'characteristics', 'solved_example', 'mcq', 'theorem', 'proof', 'timeline', 'definition',
                 'labeled_diagram', 'cause_effect', 'descriptive_answer', 'comparison', 'person', 'definition', 'misconception', 'try_this',
                 'characteristics', 'assertion_reason', 'source_extract', 'definition', 'image_points', 'practice_problem', 'solved_example',
                 'process_flow', 'illustration'];
@@ -75,6 +78,8 @@ function lecturePlan({ lecture, lectures, sections, images, types, budget }) {
     if (picked.at(-1) === t) continue;
     if (t === 'proof' && picked.at(-1) !== 'theorem') continue;   // pack flow: a proof comes right after its theorem
     picked.push(t);
+    // Commerce: a pause-and-try problem is answered on the next slide.
+    if (t === 'practice_problem' && has('journal_entry')) picked.push('journal_entry');
   }
   const list = [...head, ...picked, ...tail];
   return {
@@ -110,7 +115,21 @@ function fillField(name, lim, v, seed) {
   return lim.items ? Array.from({ length: n }, (_, i) => phrase(v, w, seed + i)) : phrase(v, w, seed);
 }
 
+// Does this spec field hold numbers somewhere (accounting amounts)? Random
+// phrases cannot fill those, so such slides take their template's example.
+function holdsNumbers(spec) {
+  const f = typeof spec === 'string' ? { type: spec.replace('!', '') } : Array.isArray(spec) ? { type: 'list', of: spec[0] } : spec && !spec.type ? { type: 'object', fields: spec } : spec;
+  if (!f) return false;
+  if (f.type === 'number') return true;
+  if (f.type === 'list') return holdsNumbers(f.of);
+  if (f.type === 'object') return Object.values(f.fields || {}).some(holdsNumbers);
+  return false;
+}
+
 function slideData(st, plan, v, seed) {
+  if (st.example && Object.keys(st.spec.fields).some((k) => holdsNumbers(st.schema[k]))) {
+    return { title: plan.title, ...Object.fromEntries(Object.keys(st.spec.fields).filter((k) => k in st.example).map((k) => [k, structuredClone(st.example[k])])) };
+  }
   const d = { title: plan.title };
   for (const [k, lim] of Object.entries(st.spec.fields)) {
     if (!lim.required && !['points', 'caption', 'steps'].includes(k)) continue;

@@ -81,8 +81,16 @@ export function flowRules(pack) {
   if (f.lastLecture?.minTrailingQuestions) lines.push(`- The last lecture ends with at least ${f.lastLecture.minTrailingQuestions} question slides in a row.`);
   if (f.maxConsecutiveSameType) lines.push(`- Never more than ${f.maxConsecutiveSameType} slides of the same type in a row.`);
   for (const [t, before] of Object.entries(f.mustFollow || {})) lines.push(`- A ${t} slide comes right after a ${before.join(' or ')} slide.`);
+  for (const [t, after] of Object.entries(f.mustPrecede || {})) if (pack.types?.[t]?.max !== 0) lines.push(`- A ${t} slide is followed right away by its worked solution: a ${after.join(' / ')} slide that solves exactly that problem.`);
   if (f.firstLecture?.opening?.length > 1) lines.push(`- Lecture 1 of a chapter opens: ${f.firstLecture.opening.join(' → ')}. Other lectures open with ${(f.everyLecture?.opening || ['intro']).join(' → ')}.`);
   return `# FLOW RULES (checked by code)\n\n${lines.join('\n')}`;
+}
+
+// Item fields of a list, nested lists included, with their notes:
+// { date ≤4w, lines* [2–5] { account* ≤6w (…), … }, narration* ≤14w (…) }
+function itemFields(fields) {
+  return `{ ${Object.entries(fields).map(([k, l]) => `${k}${l.required ? '*' : ''}${l.items ? ` [${l.items.join('–')}]` : ''}${l.words ? ` ≤${l.words}w` : ''}`
+    + `${l.fields ? ` ${itemFields(l.fields)}` : ''}${l.note ? ` (${l.note})` : ''}`).join(', ')} }`;
 }
 
 function limits(lim) {
@@ -90,7 +98,7 @@ function limits(lim) {
   if (lim.required) b.push('required');
   if (lim.items) b.push(`${lim.items[0]}–${lim.items[1]} items`);
   if (lim.words) b.push(`≤ ${lim.words} words${lim.items ? ' each' : ''}`);
-  if (lim.fields) b.push(`each item: { ${Object.entries(lim.fields).map(([k, l]) => `${k}${l.required ? '*' : ''}${l.words ? ` ≤${l.words}w` : ''}`).join(', ')} }`);
+  if (lim.fields) b.push(`each item: ${itemFields(lim.fields)}`);
   if (lim.note) b.push(lim.note);
   return b.join('; ');
 }

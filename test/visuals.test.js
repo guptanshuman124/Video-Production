@@ -22,7 +22,7 @@ const T = ALL.biology;
 const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex');
 
 test('every pack offers illustration and process_flow', () => {
-  for (const pack of ['biology', 'chemistry', 'physics', 'mathematics', 'theory']) {
+  for (const pack of ['biology', 'chemistry', 'physics', 'mathematics', 'theory', 'commerce']) {
     assert.ok(ALL[pack].illustration, `${pack}: illustration`);
     assert.ok(ALL[pack].process_flow, `${pack}: process_flow`);
   }

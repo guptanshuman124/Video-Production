@@ -12,5 +12,5 @@
   overflow: hidden;
 }
 .label { display: flex; align-items: baseline; gap: 16px; font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; }
-.marks { font: 600 20px/1 var(--font-body); color: var(--brand-navy); text-transform: none; padding: 5px 12px; border-radius: 999px; background: #fff; }
+.marks { font: 600 20px/1 var(--font-body); color: var(--brand-navy); text-transform: none; padding: 5px 12px; border-radius: 999px; background: rgba(127, 217, 255, .14); }
 .text { margin-top: 12px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }

@@ -359,6 +359,13 @@ export function gateLecturePlan(plan, ctx) {
       if (x === t && !before.includes(types[i - 1])) issues.push(issue('FLOW_ORDER', 'error', at(i), `slide ${i + 1}: a ${t} slide must come right after a ${before.join(' or ')} slide`));
     });
   }
+  // mustPrecede: { practice_problem: ['journal_entry', …] } — a problem the student
+  // pauses on is answered on the very next slide, in one of these formats.
+  for (const [t, after] of Object.entries(flow.mustPrecede || {})) {
+    types.forEach((x, i) => {
+      if (x === t && !after.includes(types[i + 1])) issues.push(issue('FLOW_ORDER', 'error', at(i), `slide ${i + 1}: a ${t} slide must be followed right away by its worked solution (${after.join(' / ')})`));
+    });
+  }
   if (flow.questionAfterDefinitions) {
     let defs = 0;
     types.forEach((t, i) => {

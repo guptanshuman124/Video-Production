@@ -14,7 +14,7 @@
 .head { display: flex; align-items: center; gap: 14px; }
 .n {
   flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--brand-navy); color: #fff; font: 700 21px/1 var(--font-body);
+  background: var(--brand-navy); color: #0b1230; font: 700 21px/1 var(--font-body); box-shadow: 0 0 14px rgba(127, 217, 255, .5);
 }
 h2 { margin: 0; font: 700 30px/1.18 var(--font-card); color: var(--brand-navy); }
 .step p { margin: 0; font: 400 25px/1.35 var(--font-card); color: var(--brand-body); }

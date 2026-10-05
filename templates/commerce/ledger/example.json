@@ -1,0 +1,14 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "title": "Ledger",
+  "account": "Cash Account",
+  "debit": [
+    { "date": "01-04-2024", "particulars": "Balance b/d", "amount": 50000 },
+    { "date": "08-04-2024", "particulars": "Sales A/c", "jf": "4", "amount": 18000 }
+  ],
+  "credit": [
+    { "date": "01-04-2024", "particulars": "Furniture A/c", "jf": "1", "amount": 25000 },
+    { "date": "10-04-2024", "particulars": "Rent A/c", "jf": "3", "amount": 12000 },
+    { "date": "30-04-2024", "particulars": "Balance c/d", "amount": 31000 }
+  ]
+}

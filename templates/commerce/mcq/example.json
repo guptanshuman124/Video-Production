@@ -1,0 +1,16 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "title": "Test Yourself",
+  "question": "Goods worth ₹8,000 were purchased from Mohan on credit. Which account is credited?",
+  "options": [
+    "Purchases A/c",
+    "Cash A/c",
+    "Mohan’s A/c",
+    "Goods A/c"
+  ],
+  "answer": "C",
+  "wrong": [
+    "B"
+  ],
+  "description": "Mohan is the giver of goods, so under the personal account rule his account is credited; no cash moves in a credit purchase."
+}

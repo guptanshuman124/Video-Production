@@ -1,0 +1,12 @@
+{
+  "data": {
+    "title": "Accounting in a Small Shop",
+    "art_prompt": "A shopkeeper at the counter of a small Indian grocery store handing a packet to a customer beside a closed account book, shelves of packed goods behind him, warm afternoon light, medium view",
+    "points": [
+      "Every sale and purchase is a transaction",
+      "Recording them daily shows what the shop owns and owes",
+      "At the year-end the records tell the profit or loss"
+    ]
+  },
+  "narration_hinglish": "यह एक छोटी grocery shop का scene है, जहाँ shopkeeper एक customer को सामान दे रहा है, और पास में उसकी account book रखी है। {{b1.1}} दिन भर में जो भी sale या purchase होती है, वह एक transaction है। {{b1.2}} अगर shopkeeper इन्हें रोज़ record करे, तो उसे हमेशा पता रहेगा कि shop के पास क्या है और उसे किसको कितना देना है। {{b1.3}} और साल के end में यही records बताते हैं कि shop ने profit कमाया या loss हुआ। यही accounting का असली काम है।"
+}

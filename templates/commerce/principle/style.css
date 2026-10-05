@@ -1,0 +1,19 @@
+--brand-bg: var(--bg-lavender);
+
+/* PDF p4: statement 1160×165 at (84,223); illustration 1160×284 at (84,400);
+   why it matters 1160×278 at (84,701); image panel 574×752 at (1260,223).
+   Without an image the stack is 1752 wide. */
+.cards {
+  position: absolute; left: var(--frame-left); top: 223px; width: 1752px; height: 756px;
+  display: flex; flex-direction: column; gap: 16px;
+  &.with-image { width: 1160px; }
+}
+.card { border-radius: var(--radius-card); padding: 18px 26px 20px; overflow: hidden; }
+.statement { flex: 0 0 auto; min-height: 165px; background: var(--brand-surface); border: 1px solid var(--brand-panel-line); }
+.illustration { flex: 1 1 0; min-height: 0; background: var(--brand-cream); }
+.significance { flex: 1 1 0; min-height: 0; background: var(--brand-cream); }
+.label { font: 700 24px/1.2 var(--font-body); text-transform: uppercase; }
+.text { margin-top: 10px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
+.statement .text { font-weight: 600; }
+.side { left: 1260px; top: 223px; width: 576px; height: 756px; }
+.side .panel-caption { padding-bottom: 15px; }

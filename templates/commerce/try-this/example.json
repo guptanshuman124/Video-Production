@@ -1,0 +1,11 @@
+{
+  "lecture": "Introduction to Accounting",
+  "title": "Your Family’s Money Diary",
+  "prompt": "For one week, note every amount your family receives and spends — milk, fuel, school fees, salary.",
+  "steps": [
+    "Write the date and what the money was for",
+    "Put money received in one column and money spent in another",
+    "Add both columns at the end of the week"
+  ],
+  "think": "How would you know whether the family saved money this week?"
+}

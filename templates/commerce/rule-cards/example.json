@@ -1,0 +1,9 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "title": "Golden Rules of Accounting",
+  "cards": [
+    { "label": "Personal Account", "rule": "Debit the receiver, credit the giver", "example": "Cash paid to Ramesh — Ramesh’s A/c is debited (he is the receiver)" },
+    { "label": "Real Account", "rule": "Debit what comes in, credit what goes out", "example": "Furniture bought for cash — Furniture A/c debited (comes in), Cash A/c credited (goes out)" },
+    { "label": "Nominal Account", "rule": "Debit all expenses and losses, credit all incomes and gains", "example": "Rent paid — Rent A/c debited (an expense); commission received — Commission A/c credited (an income)" }
+  ]
+}

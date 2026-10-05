@@ -1,0 +1,30 @@
+--brand-bg: var(--bg-grey);
+
+/* PDF p19: account name centred at y≈261; Dr. / Cr. labels at y≈330; two
+   tables 799 wide at x=104 and x=1037 (head row at y≈380); the Total rows
+   under a rule. Rows get a fixed slot height so both sides line up. */
+.taccount { position: absolute; left: var(--frame-left); top: 236px; width: 1752px; }
+.aname { text-align: center; font: 700 36px/1.2 var(--font-heading); color: var(--brand-title); }
+.sides { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; }
+.side { position: relative; }
+.sides .side + .side::before {
+  content: ''; position: absolute; left: -33px; top: 40px; bottom: -86px; width: 2px; background: var(--brand-violet); opacity: .55;
+}
+.sidelabel { font: 700 26px/1.2 var(--font-heading); color: var(--brand-navy); margin: 0 0 8px 12px; }
+.lrow {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr) 70px 180px; align-items: center;
+  min-height: 58px; font: 400 25px/1.25 var(--font-body); color: var(--brand-ink); font-variant-numeric: tabular-nums;
+}
+.lrow > div { padding: 0 12px; }
+.head { min-height: 50px; border-radius: var(--radius-row); background: var(--brand-surface-head); font: 700 22px/1.2 var(--font-heading); color: var(--brand-title); }
+.head .c3 { text-align: right; }
+.rows { min-height: calc(var(--slots) * 58px + 12px); padding-top: 6px; }
+.c0 { font-size: 22px; color: var(--brand-body); }
+.c2 { color: var(--brand-body); text-align: center; }
+.amt { text-align: right; font-weight: 700; color: var(--brand-navy); }
+.totals { display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; }
+.trow {
+  display: flex; justify-content: space-between; padding: 14px 12px 0 174px;
+  border-top: 2px solid var(--brand-panel-line);
+  font: 800 27px/1.2 var(--font-heading); color: var(--brand-heading);
+}

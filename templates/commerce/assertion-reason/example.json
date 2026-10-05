@@ -1,0 +1,10 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "assertion": "Drawings are debited to the Drawings Account.",
+  "reason": "Drawings reduce the owner’s capital in the business.",
+  "answer": "A",
+  "wrong": [
+    "B"
+  ],
+  "explanation": "Both are true: drawings reduce capital, so they are debited — to a separate Drawings Account that is later transferred to Capital."
+}

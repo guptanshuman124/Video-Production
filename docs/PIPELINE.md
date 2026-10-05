@@ -224,7 +224,7 @@ These come from `PPT-maths.pdf` and `PPT Theory.pdf`. Theory covers Social Scien
 | `proof` | `mathematics/proof`: to prove / given, 2–6 steps (compact rows from 4), figure. Must come right after a `theorem` (`pack.json` `flow.mustFollow`, G2 `FLOW_ORDER`) | Maths 6 |
 | `solved_example` | `mathematics/worked-example`: PROBLEM, SOLUTION steps (+ display equations), ANSWER, "watch out" tip | Maths 7–8 |
 
-Every prompt example in every pack is checked against its slide type, including marker order, by `test/packs.test.js`. Only **commerce** (Accountancy, Business Studies) is still waiting for its template pack.
+Every prompt example in every pack is checked against its slide type, including marker order, by `test/packs.test.js`. All six packs are installed. **Commerce** (Accountancy + Business Studies, from `PPT Accounts.pdf`) reuses the shared layouts for its generic pages and adds ten accounting slides: `principle`, `rule_cards`, `journal_entry`, `practice_problem` (pause, then the solution on the next slide — `flow.mustPrecede`), `ledger`, `trial_balance`, `adjustment`, `case_study`, `balance_sheet` and `final_accounts`. Amounts are written as plain numbers; the slide formats them in the Indian system (1,25,000) and computes every total, and the content gate refuses a journal entry, ledger, trial balance, balance sheet or T-account that does not balance. `pack.json` → `variantRules.business-studies` switches the bookkeeping slides off (`max: 0`) for Business Studies, which practises through case studies instead (`packFor()` in `src/templates.js`).
 
 ## Models and voice (config/default.yaml)
 
@@ -237,9 +237,10 @@ Every prompt example in every pack is checked against its slide type, including 
 - **Review → fix:** reviewer findings on specific slides trigger a rewrite of those slides and a second review (`llm.review_repair_rounds`). Only what still fails reaches the review queue.
 - **TTS:** Sarvam `bulbul:v3`, speaker `shubh`, pace 0.9, 2,400 characters per request (the API limit is 2,500). Keys live in `.env`.
 
-## Adding a pack (commerce next)
+## Adding a pack
 
 1. **Templates:** `templates/<pack>/<slide>/template.jsx + style.css + example.json` (see `templates/README.md`). Each template's `meta.slide` declares its slide type, fields and limits, image rule and reveal order.
 2. **`templates/<pack>/pack.json`:** per-type min/max per lecture, flow rules and image-free fallbacks (copy `templates/biology/pack.json`).
+   Optional `variantRules.<variant>` overrides `types` / `flow` / `fallbacks` for one variant (e.g. `max: 0` hides a type from that variant's planner).
 3. **Prompts:** `prompts/packs/<pack>/role.md`, `notation.md`, `slide-usage.md`, `flow.md`, and `examples/<slide_type>.json` (data + marker narration). Variants go in `prompts/packs/<pack>/variants/<variant>/<same names>.md`, which are appended after the pack's own.
 4. **Check:** `hvr packs` lists it, `hvr prompt slide-plan --pack <pack>` shows what the LLM will read, and `hvr run <chapter> --mock` exercises every gate.

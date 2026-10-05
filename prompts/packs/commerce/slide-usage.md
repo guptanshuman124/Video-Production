@@ -1,0 +1,28 @@
+# WHICH SLIDE TYPE FOR WHICH COMMERCE CONTENT
+
+- **intro** — every lecture, first slide only: a title card filled in by code. Nothing to write; the narration is a ~10-second welcome.
+- **hook** — lecture 1 only, second slide: a real business situation or question that frames why the chapter matters — no term or rule yet.
+- **concept_intro** — the plain-language lead-in right before a new term, rule or format: the everyday business situation that makes it needed.
+- **definition** — a named term (Asset, Capital, Depreciation, Management, Partnership Deed): meaning in one line, features or types, optional small table.
+- **principle** — an accounting concept or convention, a legal provision or a management principle: Statement → Illustration (a worked example with ₹ figures) → Why it matters.
+- **rule_cards** — 2–4 parallel rules, each with an example: the golden rules, the rules of debit and credit, a few management principles at a time.
+- **comparison** — two or three things across 3–6 bases (Capital vs Revenue Expenditure, Shares vs Debentures); also a small vertical statement.
+- **cause_effect / process_flow** — a procedure in order (the accounting cycle, the planning process, issue of shares) or a chain of reasons.
+- **timeline** — dated steps (the dated transactions of an illustration, stages of company formation).
+- **labeled_diagram** — an NCERT chart, specimen document (cheque, voucher, invoice) or organisation chart, read part by part.
+- **person** — a thinker NCERT discusses (Fayol, Taylor), at most once.
+- **journal_entry** — 1–3 transactions journalised: date, debit and credit lines with amounts, narration, and the rule behind each side (`checks`).
+- **ledger** — one account posted and balanced in T-form.
+- **trial_balance** — the balances listed with agreeing totals.
+- **final_accounts** — Trading A/c and P&L A/c (or P&L Appropriation, Revaluation, Realisation) in T-form, each closed by its profit / loss line.
+- **balance_sheet** — liabilities and assets (horizontal format) with agreeing totals. Class 12 company balance sheets (Schedule III, vertical) go on a `comparison`.
+- **adjustment** — one adjustment and its two effects (in the P&L and in the Balance Sheet).
+- **practice_problem** — ONE problem the student pauses on, with how to approach it (never the answer). The very next slide is its worked solution (journal_entry, ledger, trial_balance, final_accounts, balance_sheet or adjustment) using exactly the same figures.
+- **case_study** — a CBSE case-based question: a short business situation and 1–3 questions, answers withheld.
+- **try_this** — an activity before a concept is named (list your family's expenses) — no answer shown.
+- **misconception** — only a genuine, common student error (drawings as an expense; every receipt as income).
+- **mcq** — a CBSE-style MCQ with one trap option (the other side of the entry, a similar account, a close figure).
+- **assertion_reason** — a genuine claim-and-cause pair from this content.
+- **formula_sheet** — end of a numerical lecture: the formulas taught (ratios, depreciation, profit, sacrificing ratio).
+- **quick_revision** — end of the lecture: key points + glossary.
+- **illustration** — an everyday business scene (a shopkeeper at the counter with a cash book, a busy wholesale market, a bank counter) — never text, figures, documents or formats in the picture; those stay on the accounting slides. At most 2 per lecture.

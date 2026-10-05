@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { gateReport } from '../contracts/index.js';
-import { buildTemplates, loadPacks } from '../templates.js';
+import { buildTemplates, loadPacks, packFor } from '../templates.js';
 import { slideTypes } from '../slides.js';
 import { BAND_NOTES } from '../curriculum/index.js';
 import { createLLM } from '../llm/index.js';
@@ -71,7 +71,7 @@ function makeGate(store, unitLabel, log) {
 
 // Everything the generation layers need about one prepared unit.
 function layerContext(prepared, { cfg, llm, build, packs, lectures }) {
-  const pack = packs[prepared.chapter.pack];
+  const pack = packFor(packs[prepared.chapter.pack], prepared.chapter.variant);
   const types = slideTypes(build)[prepared.chapter.pack];
   if (!pack || !types) throw new Error(`templates/${prepared.chapter.pack}/ has no slide types installed`);
   const vars = {

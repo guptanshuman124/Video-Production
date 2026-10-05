@@ -1,0 +1,15 @@
+{
+  "data": {
+    "title": "The Accounting Process",
+    "steps": [
+      { "label": "Identify", "detail": "Pick out business transactions from source documents" },
+      { "label": "Journal", "detail": "Record each transaction in date order" },
+      { "label": "Ledger", "detail": "Post entries to accounts and balance them" },
+      { "label": "Trial Balance", "detail": "List the balances to check arithmetical accuracy" },
+      { "label": "Final Accounts", "detail": "Prepare the P&L Account and the Balance Sheet" }
+    ],
+    "cycle": false,
+    "note": "Each step uses the output of the one before"
+  },
+  "narration_hinglish": "Accounting एक fixed order में चलती है — इसे accounting process कहते हैं। {{b1.1}} पहले source documents, जैसे bills और vouchers से, business transactions पहचाने जाते हैं। {{b1.2}} फिर हर transaction date के order में journal में record होता है। {{b1.3}} उसके बाद journal entries ledger के accounts में post की जाती हैं, और हर account balance किया जाता है। {{b1.4}} फिर सारे balances को trial balance में list करते हैं, ताकि arithmetical accuracy check हो सके। {{b1.5}} और आख़िर में इन्हीं से profit and loss account और balance sheet बनती है। हर step पिछले step के result पर टिका है।"
+}

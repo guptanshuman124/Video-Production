@@ -1,0 +1,9 @@
+{
+  "lecture": "Financial Statements – II",
+  "title": "Adjustment Treatment",
+  "adjustment": "Outstanding salary ₹5,000 (not yet paid at year-end)",
+  "effects": [
+    { "heading": "Effect in Trading & P&L A/c", "text": "Added to Salary on the debit side of the Profit & Loss Account, so the salary expense shows the full amount incurred for the year." },
+    { "heading": "Effect in Balance Sheet", "text": "Shown as a current liability under *Outstanding Expenses*, because the amount is owed but not yet paid on the balance sheet date." }
+  ]
+}

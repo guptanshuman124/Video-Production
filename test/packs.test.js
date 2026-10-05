@@ -36,9 +36,9 @@ test('prompt examples pass their slide type checks, with narration markers in or
   }
 });
 
-test('mathematics + theory template examples validate against their own slide spec', () => {
+test('mathematics + theory + commerce template examples validate against their own slide spec', () => {
   let checked = 0;
-  for (const id of ['mathematics', 'theory']) {
+  for (const id of ['mathematics', 'theory', 'commerce']) {
     for (const st of Object.values(T[id])) {
       const f = path.join('templates', st.templateId, 'example.json');
       if (!fs.existsSync(f) || st.spec.codeOnly || baseTemplateOf(st.templateId)) continue;   // the new templates (wrappers are checked in their own pack)

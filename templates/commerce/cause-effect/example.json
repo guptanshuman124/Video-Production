@@ -1,0 +1,10 @@
+{
+  "lecture": "Introduction to Accounting",
+  "title": "The Accounting Process",
+  "links": [
+    "Transactions are identified from source documents like bills and vouchers",
+    "They are recorded in the Journal in date order",
+    "Journal entries are posted to Ledger accounts and balanced",
+    "The balances are listed in a Trial Balance to check accuracy"
+  ]
+}

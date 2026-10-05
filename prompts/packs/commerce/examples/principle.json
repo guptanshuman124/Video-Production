@@ -1,0 +1,10 @@
+{
+  "data": {
+    "title": "Business Entity Concept",
+    "statement": "The business and its owner are two separate entities, so only the transactions of the business are recorded in its books.",
+    "illustration": "Ramesh starts a shop with ₹1,00,000. The business owes him this amount as capital. If he later takes ₹5,000 from the till to pay his home electricity bill, it is recorded as *drawings*, not as a business expense.",
+    "significance": "Without it, personal spending would mix with business costs and the profit shown would be wrong.",
+    "caption": null
+  },
+  "narration_hinglish": "Accounting का एक बहुत basic concept है — business entity concept. {{b1}} इसका मतलब है कि business और उसका owner, दोनों अलग-अलग माने जाते हैं। इसलिए books में सिर्फ़ business के transactions ही record होते हैं, owner के personal नहीं। {{b2}} एक example लेते हैं। Ramesh एक lakh rupaye से shop शुरू करता है — तो business की नज़र में यह amount Ramesh का capital है, यानी business उसका इतना देनदार है। अब अगर Ramesh गल्ले से पाँच हज़ार rupaye निकालकर अपने घर का electricity bill भरता है, तो यह business का expense नहीं है — यह drawings है। {{b3}} यह concept ज़रूरी क्यों है? क्योंकि अगर personal खर्चे business के खर्चों में मिल जाएँ, तो profit गलत दिखेगा, और business की असली हालत पता ही नहीं चलेगी।"
+}

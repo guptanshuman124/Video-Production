@@ -1,0 +1,29 @@
+{
+  "data": {
+    "title": "Journal Entry",
+    "entries": [
+      {
+        "date": "01-04-2024",
+        "lines": [
+          {
+            "account": "Furniture A/c",
+            "side": "Dr",
+            "amount": 25000
+          },
+          {
+            "account": "Cash A/c",
+            "side": "Cr",
+            "amount": 25000
+          }
+        ],
+        "narration": "Being furniture purchased for cash"
+      }
+    ],
+    "checks": [
+      "Furniture A/c → Real Account: debit what comes in",
+      "Cash A/c → Real Account: credit what goes out"
+    ],
+    "checksLabel": null
+  },
+  "narration_hinglish": "चलिए एक transaction को journal में record करते हैं। First April को business ने पच्चीस हज़ार rupaye का furniture cash में खरीदा। {{b1.1}} तो entry ऐसी बनेगी — Furniture account debit पच्चीस हज़ार, to Cash account पच्चीस हज़ार। नीचे narration — being furniture purchased for cash. Debit और credit, दोनों तरफ़ amount बराबर है — यही double entry है। {{b2.1}} अब check करते हैं क्यों। Furniture एक real account है, और furniture business में अंदर आया — इसलिए debit. {{b2.2}} Cash भी real account है, और cash बाहर गया — इसलिए credit. Exam में narration लिखना मत भूलना, उसके marks अलग से कटते हैं।"
+}

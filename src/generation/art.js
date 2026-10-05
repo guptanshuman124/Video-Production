@@ -22,7 +22,7 @@ import OpenAI from 'openai';
 import { sha } from '../llm/index.js';
 import { FFMPEG } from '../tools.js';
 
-export const STYLE = 'Clean, soft semi-realistic educational illustration in a soft, fresh palette that sits on light sky-blue and sage slides (soft sky blue, sage teal, warm amber accents, clean whites), gently saturated, never neon or dark, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.';
+export const STYLE = 'Clean, soft semi-realistic educational illustration with cinematic lighting in a palette that sits on deep-navy slides (deep navy and indigo tones, warm amber light, soft cyan highlights), rich but natural colours, never neon, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.';
 
 const VERDICT = {
   type: 'object', additionalProperties: false,

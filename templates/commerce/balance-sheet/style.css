@@ -1,0 +1,25 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p23: "as at" centred at y≈244; two columns 862 wide at x=84 and x=971
+   (head bars at y≈315), a navy divider between them, Total bars at y≈897. */
+.asat {
+  position: absolute; left: var(--frame-left); top: 236px; width: 1752px; text-align: center;
+  font: italic 400 26px/1.2 var(--font-body); color: var(--brand-body);
+}
+.sheet {
+  position: absolute; left: var(--frame-left); top: 292px; width: 1752px; height: 690px;
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 14px 28px;
+}
+.side { position: relative; display: flex; flex-direction: column; gap: 2px; }
+.side + .side::before { content: ''; position: absolute; left: -15px; top: 0; bottom: -78px; width: 2px; background: var(--brand-violet); opacity: .55; }
+.rows { display: flex; flex-direction: column; gap: 2px; }
+.brow {
+  display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  min-height: 62px; padding: 0 22px; font: 400 28px/1.25 var(--font-body); color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+}
+.head { min-height: 54px; border-radius: var(--radius-row); background: var(--brand-surface-head); font: 700 25px/1.2 var(--font-heading); color: var(--brand-title); }
+.rows .brow { border-bottom: 1px solid var(--brand-rule); }
+.amt { font-weight: 700; color: var(--brand-navy); }
+.total { border-radius: var(--radius-row); background: var(--brand-surface-head); border-top: 2px solid var(--brand-violet); }
+.total span, .total .amt { font: 800 29px/1.2 var(--font-heading); color: var(--brand-heading); }

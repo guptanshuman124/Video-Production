@@ -81,10 +81,10 @@ export const cueList = (what) => ({
 // keyframes are resolved before custom properties would be; they match the
 // --mcq-* and --brand-surface-alt tokens in global.css.
 export const MCQ = {
-  correct: { bg: '#def2e8', border: '#1f8a6a' },
-  wrong: { bg: '#fbe5e1', border: '#c8553d' },
+  correct: { bg: 'rgba(94, 230, 168, 0.18)', border: '#5ee6a8' },
+  wrong: { bg: 'rgba(255, 122, 122, 0.18)', border: '#ff7a7a' },
 };
-export const stateAnim = (state, base = '#f6f9fc') => ({
+export const stateAnim = (state, base = 'rgba(255, 255, 255, 0.05)') => ({
   dur: 450, ease: 'outSoft',
   kf: [{ backgroundColor: base, borderColor: 'rgba(0,0,0,0)' },
        { backgroundColor: MCQ[state].bg, borderColor: MCQ[state].border }],

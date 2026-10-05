@@ -1,0 +1,31 @@
+{
+  "lecture": "Accounting Procedures",
+  "title": "Capital vs Revenue Expenditure",
+  "columns": [
+    "Basis",
+    "Capital Expenditure",
+    "Revenue Expenditure"
+  ],
+  "rows": [
+    [
+      "Benefit",
+      "Lasts more than one year",
+      "Used up within the year"
+    ],
+    [
+      "Purpose",
+      "Acquire or improve fixed assets",
+      "Run the day-to-day business"
+    ],
+    [
+      "Shown in",
+      "Balance Sheet (as an asset)",
+      "Profit & Loss Account"
+    ],
+    [
+      "Example",
+      "Purchase of machinery",
+      "Wages, rent, repairs"
+    ]
+  ]
+}

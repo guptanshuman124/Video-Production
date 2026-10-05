@@ -1,0 +1,37 @@
+--brand-bg: var(--bg-mist);
+
+/* PDF p17: journal card 1752 wide at (84,240) — head row, then each entry's
+   lines and its narration; the rule-check box 1752 wide, 26px below it.
+   Columns: Date 190 · Particulars 1fr · L.F. 120 · Debit 270 · Credit 270. */
+.wrap {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px;
+  display: flex; flex-direction: column; gap: 26px;
+}
+.journal {
+  padding: 14px 24px 16px; border-radius: var(--radius-card);
+  background: var(--brand-surface); border: 1px solid var(--brand-panel-line); box-shadow: var(--brand-shadow);
+}
+.jrow {
+  display: grid; grid-template-columns: 190px minmax(0, 1fr) 120px 270px 270px; align-items: center;
+  min-height: 46px; font: 400 27px/1.25 var(--font-body); color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+}
+.jrow > div { padding: 0 14px; }
+.head {
+  min-height: 52px; border-radius: var(--radius-row); background: var(--brand-surface-head);
+  font: 700 23px/1.2 var(--font-heading); color: var(--brand-title);
+  .c3, .c4 { text-align: right; }
+}
+.entry { padding: 6px 0 8px; border-bottom: 1px solid var(--brand-rule); }
+.entry:last-child { border-bottom: 0; }
+.c0 { color: var(--brand-body); font-size: 24px; white-space: nowrap; }
+.dr .c1 { display: flex; justify-content: space-between; gap: 18px; font-weight: 700; color: var(--brand-title); }
+.drmark { color: var(--brand-heading); font-weight: 700; }
+.cr .c1 { padding-left: 64px; }
+.amt { text-align: right; font-weight: 700; color: var(--brand-navy); }
+.narr { min-height: 40px; }
+.narr .c1 { font: italic 400 24px/1.3 var(--font-body); color: var(--brand-body); }
+.checks { padding: 18px 26px 20px; border-radius: var(--radius-card); background: var(--brand-cream); }
+.checks .label { font: 700 24px/1.2 var(--font-body); }
+.checks ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { font: 400 26px/1.35 var(--font-body); color: var(--brand-ink); }

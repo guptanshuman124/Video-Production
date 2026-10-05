@@ -1,0 +1,16 @@
+{
+  "lecture": "Financial Statements – I",
+  "title": "Balance Sheet",
+  "asAt": "as at 31st March 2024",
+  "liabilities": [
+    { "item": "Capital", "amount": 175000 },
+    { "item": "Creditors", "amount": 25000 },
+    { "item": "Outstanding Salary", "amount": 5000 }
+  ],
+  "assets": [
+    { "item": "Machinery", "amount": 40000 },
+    { "item": "Furniture", "amount": 25000 },
+    { "item": "Stock", "amount": 60000 },
+    { "item": "Cash in Hand", "amount": 80000 }
+  ]
+}

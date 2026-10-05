@@ -1,0 +1,9 @@
+{
+  "data": {
+    "title": "Practice Problem",
+    "problem": "Record the journal entry: Rent paid ₹12,000 by cheque on 10th April 2024.",
+    "hint": "Decide the type of each account first. Rent is an expense — which rule covers expenses? A cheque payment goes out of the bank. Write the full entry with its narration before continuing.",
+    "caption": null
+  },
+  "narration_hinglish": "अब आपकी बारी है। Question है — ten April को बारह हज़ार rupaye का rent cheque से दिया गया, इसकी journal entry बनाइए। {{b1}} Hint यह है: पहले हर account का type पहचानो। Rent एक expense है — तो expenses के लिए कौन सा rule लगता है? और cheque से payment का मतलब है पैसा bank से बाहर गया। Video को यहीं pause कीजिए, पूरी entry narration के साथ copy में लिखिए, और फिर अगली slide पर अपना answer check कीजिए।"
+}

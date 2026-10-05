@@ -1,0 +1,34 @@
+--brand-bg: var(--bg-mist);
+
+/* PDF p24: two stacked T-accounts 1752 wide from y≈225 — name centred over a
+   navy rule, Dr. | Cr. halves split by a vertical rule, Total rows under a
+   short rule. One account alone gets the full height and larger text. */
+.stack {
+  position: absolute; left: var(--frame-left); top: 228px; width: 1752px; height: 760px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.account { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.aname {
+  text-align: center; padding-bottom: 8px; border-bottom: 2px solid var(--brand-violet);
+  font: 700 32px/1.2 var(--font-heading); color: var(--brand-title);
+}
+.sides { flex: 1 1 auto; display: grid; grid-template-columns: 1fr 1fr; }
+.side { display: flex; flex-direction: column; padding: 8px 26px 0; }
+.side + .side { border-left: 2px solid var(--brand-violet); }
+.sidelabel { font: 700 24px/1.2 var(--font-heading); color: var(--brand-navy); margin-bottom: 4px; }
+.lines { display: flex; flex-direction: column; min-height: calc(var(--slots) * 50px); }
+.aline {
+  display: flex; justify-content: space-between; gap: 24px; min-height: 50px; align-items: center;
+  font: 400 27px/1.25 var(--font-body); color: var(--brand-ink); font-variant-numeric: tabular-nums;
+}
+.amt { font-weight: 700; color: var(--brand-navy); white-space: nowrap; }
+.atotal {
+  display: flex; justify-content: space-between; margin-top: 6px; padding-top: 10px;
+  border-top: 2px solid var(--brand-panel-line); font: 800 27px/1.2 var(--font-heading); color: var(--brand-heading);
+  .amt { color: var(--brand-heading); }
+}
+.two .aname { font-size: 28px; }
+.two .aline { min-height: 42px; font-size: 24px; }
+.two .lines { min-height: calc(var(--slots) * 42px); }
+.two .atotal { font-size: 25px; padding-top: 6px; }
+.two .sidelabel { font-size: 21px; }

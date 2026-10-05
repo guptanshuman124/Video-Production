@@ -1,0 +1,19 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "keyPoints": [
+    "Every transaction affects at least two accounts — the dual aspect",
+    "Personal accounts: debit the receiver, credit the giver",
+    "Real accounts: debit what comes in, credit what goes out",
+    "Nominal accounts: debit expenses and losses, credit incomes and gains"
+  ],
+  "glossary": [
+    {
+      "term": "Journal",
+      "meaning": "book of original entry, in date order"
+    },
+    {
+      "term": "Narration",
+      "meaning": "short explanation written below each entry"
+    }
+  ]
+}

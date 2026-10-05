@@ -1,0 +1,12 @@
+{
+  "lecture": "Trial Balance and Rectification of Errors",
+  "title": "Trial Balance",
+  "asAt": "as at 31st March 2024",
+  "rows": [
+    { "account": "Capital A/c", "credit": 100000 },
+    { "account": "Machinery A/c", "debit": 40000 },
+    { "account": "Purchases A/c", "debit": 60000 },
+    { "account": "Sales A/c", "credit": 25000 },
+    { "account": "Cash in Hand", "debit": 25000 }
+  ]
+}

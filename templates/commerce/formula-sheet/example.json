@@ -1,0 +1,10 @@
+{
+  "lecture": "Accounting Ratios",
+  "title": "Formula sheet",
+  "items": [
+    { "formula": "\\text{Current Ratio} = \\dfrac{\\text{Current Assets}}{\\text{Current Liabilities}}", "label": "Liquidity" },
+    { "formula": "\\text{Quick Ratio} = \\dfrac{\\text{Quick Assets}}{\\text{Current Liabilities}}", "label": "Acid test" },
+    { "formula": "\\text{Gross Profit} = \\text{Net Sales} - \\text{COGS}", "label": "Gross profit" },
+    { "formula": "\\text{GP Ratio} = \\dfrac{\\text{Gross Profit}}{\\text{Net Sales}} \\times 100", "label": "Gross profit ratio" }
+  ]
+}

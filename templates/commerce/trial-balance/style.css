@@ -1,0 +1,19 @@
+--brand-bg: var(--bg-white);
+
+/* PDF p20: "as at" centred at y≈253; head row at y≈319, 1752 wide; rows of
+   ~56px, alternate rows tinted; the Total row on the head tint. */
+.tb { position: absolute; left: var(--frame-left); top: 236px; width: 1752px; display: flex; flex-direction: column; gap: 4px; }
+.asat { text-align: center; margin-bottom: 14px; font: italic 400 26px/1.2 var(--font-body); color: var(--brand-body); }
+.rows { display: flex; flex-direction: column; gap: 4px; }
+.trow {
+  display: grid; grid-template-columns: minmax(0, 1fr) 320px 320px; align-items: center;
+  min-height: 60px; padding: 0 28px; border-radius: var(--radius-row);
+  background: var(--brand-surface); font: 400 28px/1.25 var(--font-body); color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+  &.alt { background: var(--brand-surface-alt); }
+}
+.head { min-height: 56px; background: var(--brand-surface-head); font: 700 25px/1.2 var(--font-heading); color: var(--brand-title); }
+.head .c1, .head .c2 { text-align: right; }
+.amt { text-align: right; font-weight: 700; color: var(--brand-navy); }
+.total { margin-top: 6px; background: var(--brand-surface-head); border-top: 2px solid var(--brand-violet); }
+.total .c0, .total .amt { font: 800 29px/1.2 var(--font-heading); color: var(--brand-heading); }

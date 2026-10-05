@@ -1,0 +1,28 @@
+{
+  "lecture": "Recording of Transactions – I",
+  "title": "Journal",
+  "definition": "A Journal is the book of original entry in which transactions are first recorded in chronological order, showing the accounts debited and credited.",
+  "points": [
+    "Also called the book of original entry",
+    "Each record is a journal entry with a narration",
+    "Entries are later posted to the ledger"
+  ],
+  "columns": [
+    "Column",
+    "Shows"
+  ],
+  "rows": [
+    [
+      "L.F.",
+      "Ledger page of the account"
+    ],
+    [
+      "Debit (₹)",
+      "Amount debited"
+    ],
+    [
+      "Credit (₹)",
+      "Amount credited"
+    ]
+  ]
+}

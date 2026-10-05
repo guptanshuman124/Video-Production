@@ -46,9 +46,9 @@ test('pipeline (mock): chapter -> 5 validated lectures -> content + voice + proj
 test('pipeline: a bad input stops at G0 with the reason recorded', async () => {
   const jobs = fs.mkdtempSync(path.join(os.tmpdir(), 'hvr-jobs-'));
   const cfg = merge(loadConfig(), { llm: { provider: 'mock' }, tts: { provider: 'mock' }, paths: { jobs } });
-  const summary = await runChapter({ ...chapter, chapter_id: 'bad', pack: 'commerce' }, { cfg, to: 'build', offline: true, log: () => {} });
+  const summary = await runChapter({ ...chapter, chapter_id: 'bad', pack: 'commerce', variant: 'economics' }, { cfg, to: 'build', offline: true, log: () => {} });
   assert.match(summary.stoppedAt, /prepare failed G0/);
   const q = JSON.parse(fs.readFileSync(path.join(jobs, 'bad', 'review-queue.json'), 'utf8'));
-  assert.equal(q[0].errors[0].code, 'PACK_NOT_INSTALLED');
+  assert.equal(q[0].errors[0].code, 'UNKNOWN_VARIANT');
   fs.rmSync(jobs, { recursive: true, force: true });
 });

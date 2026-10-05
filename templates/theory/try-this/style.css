@@ -8,7 +8,7 @@
 }
 .tag {
   align-self: flex-start; padding: 7px 18px; border-radius: 999px;
-  background: var(--brand-orange); color: #fff;
+  background: var(--brand-orange); color: #1a1030;
   font: 700 22px/1.2 var(--font-body); text-transform: uppercase; letter-spacing: .05em;
 }
 .prompt { margin: 0; font: 400 31px/1.4 var(--font-body); color: var(--brand-ink); }

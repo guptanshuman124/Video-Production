@@ -1,0 +1,29 @@
+{
+  "lecture": "Financial Statements – I",
+  "title": "Trading & P&L Account",
+  "accounts": [
+    {
+      "name": "Trading Account",
+      "debit": [
+        { "particulars": "Opening Stock", "amount": 15000 },
+        { "particulars": "Purchases", "amount": 60000 },
+        { "particulars": "Gross Profit c/d", "amount": 45000 }
+      ],
+      "credit": [
+        { "particulars": "Sales", "amount": 100000 },
+        { "particulars": "Closing Stock", "amount": 20000 }
+      ]
+    },
+    {
+      "name": "Profit & Loss Account",
+      "debit": [
+        { "particulars": "Salaries", "amount": 15000 },
+        { "particulars": "Rent", "amount": 10000 },
+        { "particulars": "Net Profit (transferred to Capital A/c)", "amount": 20000 }
+      ],
+      "credit": [
+        { "particulars": "Gross Profit b/d", "amount": 45000 }
+      ]
+    }
+  ]
+}

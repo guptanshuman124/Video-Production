@@ -1,0 +1,23 @@
+--brand-bg: var(--bg-mist);
+
+/* PDF p18: problem bar 1752 wide at (84,240); below it the cream pause card
+   (1048 wide) beside a 686-wide image panel, both down to y≈980. The column
+   flows, so a long problem pushes the pause card down instead of under it. */
+.col {
+  position: absolute; left: var(--frame-left); top: 240px; width: 1752px; height: 740px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.problem { flex: none; padding: 16px 26px 18px; border-radius: var(--radius-card); background: var(--brand-surface-head); }
+.label { font: 700 24px/1.2 var(--font-body); text-transform: uppercase; }
+.ptext { margin-top: 6px; font: 600 31px/1.35 var(--font-body); color: var(--brand-title); }
+.row { flex: 1 1 auto; min-height: 0; display: flex; gap: 18px; }
+.pause {
+  flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;
+  padding: 22px 26px; border-radius: var(--radius-card); background: var(--brand-cream);
+  border: 1px solid rgba(255, 191, 71, .35); overflow: hidden;
+}
+.plabel { font: 700 32px/1.2 var(--font-heading); color: var(--brand-heading); }
+.hint { margin-top: 12px; font: 400 29px/1.45 var(--font-body); color: var(--brand-ink); }
+.footer { margin-top: auto; padding-top: 12px; font: italic 400 24px/1.3 var(--font-body); color: var(--brand-body); }
+.side { position: relative; left: auto; top: auto; flex: 0 0 686px; height: auto; }
+.side .panel-caption { padding-bottom: 15px; }
