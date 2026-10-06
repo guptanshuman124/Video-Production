@@ -24,9 +24,12 @@ import { FFMPEG } from '../tools.js';
 
 // One house style per slide theme (project.theme): sky-blue lecture videos,
 // deep-navy summary videos. The style is part of the cache key.
+// Incidental marks in the background (book spines, wall maps, car badges) were
+// the commonest reason both paid attempts failed the check — name those surfaces.
+const NO_MARKS = 'Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image: every surface is plain and unmarked, including book spines, walls, screens, packaging, vehicles, clothing, tools and instruments, even far in the background.';
 export const STYLES = {
-  sky: 'Clean, soft semi-realistic educational illustration in a soft, fresh palette that sits on light sky-blue and sage slides (soft sky blue, sage teal, warm amber accents, clean whites), gently saturated, never neon or dark, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.',
-  dark: 'Clean, soft semi-realistic educational illustration with cinematic lighting in a palette that sits on deep-navy slides (deep navy and indigo tones, warm amber light, soft cyan highlights), rich but natural colours, never neon, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. Absolutely no text, letters, numbers, labels, arrows, logos, signs or watermarks anywhere in the image.',
+  sky: `Clean, soft semi-realistic educational illustration in a soft, fresh palette that sits on light sky-blue and sage slides (soft sky blue, sage teal, warm amber accents, clean whites), gently saturated, never neon or dark, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. ${NO_MARKS}`,
+  dark: `Clean, soft semi-realistic educational illustration with cinematic lighting in a palette that sits on deep-navy slides (deep navy and indigo tones, warm amber light, soft cyan highlights), rich but natural colours, never neon, natural soft light, uncluttered background, one clear subject, accurate real-world proportions and details. Indian context wherever people or places appear. ${NO_MARKS}`,
 };
 export const STYLE = STYLES.sky;
 

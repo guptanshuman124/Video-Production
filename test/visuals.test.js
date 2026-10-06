@@ -31,7 +31,9 @@ test('every pack offers illustration and process_flow', () => {
 test('illustration: art_prompt may only describe a plain scene', () => {
   const ok = checkSlideData(T.illustration, { title: 'Rust', art_prompt: 'An old iron gate with rust patches after rain, close-up, soft light', points: ['Iron reacts with air and water', 'The coating is rust'] });
   assert.deepEqual(ok.issues.filter((i) => i.severity === 'error'), []);
-  for (const bad of ['A labelled diagram of the human heart', 'A map of India with rivers', 'A poster with the words SAVE WATER', 'A cross-section of a leaf']) {
+  // Objects the image model always draws with markings: refused before a picture is paid for.
+  for (const bad of ['A labelled diagram of the human heart', 'A map of India with rivers', 'A poster with the words SAVE WATER', 'A cross-section of a leaf',
+    'A carpenter measuring a wooden board with a measuring tape', 'A student beside a tall bookshelf in a library', 'A wall clock above a classroom door']) {
     const r = checkSlideData(T.illustration, { title: 'X', art_prompt: bad, points: ['a b c', 'd e f'] });
     assert.ok(r.issues.some((i) => i.code === 'TEMPLATE_CHECK'), `refused: ${bad}`);
   }

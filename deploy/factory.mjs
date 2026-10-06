@@ -13,6 +13,8 @@
 // OneDrive / SharePoint MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, SHAREPOINT_SITE_URL.
 // After changing .env run `npm run factory -- deploy`.
 // FACTORY_LIBRARY overrides where videos are saved (default: <home>\Videos\Prepzy Lectures).
+// FACTORY_WORKERS in .env sets how many lectures run at once (default 2; the AWS c7i.2xlarge runs 3–4).
+// Also runs on a Linux server with plain Docker (the AWS box): see docs/AWS.md.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -102,13 +104,23 @@ function buildImage(kind) {
   if (out('docker', ['images', '-q', 'mysql:8.0'])) sh(kind, ['load', 'docker-image', 'mysql:8.0', '--name', CLUSTER], { allowFail: true, quiet: true });
 }
 
+// How pods reach a port published on this machine: Docker Desktop has host.docker.internal;
+// plain Docker on Linux (the AWS server) has no such name, so use the kind network's gateway.
+function hostAddress() {
+  if (process.platform !== 'linux') return 'host.docker.internal';
+  const gws = out('docker', ['network', 'inspect', 'kind', '--format', '{{range .IPAM.Config}}{{.Gateway}} {{end}}']).split(/\s+/);
+  const v4 = gws.find((g) => /^\d+\.\d+\.\d+\.\d+$/.test(g));
+  if (!v4) throw new Error('could not find the kind network gateway (docker network inspect kind)');
+  return v4;
+}
+
 function applySecrets() {
   const env = readEnv();
   for (const k of ['OPENAI_API_KEY', 'SARVAM_API_KEY']) if (!env[k]) throw new Error(`${k} is missing from .env`);
   const source = env.SOURCE_DB_URL || env.TEXTBOOK_DB_URL;
   if (!source) throw new Error('TEXTBOOK_DB_URL (the prepzy-mysql URL) is missing from .env');
   const src = new URL(source);
-  if (['127.0.0.1', 'localhost'].includes(src.hostname)) src.hostname = 'host.docker.internal';
+  if (['127.0.0.1', 'localhost'].includes(src.hostname)) src.hostname = hostAddress();
   // Keep the database password stable across deploys.
   const existing = out('kubectl', ['--context', CONTEXT, '-n', NS, 'get', 'secret', 'factory-secrets', '-o', 'jsonpath={.data.MYSQL_ROOT_PASSWORD}']);
   const pw = existing ? Buffer.from(existing, 'base64').toString('utf8') : crypto.randomBytes(18).toString('base64url');
@@ -121,12 +133,18 @@ function applySecrets() {
   };
   const secret = { apiVersion: 'v1', kind: 'Secret', metadata: { name: 'factory-secrets', namespace: NS }, type: 'Opaque', stringData: data };
   kubectl(['apply', '-f', '-'], { input: JSON.stringify(secret) });
-  const config = { apiVersion: 'v1', kind: 'ConfigMap', metadata: { name: 'factory-config', namespace: NS }, data: { LIBRARY_HOST_PATH: LIBRARY } };
+  // What Docker can use on this machine (Docker Desktop's VM, or the whole Linux server).
+  const [cpus, mem] = out('docker', ['info', '--format', '{{.NCPU}} {{.MemTotal}}']).split(/\s+/).map(Number);
+  const host = cpus && mem ? { HOST_CPUS: String(cpus), HOST_MEMORY_GB: (mem / 2 ** 30).toFixed(1) } : {};
+  const config = { apiVersion: 'v1', kind: 'ConfigMap', metadata: { name: 'factory-config', namespace: NS }, data: { LIBRARY_HOST_PATH: LIBRARY, ...host } };
   kubectl(['apply', '-f', '-'], { input: JSON.stringify(config) });
 }
 
 function deploy({ restart }) {
   kubectl(['apply', '-f', 'deploy/k8s/factory.yaml'], { quiet: true });
+  // The manifest says 2 workers (the PC's default); a bigger machine sets FACTORY_WORKERS in .env.
+  const workers = Number(readEnv().FACTORY_WORKERS || 0);
+  if (workers) kubectl(['-n', NS, 'scale', 'deployment/worker', `--replicas=${workers}`], { quiet: true });
   say('waiting for the database, central and workers');
   kubectl(['-n', NS, 'rollout', 'status', 'statefulset/factory-db', '--timeout=300s']);
   // The central first, then the workers: a new worker must never talk to an old

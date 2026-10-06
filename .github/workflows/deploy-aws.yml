@@ -1,0 +1,66 @@
+# Push to main → test → update the lecture factory on the AWS server (docs/AWS.md).
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   AWS_SSH_KEY   contents of video-creation-app.pem
+#   AWS_HOST      13.204.84.117 (change it if the instance gets a new IP / an Elastic IP)
+#
+# The server keeps its own .env (API keys, FACTORY_WORKERS); it is never in git or in this workflow.
+# A deploy restarts central and the workers: a lecture that is mid-way is picked up again from its
+# last finished stage (the work volume is kept), so it costs only the stage that was interrupted.
+
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-aws
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-core
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+        env:
+          HVR_CHROME: /usr/bin/google-chrome
+          HVR_FFMPEG: /usr/bin/ffmpeg
+          HVR_FFPROBE: /usr/bin/ffprobe
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/aws.pem
+          chmod 600 ~/.ssh/aws.pem
+          ssh-keyscan -H "${{ secrets.AWS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Upload the code
+        run: |
+          git archive --format=tar.gz -o /tmp/repo.tgz HEAD
+          scp -i ~/.ssh/aws.pem /tmp/repo.tgz "ubuntu@${{ secrets.AWS_HOST }}:/home/ubuntu/repo.tgz"
+      - name: Swap the code in and redeploy
+        run: |
+          ssh -i ~/.ssh/aws.pem "ubuntu@${{ secrets.AWS_HOST }}" 'bash -lc "
+            set -e
+            rm -rf ~/factory.new && mkdir ~/factory.new && tar -xzf ~/repo.tgz -C ~/factory.new
+            cp ~/factory/.env ~/factory.new/.env
+            cd ~/factory.new && npm ci --omit=dev --no-audit --no-fund
+            rm -rf ~/factory.prev && mv ~/factory ~/factory.prev && mv ~/factory.new ~/factory
+            cd ~/factory && npm run factory -- deploy
+            echo ${{ github.sha }} > ~/factory/DEPLOYED_COMMIT
+          "'
+      - name: Check the pods
+        run: |
+          ssh -i ~/.ssh/aws.pem "ubuntu@${{ secrets.AWS_HOST }}" \
+            'kubectl --context kind-lecture-factory -n lecture-factory get pods && curl -sf -o /dev/null http://127.0.0.1:8080/api/state && echo "dashboard OK"'

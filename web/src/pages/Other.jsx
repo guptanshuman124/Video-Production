@@ -297,9 +297,11 @@ export function WorkersPage() {
   const s = useStore();
   const [run, busy] = useAction();
   useTick(2000);
-  const { workers = [], scale, k8s } = s.workers;
+  const { workers = [], scale, k8s, host } = s.workers;
   const online = workers.filter((w) => w.online);
   const desired = scale?.desired ?? online.length;
+  // A rendering worker may use 2.5 GB and ~2 CPUs; the database, central and Kubernetes take ~2.5 GB.
+  const safe = host?.memoryGb ? Math.max(1, Math.min(Math.floor((host.memoryGb - 2.5) / 2.5), Math.floor(host.cpus / 2))) : 2;
   const setScale = (n) => run('scale', () => api('POST', '/api/workers/scale', { replicas: n }), `Workers set to ${n}`);
   return (
     <div className="page">
@@ -314,7 +316,9 @@ export function WorkersPage() {
           </div>
         )}
       </div>
-      {k8s && desired > 2 && <div className="alert alert-amber"><AlertTriangle size={16} /><div>More than 2 parallel lectures can use more memory than Docker Desktop has (8 GB) and freeze the PC while they render. Raise this only when the PC has free RAM.</div></div>}
+      {k8s && desired > safe && <div className="alert alert-amber"><AlertTriangle size={16} /><div>{host?.memoryGb
+        ? `This machine (${host.memoryGb} GB RAM, ${host.cpus} CPUs) fits about ${safe} parallel lectures. More can run out of memory or slow every render down; watch the first few.`
+        : `More than ${safe} parallel lectures can use more memory than Docker has and freeze the machine while they render.`}</div></div>}
       <div className="workers">{workers.map((w) => <WorkerCard key={w.name} w={w} />)}</div>
       {!workers.length && <Card><Empty Icon={Server} title="No workers connected">Worker pods register when they start. Run <span className="mono">kubectl get pods</span> to see them.</Empty></Card>}
     </div>

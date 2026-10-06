@@ -22,7 +22,7 @@ export const meta = {
     use: 'where this idea shows up in real life — an everyday example, an application or a hook — with a picture drawn from `art_prompt`. The picture is one plain scene: never a diagram, a labelled structure, a process, an experiment set-up, a map or a graph (those stay on NCERT figures)',
     image: 'none',
     fields: {
-      art_prompt: { required: true, words: 45, note: 'the picture, as one plain concrete scene: subject, setting, view, light — only what can be seen; no text, labels, arrows or diagram-like content; no named real people; an Indian setting when people appear. The picture sets the real-life scene; never rely on it to show a scientific effect precisely (light bending, colours of a spectrum, a reaction) — that is taught with NCERT figures and words' },
+      art_prompt: { required: true, words: 45, note: 'the picture, as one plain concrete scene: subject, setting, view, light — only what can be seen; no text, labels, arrows or diagram-like content; no named real people; an Indian setting when people appear. Leave out objects that always carry writing or numbers (measuring tapes, rulers, clocks, books and bookshelves, newspapers, screens and phones, maps, signs, number plates, price tags, banknotes, meters and gauges): the picture checker rejects any visible marking, so such a scene is paid for and thrown away — show the idea through objects with plain surfaces instead. The picture sets the real-life scene; never rely on it to show a scientific effect precisely (light bending, colours of a spectrum, a reaction) — that is taught with NCERT figures and words' },
       points: { required: true, items: [2, 3], words: 16 },
     },
     reveal: [{ field: 'points', each: true, cue: 'cues.points', hint: 'this point appears beside the picture — first say in a line what the picture shows, then connect it to this point' }],
@@ -43,9 +43,17 @@ export const schema = {
 // labels, diagrams, maps, charts). The writer is sent back to rewrite.
 const DIAGRAM_WORDS = /\b(labels?|label{1,2}ed|diagrams?|charts?|graphs?|infographics?|flow ?charts?|cross[- ]?sections?|cutaways?|schematics?|maps?|arrows?|captions?|texts?|writing|written|formulas?|equations?|signboards?|posters?|logos?|watermarks?)\b/i;
 
+// Objects the image model always draws with markings (digits on a tape, titles on
+// book spines, badges on cars). The vision check rejects any visible marking, so
+// both paid attempts were thrown away (2026-10: 5 of 10 lectures with pictures).
+const MARKED_OBJECTS = /\b(measuring tapes?|tape measures?|rulers?|metre scales?|meter scales?|clocks?|wall ?clocks?|watch faces?|calendars?|book spines?|bookshel(f|ves)|bookcases?|newspapers?|magazines?|computer screens?|monitors?|laptops?|(smart)?phones?|televisions?|tvs?|globes?|road signs?|signage|shop ?fronts?|storefronts?|number ?plates?|licen[cs]e ?plates?|price ?tags?|banknotes?|currency notes?|thermometers?|gauges?|speedometers?|keyboards?|calculators?|blackboards?|whiteboards?|chalkboards?|scoreboards?|jerseys?|packets?|packaging|bottle labels?|stopwatch(es)?)\b/i;
+
 export function check(d) {
-  const m = String(d.art_prompt || '').match(DIAGRAM_WORDS);
-  return m ? [`art_prompt asks for "${m[0]}": describe a plain scene only (no text, labels, diagrams, maps, charts or arrows in the picture)`] : [];
+  const p = String(d.art_prompt || '');
+  const m = p.match(DIAGRAM_WORDS);
+  if (m) return [`art_prompt asks for "${m[0]}": describe a plain scene only (no text, labels, diagrams, maps, charts or arrows in the picture)`];
+  const o = p.match(MARKED_OBJECTS);
+  return o ? [`art_prompt shows "${o[0]}", which the image model always draws with numbers or writing (the picture would be rejected): show the idea with objects that have plain, unmarked surfaces`] : [];
 }
 
 export default function Illustration(d, { scene } = {}) {

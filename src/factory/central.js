@@ -223,9 +223,12 @@ async function workersState() {
   return {
     // Pods get new names on every redeploy: only live workers are shown.
     workers: rows.map((w) => ({ ...w, online: new Date(w.last_seen).getTime() >= cutoff })).filter((w) => w.online),
-    scale, k8s: k8s.available(),
+    scale, k8s: k8s.available(), host: HOST,
   };
 }
+// The machine the cluster runs on (set by deploy/factory.mjs from `docker info`):
+// the Workers page warns from these instead of assuming the PC's 8 GB.
+const HOST = { memoryGb: Number(process.env.HOST_MEMORY_GB) || null, cpus: Number(process.env.HOST_CPUS) || null };
 let scaleCache = { at: 0, v: null };
 async function getScaleCached() {
   if (Date.now() - scaleCache.at < 5000) return scaleCache.v;
