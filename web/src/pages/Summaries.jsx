@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { PlayCircle, Pause, Play, RotateCcw, ChevronsUp, XCircle, RefreshCw, Trash2, PlusCircle, Clapperboard, Search, BookOpen, CircleSlash, AlertTriangle, CheckCircle2, Loader2, Circle, CircleDot, Cloud, FolderOpen, ExternalLink, Download, CloudUpload } from 'lucide-react';
 import { api, allChapters, countSummaries, summaryStatus, summaryStageLabel, SUMMARY_STAGES, useStore, useTick } from '../store.js';
 import { Btn, Card, Drawer, Empty, Modal, Progress, StackBar, StatusChip, ActivityLog, fmtAgo, fmtBytes, fmtDur, fmtElapsed, fmtMin, pct, useAction, useToast } from '../components/ui.jsx';
-import { StorageBadge, CostBreakdown } from '../components/lecture.jsx';
+import { StorageBadge, CostBreakdown, YoutubeButton } from '../components/lecture.jsx';
 
 export const SummaryCtx = createContext({ openSummary: () => {}, playSummary: () => {} });
 const useSummaryApp = () => useContext(SummaryCtx);
@@ -254,9 +254,12 @@ export function SummaryDrawer({ id, onClose }) {
               <StorageBadge v={video} provider={s.storage?.provider} />
               {video.remote_url && <a className="link small" href={video.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={12} /> Open in SharePoint</a>}
               {video.storage === 'failed' && <Btn size="sm" Icon={CloudUpload} onClick={() => api('POST', `/api/summary-videos/${id}/upload`)}>Retry upload</Btn>}
+              <YoutubeButton id={id} v={video} size="sm" summary />
             </div>
             <div className="mono small">{video.storage === 'onedrive' ? `${s.storage?.site || 'SharePoint'} › ${s.storage?.library || 'Documents'} › ${s.roots.summaries}/${video.path}` : `${s.roots.summaries}/${video.path}`}</div>
             {video.storage === 'failed' && video.remote_error && <div className="t-red small">{video.remote_error}</div>}
+            {video.yt_status === 'failed' && video.yt_error && <div className="t-red small">YouTube: {video.yt_error}</div>}
+            {video.yt_status === 'done' && video.yt_warning && <div className="t-amber small">YouTube: {video.yt_warning}</div>}
             <div className="muted small">{fmtDur(video.duration_s)} · {fmtBytes(video.bytes)} · {video.slides ?? '—'} slides in {video.parts ?? '—'} parts · made {fmtAgo(video.created_at)}</div>
           </div>
         </div>
@@ -323,6 +326,7 @@ export function SummaryPlayer({ id, onClose }) {
           <div className="row-actions">
             <StorageBadge v={v} provider={s.storage?.provider} />
             {v.remote_url && <a className="btn btn-default" href={v.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={15} /><span>SharePoint</span></a>}
+            <YoutubeButton id={id} v={v} summary />
             <a className="btn btn-default" href={`/api/summary-videos/${id}/file`} download={`${v.path.split('/').pop()}`}><Download size={15} /><span>Download</span></a>
             <Btn onClick={() => { onClose(); openSummary(id); }}>Details</Btn>
           </div>

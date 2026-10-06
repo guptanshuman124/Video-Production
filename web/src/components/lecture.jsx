@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Play, RotateCcw, RefreshCw, XCircle, ChevronsUp, PlusCircle, Trash2, FolderOpen, AlertTriangle, CheckCircle2, CircleDot, Loader2, Circle, Download, Cloud, CloudUpload, CloudOff, HardDrive, ExternalLink } from 'lucide-react';
+import { Play, RotateCcw, RefreshCw, XCircle, ChevronsUp, PlusCircle, Trash2, FolderOpen, AlertTriangle, CheckCircle2, CircleDot, Loader2, Circle, Download, Cloud, CloudUpload, CloudOff, HardDrive, ExternalLink, Youtube } from 'lucide-react';
 import { api, STAGES, lectureStatus, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Drawer, Modal, Progress, StatusChip, ActivityLog, fmtAgo, fmtDur, fmtBytes, fmtElapsed, fmtUsd, useAction, useToast } from './ui.jsx';
 
@@ -18,6 +18,32 @@ export function StorageBadge({ v, provider }) {
   }
   if (st === 'failed') return <span className="chip chip-sm tone-red" title={v.remote_error || ''}><CloudOff size={12} />Upload failed</span>;
   return <span className="chip chip-sm tone-gray"><HardDrive size={12} />{provider === 'onedrive' ? 'Local · upload pending' : 'Local'}</span>;
+}
+
+// YouTube, beside the SharePoint button: upload, its progress, the link once it is there,
+// or a retry after a failure. size 'sm' for table rows; summary: a chapter summary video (id = module_id).
+const YT_STEP = { download: 'Fetching from OneDrive', upload: 'Uploading', thumbnail: 'Thumbnail', playlist: 'Playlist' };
+export function YoutubeButton({ id, v, size, summary = false }) {
+  const s = useStore();
+  const [run, busy] = useAction();
+  const yt = s.youtube || {};
+  if (!v || !yt.configured) return null;
+  if (v.yt_status === 'done' && v.yt_video_id) {
+    return <a className={`btn btn-default ${size ? `btn-${size}` : ''}`} href={`https://youtu.be/${v.yt_video_id}`} target="_blank" rel="noreferrer" title={v.yt_warning || 'Open on YouTube'}><Youtube size={size === 'sm' ? 13 : 15} /><span>YouTube</span></a>;
+  }
+  if (v.yt_status === 'uploading' || v.yt_status === 'queued') {
+    const p = v.yt?.step === 'upload' && v.yt.total ? ` ${Math.round((v.yt.done / v.yt.total) * 100)}%` : '';
+    return <Btn size={size} Icon={Youtube} disabled>{v.yt_status === 'queued' ? 'YouTube: waiting' : `${YT_STEP[v.yt?.step] || 'YouTube'}${p}`}</Btn>;
+  }
+  const failed = v.yt_status === 'failed';
+  const ready = v.storage === 'onedrive' || v.storage === 'local' || v.storage === 'failed';
+  return (
+    <Btn size={size} Icon={Youtube} busy={busy === 'yt'} disabled={!yt.connected || !ready}
+      title={!yt.connected ? 'Connect the YouTube channel first (Settings → YouTube)' : failed ? v.yt_error || '' : `Upload as ${yt.privacy} to ${yt.channel?.title || 'the channel'}, into the ${summary ? 'subject\'s chapter-summaries' : 'chapter'} playlist`}
+      onClick={() => run('yt', () => api('POST', `/api/${summary ? 'summary-videos' : 'videos'}/${id}/youtube`), (r) => (r.already ? 'Already on YouTube' : 'Queued for YouTube'))}>
+      {failed ? 'Retry YouTube' : 'Upload to YouTube'}
+    </Btn>
+  );
 }
 
 // Open the lecture drawer / the player from anywhere.
@@ -185,11 +211,14 @@ export function LectureDrawer({ id, onClose }) {
               <StorageBadge v={video} provider={s.storage?.provider} />
               {video.remote_url && <a className="link small" href={video.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={12} /> Open in SharePoint</a>}
               {video.storage === 'failed' && <Btn size="sm" Icon={CloudUpload} onClick={() => api('POST', `/api/videos/${id}/upload`)}>Retry upload</Btn>}
+              <YoutubeButton id={id} v={video} size="sm" />
             </div>
             <div className="mono small">{video.storage === 'onedrive'
               ? `${s.storage?.site || 'SharePoint'} › ${s.storage?.library || 'Documents'} › ${s.storage?.root || 'CBSE Lectures'}/${video.path}`
               : hostPath(s.library, `${s.roots.lectures}/${video.path}`)}</div>
             {video.storage === 'failed' && video.remote_error && <div className="t-red small">{video.remote_error}</div>}
+            {video.yt_status === 'failed' && video.yt_error && <div className="t-red small">YouTube: {video.yt_error}</div>}
+            {video.yt_status === 'done' && video.yt_warning && <div className="t-amber small">YouTube: {video.yt_warning}</div>}
             <div className="muted small">{fmtDur(video.duration_s)} · {fmtBytes(video.bytes)} · {video.slides ?? '—'} slides · made {fmtAgo(video.created_at)}{video.uploaded_at ? ` · uploaded ${fmtAgo(video.uploaded_at)}` : ''}</div>
           </div>
         </div>
@@ -255,6 +284,7 @@ export function PlayerModal({ id, onClose }) {
           <div className="row-actions">
             <StorageBadge v={v} provider={s.storage?.provider} />
             {v.remote_url && <a className="btn btn-default" href={v.remote_url} target="_blank" rel="noreferrer"><ExternalLink size={15} /><span>SharePoint</span></a>}
+            <YoutubeButton id={id} v={v} />
             <a className="btn btn-default" href={`/api/videos/${id}/file`} download={`${v.path.split('/').pop()}`}><Download size={15} /><span>Download</span></a>
             <Btn onClick={() => { onClose(); openLecture(id); }}>Details</Btn>
           </div>

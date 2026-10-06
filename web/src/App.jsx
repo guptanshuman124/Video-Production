@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { LayoutDashboard, GraduationCap, ListOrdered, AlertTriangle, Film, Server, Database, Wifi, WifiOff, Loader2, Clapperboard } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, ListOrdered, AlertTriangle, Film, Server, Database, Wifi, WifiOff, Loader2, Clapperboard, Youtube } from 'lucide-react';
 import { allLectures, countLectures, allChapters, countSummaries, useStore } from './store.js';
 import { ToastProvider } from './components/ui.jsx';
 import { AppCtx, LectureDrawer, PlayerModal } from './components/lecture.jsx';
 import Overview from './pages/Overview.jsx';
 import { ClassesPage, ClassDetail } from './pages/Classes.jsx';
-import { QueuePage, AttentionPage, LibraryPage, WorkersPage, SourcePage } from './pages/Other.jsx';
+import { QueuePage, AttentionPage, LibraryPage, WorkersPage, SourcePage, YoutubePage } from './pages/Other.jsx';
 import { SummariesPage, SummaryDrawer, SummaryPlayer, SummaryCtx } from './pages/Summaries.jsx';
 
 function useHash() {
@@ -19,6 +19,9 @@ function Sidebar({ route }) {
   const c = useMemo(() => countLectures(s, allLectures(s)), [s.version]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = (s.workers.workers || []).filter((w) => w.online).length;
   const sc = useMemo(() => countSummaries(s, allChapters(s)), [s.version]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ytAll = [...Object.values(s.videos), ...Object.values(s.summaryVideos || {})];
+  const ytBusy = ytAll.filter((v) => v.yt_status === 'queued' || v.yt_status === 'uploading').length;
+  const ytFailed = ytAll.filter((v) => v.yt_status === 'failed').length;
   const items = [
     ['/', 'Overview', LayoutDashboard],
     ['/classes', 'Classes', GraduationCap],
@@ -26,6 +29,7 @@ function Sidebar({ route }) {
     ['/attention', 'Needs attention', AlertTriangle, c.failed || null, 'red'],
     ['/library', 'Library', Film, c.done || null, 'green'],
     ['/summaries', 'Summary videos', Clapperboard, sc.queued + sc.running || null, 'violet'],
+    ...(s.youtube?.configured ? [['/youtube', 'YouTube', Youtube, ytBusy || ytFailed || null, ytFailed && !ytBusy ? 'red' : 'violet']] : []),
     ['/workers', 'Workers', Server, online || null, 'blue'],
     ['/source', 'Source & settings', Database],
   ];
@@ -77,6 +81,7 @@ export default function App() {
   else if (route.startsWith('/library')) page = <LibraryPage />;
   else if (sm) page = <SummariesPage classNo={sm[1] ? Number(sm[1]) : null} />;
   else if (route.startsWith('/workers')) page = <WorkersPage />;
+  else if (route.startsWith('/youtube')) page = <YoutubePage />;
   else if (route.startsWith('/source')) page = <SourcePage />;
   else page = <Overview />;
 

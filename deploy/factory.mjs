@@ -11,6 +11,7 @@
 // Secrets come from .env: OPENAI_API_KEY, SARVAM_API_KEY, TEXTBOOK_DB_URL (the prepzy-mysql
 // URL on this PC; the cluster reaches it through host.docker.internal), and for video storage on
 // OneDrive / SharePoint MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, SHAREPOINT_SITE_URL.
+// YouTube publishing (optional): YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_PRIVACY.
 // After changing .env run `npm run factory -- deploy`.
 // FACTORY_LIBRARY overrides where videos are saved (default: <home>\Videos\Prepzy Lectures).
 // FACTORY_WORKERS in .env sets how many lectures run at once (default 2; the AWS c7i.2xlarge runs 3–4).
@@ -56,7 +57,8 @@ function kindBin() {
 }
 
 // Copied from .env into the cluster Secret (OneDrive ones are optional: without them videos stay local).
-const SECRET_KEYS = ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'GOOGLE_TTS_CREDENTIALS_B64', 'MS_TENANT_ID', 'MS_CLIENT_ID', 'MS_CLIENT_SECRET', 'SHAREPOINT_SITE_URL', 'SHAREPOINT_ROOT', 'LIBRARY_KEEP_LOCAL'];
+const SECRET_KEYS = ['OPENAI_API_KEY', 'SARVAM_API_KEY', 'GOOGLE_TTS_CREDENTIALS_B64', 'MS_TENANT_ID', 'MS_CLIENT_ID', 'MS_CLIENT_SECRET', 'SHAREPOINT_SITE_URL', 'SHAREPOINT_ROOT', 'LIBRARY_KEEP_LOCAL',
+  'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_REDIRECT_URI', 'YOUTUBE_PRIVACY', 'YOUTUBE_KIDS_CLASSES'];
 
 function readEnv() {
   const f = path.join(ROOT, '.env');

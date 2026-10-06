@@ -68,6 +68,25 @@ sudo ufw allow from 172.18.0.0/16 to any port 3307 proto tcp    # kind subnet: d
 
 The AWS security group needs inbound 22 and 80 as well; never 8080 or 3307.
 
+## YouTube publishing
+
+"Upload to YouTube" (Library list, the player, the lecture drawer) takes a stored video from OneDrive
+and publishes it to the connected channel (`src/factory/youtube.js`): title / description / tags /
+category Education / languages, the title slide as thumbnail, and the chapter playlist (one per
+OneDrive chapter folder, created on first use, lectures in order). One upload at a time; progress
+and the YouTube id are kept on the `videos` row, so a restart or retry carries on.
+
+- `.env`: `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET` (OAuth client "web", project
+  video-production-510804), `YOUTUBE_PRIVACY` (private | unlisted | public, default private),
+  optional `YOUTUBE_KIDS_CLASSES` (default `6,7,8`: marked "made for kids").
+- Connect once: `ssh -L 8080:127.0.0.1:8080 factory-aws`, open http://localhost:8080 → Settings →
+  YouTube → Connect channel, sign in as an owner/manager of the channel and pick it. Google returns
+  to `http://localhost:8080/oauth2callback` (the client's redirect URI), which only the tunnel reaches.
+  The refresh token is kept in the factory DB (`settings.youtube`).
+- Limits: the API's default quota is 10,000 units/day, an upload costs ~1,700 → about 6 videos a day
+  until Google raises it. Videos uploaded by an API project that has not passed YouTube's audit stay
+  private. Custom thumbnails and videos over 15 minutes need a phone-verified channel.
+
 ## Daily use
 
 - Dashboard: http://13.204.84.117 — nginx on port 80 with a login (user `prepzy`, password in

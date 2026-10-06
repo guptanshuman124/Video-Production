@@ -31,9 +31,10 @@ const RANK = { fail: 3, running: 2, warn: 1, pass: 0 };
 const MAX_CRASH_RETRIES = 2;
 const WORKER_LOST_S = 180;    // summaries render for a long time; heartbeats keep coming meanwhile
 const COLS = 'module_id, status, stage, progress, from_stage, priority, attempts, worker, error_code, error_stage, error_message, cost_usd, queued_at, started_at, finished_at, stages';
-const VIDEO_COLS = 'module_id, course_id, class_no, path, bytes, duration_s, width, height, slides, parts, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at';
+const VIDEO_COLS = 'module_id, course_id, class_no, path, bytes, duration_s, width, height, slides, parts, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at';
 
-export function summaryService({ getDb, broadcast, route, getCatalog, library, keepLocal, onedrive, validateVideo, streamFile, log }) {
+// ytProgressOf(id): the central's YouTube upload progress for this summary video (central.js publishes them).
+export function summaryService({ getDb, broadcast, route, getCatalog, library, keepLocal, onedrive, validateVideo, streamFile, log, ytProgressOf = () => null }) {
   const db = () => getDb();
   const now = () => new Date();
   const SUMMARY_ROOT = onedrive.SUMMARY_ROOT;
@@ -50,9 +51,14 @@ export function summaryService({ getDb, broadcast, route, getCatalog, library, k
     await db().query('INSERT INTO summary_events (module_id, at, level, stage, message) VALUES (?, ?, ?, ?, ?)', [id, now(), level, stage || null, String(message).slice(0, 4000)]);
     broadcast('summary-log', { module_id: id, at: Date.now(), level, stage, message: String(message).slice(0, 600) });
   };
+  const withProgress = (v) => {
+    let out = uploading.has(v.module_id) ? { ...v, upload: uploading.get(v.module_id) } : v;
+    if (ytProgressOf(v.module_id)) out = { ...out, yt: ytProgressOf(v.module_id) };
+    return out;
+  };
   const videoRow = async (id) => {
     const [[v]] = await db().query(`SELECT ${VIDEO_COLS} FROM summary_videos WHERE module_id = ?`, [id]);
-    return v ? (uploading.has(id) ? { ...v, upload: uploading.get(id) } : v) : null;
+    return v ? withProgress(v) : null;
   };
   const queueState = async () => (await getSetting(db(), 'summary_queue', 'running')) || 'running';
 
@@ -491,7 +497,7 @@ export function summaryService({ getDb, broadcast, route, getCatalog, library, k
   route('GET', '/api/summaries', async () => {
     const [rows] = await db().query(`SELECT ${COLS} FROM summaries`);
     const [videos] = await db().query(`SELECT ${VIDEO_COLS} FROM summary_videos`);
-    return { summaries: rows.map(compact), videos: videos.map((v) => (uploading.has(v.module_id) ? { ...v, upload: uploading.get(v.module_id) } : v)), queue: await queueState(), root: SUMMARY_ROOT };
+    return { summaries: rows.map(compact), videos: videos.map(withProgress), queue: await queueState(), root: SUMMARY_ROOT };
   });
   route('GET', '/api/summaries/:id', async ({ id }) => {
     const [[j]] = await db().query('SELECT * FROM summaries WHERE module_id = ?', [Number(id)]);
@@ -592,5 +598,8 @@ export function summaryService({ getDb, broadcast, route, getCatalog, library, k
     for (const p of pending) queueUpload(p.module_id);
   }
 
-  return { next, claim, nextPiece, claimPiece, receiveVideo, serveFile, sweep, resumeUploads };
+  // For the central's YouTube publishing: the row, the local file path, the activity log.
+  const fileOf = (rel) => path.join(ROOT, ...rel.split('/'));
+
+  return { next, claim, nextPiece, claimPiece, receiveVideo, serveFile, sweep, resumeUploads, videoRow, fileOf, event };
 }

@@ -12,6 +12,8 @@
 //   - serves the dashboard (web/dist) and live updates (Server-Sent Events)
 //   - summary videos (one per chapter): their own queue, rows, library root and
 //     routes in summaries.js; a worker's claim gets a lecture or a summary
+//   - on request, publishes a stored lecture to YouTube (youtube.js): from OneDrive,
+//     into its chapter's playlist
 //
 // env: PORT, FACTORY_DB_URL, TEXTBOOK_DB_URL, SOURCE_DB_URL, LIBRARY_DIR, WEB_DIR
 
@@ -26,7 +28,12 @@ import { syncSource } from './sync.js';
 import { probeAll } from '../qa.js';
 import * as k8s from './k8s.js';
 import * as onedrive from './onedrive.js';
+import * as youtube from './youtube.js';
 import { summaryService } from './summaries.js';
+import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { Readable } from 'node:stream';
+import { FFMPEG } from '../tools.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const PORT = Number(process.env.PORT || 8080);
@@ -415,6 +422,209 @@ async function loadStorageInfo() {
   }
 }
 
+// ---- YouTube ----------------------------------------------------------------------------
+// "Upload to YouTube" on a stored lecture or summary video (src/factory/youtube.js). One upload
+// at a time: the file comes from the library while a local copy exists, else from OneDrive into
+// LIBRARY/.youtube; then title slide → thumbnail; then the playlist at the right position —
+// lectures: one playlist per OneDrive chapter folder, in lecture order; summaries: one per
+// class + subject (+ book), in chapter order. Every step is saved on the row (yt_*), so a restart
+// or a retry carries on instead of uploading the same video twice.
+const ytQueue = [];              // 'lecture:<lecture_id>' | 'summary:<module_id>'
+const ytProgress = new Map();    // same key -> { step, done, total }
+let ytBusy = false;
+let ytAuth = null;               // settings.youtube: { refresh_token, channel, connected_at }
+const ytStates = new Map();      // OAuth state -> expiry (the consent page round trip)
+
+async function loadYoutubeAuth() {
+  ytAuth = await getSetting(db, 'youtube');
+  youtube.use(ytAuth?.refresh_token);
+}
+const youtubeInfo = () => ({
+  configured: youtube.configured(), connected: !!ytAuth?.refresh_token, channel: ytAuth?.channel || null,
+  connected_at: ytAuth?.connected_at || null, privacy: youtube.PRIVACY, kids: process.env.YOUTUBE_KIDS_CLASSES || 'all',
+  redirect: youtube.REDIRECT, error: ytAuth?.error || null,
+  queue: [...ytQueue],             // waiting, in upload order ('lecture:<id>' | 'summary:<id>')
+});
+
+// The two kinds of video: where their rows, files, logs and live updates are, and how each
+// is described and ordered on YouTube.
+const YT = {
+  lecture: {
+    table: 'videos', key: 'lecture_id',
+    push: async (id) => broadcast('video', await videoRow(id)),
+    row: (id) => videoRow(id),
+    file: (rel) => lectureFile(rel),
+    log: (id, level, msg) => event(id, level, 'youtube', msg),
+    // { folder: playlist key (the OneDrive chapter folder), playlist: its text, meta(playlistId), order }
+    async describe(id, v) {
+      const l = catalog.lectures.get(id);
+      if (!l) throw new Error('this lecture is no longer in the catalog');
+      let input = null;
+      try { input = await inputFor(l); } catch (e) { log(`youtube lecture ${id}: no source input (${e.message}); plain description`); }
+      return { folder: path.posix.dirname(v.path), playlist: youtube.playlistFor(l), meta: (pid) => youtube.videoMeta(l, input, pid), order: l.lecture_no };
+    },
+    orderOf: (id) => catalog.lectures.get(id)?.lecture_no,
+  },
+  summary: {
+    table: 'summary_videos', key: 'module_id',
+    push: async (id) => broadcast('summary-video', await summaries.videoRow(id)),
+    row: (id) => summaries.videoRow(id),
+    file: (rel) => summaries.fileOf(rel),
+    log: (id, level, msg) => summaries.event(id, level, 'youtube', msg),
+    async describe(id, v) {
+      const ch = catalog.chapters.get(id);
+      if (!ch) throw new Error('this chapter is no longer in the catalog');
+      let language = null;
+      try { language = (await inputFor(catalog.lectures.get(ch.lecture_ids[0]))).narration_language; } catch { /* Hinglish */ }
+      // The chapter's own lecture playlist, when its lectures are on YouTube: linked from the description.
+      const chapterFolder = path.posix.dirname(v.path);
+      const [[lp]] = await db.query('SELECT playlist_id FROM youtube_playlists WHERE folder = ?', [chapterFolder]);
+      return {
+        folder: `summaries:${path.posix.dirname(chapterFolder)}`, playlist: youtube.summaryPlaylistFor(ch),
+        meta: (pid) => youtube.summaryMeta(ch, language, pid, lp?.playlist_id), order: ch.chapter_no,
+      };
+    },
+    orderOf: (id) => catalog.chapters.get(id)?.chapter_no,
+  },
+};
+
+async function queueYoutube(kind, id) {
+  const K = YT[kind];
+  const v = await K.row(id);
+  if (!v) throw Object.assign(new Error('no stored video'), { status: 404 });
+  if (!youtube.configured()) throw Object.assign(new Error('YouTube is not set up (YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET in .env)'), { status: 400 });
+  if (!ytAuth?.refresh_token) throw Object.assign(new Error('connect the YouTube channel first (Settings → YouTube)'), { status: 400 });
+  if (v.yt_status === 'done') return { already: true, video_id: v.yt_video_id };
+  const key = `${kind}:${id}`;
+  if (!ytQueue.includes(key) && !ytProgress.has(key)) {
+    ytQueue.push(key);
+    await db.query(`UPDATE ${K.table} SET yt_status='queued', yt_error=NULL WHERE ${K.key}=?`, [id]);
+    await K.push(id);
+  }
+  pumpYoutube();
+  return { queued: true, position: ytQueue.indexOf(key) + 1 };
+}
+
+function pumpYoutube() {
+  if (ytBusy || !ytQueue.length) return;
+  ytBusy = true;
+  const key = ytQueue.shift();
+  const [kind, id] = key.split(':');
+  youtubeOne(kind, Number(id)).catch((e) => log(`youtube ${key}: ${e.message}`)).finally(() => { ytProgress.delete(key); ytBusy = false; pumpYoutube(); });
+}
+
+async function ytStep(kind, id, step, done = 0, total = 0) {
+  ytProgress.set(`${kind}:${id}`, { step, done, total });
+  await YT[kind].push(id);
+}
+
+async function youtubeOne(kind, id) {
+  const K = YT[kind];
+  const key = `${kind}:${id}`;
+  const [[v]] = await db.query(`SELECT path, remote_id, yt_video_id FROM ${K.table} WHERE ${K.key} = ?`, [id]);
+  if (!v) return;
+  await db.query(`UPDATE ${K.table} SET yt_status='uploading', yt_error=NULL WHERE ${K.key}=?`, [id]);
+  const tmpDir = path.join(LIBRARY, '.youtube');
+  let tmp = null;
+  try {
+    const warnings = [];
+    const d = await K.describe(id, v);
+
+    // 1. The playlist (made first, so the description can link to it).
+    let [[pl]] = await db.query('SELECT playlist_id FROM youtube_playlists WHERE folder = ?', [d.folder]);
+    if (pl && !(await youtube.playlistExists(pl.playlist_id))) {
+      await db.query('DELETE FROM youtube_playlists WHERE folder = ?', [d.folder]);
+      pl = null;
+    }
+    let playlistId = pl?.playlist_id;
+    if (!playlistId) {
+      await ytStep(kind, id, 'playlist');
+      playlistId = await youtube.createPlaylist(d.playlist.title, d.playlist.description);
+      await db.query('INSERT INTO youtube_playlists (folder, playlist_id, title, created_at) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE playlist_id=VALUES(playlist_id), title=VALUES(title)', [d.folder, playlistId, d.playlist.title, now()]);
+      await K.log(id, 'info', `created playlist "${d.playlist.title}"`);
+    }
+
+    // 2. Upload (skipped when an earlier attempt already got the video up): the local copy,
+    //    else a download from OneDrive.
+    let videoId = v.yt_video_id;
+    if (!videoId) {
+      const meta = d.meta(playlistId);
+      let file = K.file(v.path);
+      if (!fs.existsSync(file)) {
+        if (!v.remote_id || !onedrive.configured()) throw new Error('the video is neither in the library nor on OneDrive');
+        await ytStep(kind, id, 'download');
+        fs.mkdirSync(tmpDir, { recursive: true });
+        tmp = path.join(tmpDir, `${kind}-${id}.mp4`);
+        const r = await fetch(await onedrive.downloadUrl(v.remote_id));
+        if (!r.ok) throw new Error(`OneDrive download failed: HTTP ${r.status}`);
+        await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(tmp));
+        file = tmp;
+      }
+      let last = 0;
+      videoId = await youtube.uploadVideo(file, meta, {
+        onProgress: (done, total) => {
+          ytProgress.set(key, { step: 'upload', done, total });
+          if (Date.now() - last > 1000 || done === total) { last = Date.now(); broadcast('ytupload', { kind, id, step: 'upload', done, total }); }
+        },
+      });
+      await db.query(`UPDATE ${K.table} SET yt_video_id=? WHERE ${K.key}=?`, [videoId, id]);
+      await K.log(id, 'info', `uploaded to YouTube: https://youtu.be/${videoId} ("${meta.title}", ${youtube.PRIVACY}${meta.kids ? ', made for kids — comments off' : ''})`);
+
+      // 3. Thumbnail: the title slide (a refusal — unverified channel — is only a warning).
+      await ytStep(kind, id, 'thumbnail');
+      const thumb = path.join(tmpDir, `${kind}-${id}.jpg`);
+      fs.mkdirSync(tmpDir, { recursive: true });
+      const ff = spawnSync(FFMPEG, ['-y', '-ss', '4', '-i', file, '-frames:v', '1', '-vf', 'scale=1280:720', '-q:v', '3', thumb], { encoding: 'utf8' });
+      if (ff.status === 0 && fs.existsSync(thumb)) {
+        try { await youtube.setThumbnail(videoId, thumb); } catch (e) { warnings.push(`thumbnail not set (${e.message}) — custom thumbnails need a verified channel`); }
+        fs.rmSync(thumb, { force: true });
+      } else warnings.push('thumbnail not made (ffmpeg could not read the video)');
+    }
+
+    // 4. Playlist position: after the items with a lower lecture / chapter number already in it.
+    await ytStep(kind, id, 'playlist');
+    const [inList] = await db.query(`SELECT ${K.key} AS id FROM ${K.table} WHERE yt_playlist_id = ? AND yt_status = 'done' AND ${K.key} <> ?`, [playlistId, id]);
+    const position = inList.filter((r) => (K.orderOf(r.id) ?? 1e9) < d.order).length;
+    await youtube.addToPlaylist(playlistId, videoId, position);
+
+    await db.query(`UPDATE ${K.table} SET yt_status='done', yt_playlist_id=?, yt_error=NULL, yt_warning=?, yt_uploaded_at=? WHERE ${K.key}=?`,
+      [playlistId, warnings.join('; ') || null, now(), id]);
+    if (warnings.length) await K.log(id, 'warn', warnings.join('; '));
+    await K.log(id, 'info', `added to the playlist (position ${position + 1})`);
+    log(`youtube: ${key} → ${videoId}`);
+  } catch (e) {
+    await db.query(`UPDATE ${K.table} SET yt_status='failed', yt_error=? WHERE ${K.key}=?`, [e.message.slice(0, 2000), id]);
+    await K.log(id, 'error', `YouTube upload failed: ${e.message.slice(0, 600)}`);
+    if (/revoked|expired|not connected/.test(e.message)) ytAuth = { ...(ytAuth || {}), error: e.message };
+  } finally {
+    if (tmp) fs.rmSync(tmp, { force: true });
+    ytProgress.delete(key);
+    await K.push(id);
+  }
+}
+
+// The consent page's return: swap the code for the channel's refresh token.
+async function youtubeCallback(url, res) {
+  const page = (title, body) => {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><body style="font:16px system-ui;max-width:560px;margin:60px auto;padding:0 16px"><h2>${title}</h2><p>${body}</p><p><a href="/">Back to the dashboard</a></p></body>`);
+  };
+  const state = url.searchParams.get('state');
+  if (url.searchParams.get('error')) return page('YouTube not connected', `Google said: ${url.searchParams.get('error')}`);
+  if (!state || !ytStates.has(state) || ytStates.get(state) < Date.now()) return page('YouTube not connected', 'This sign-in link has expired. Start again from Settings → YouTube.');
+  ytStates.delete(state);
+  try {
+    const r = await youtube.connect(url.searchParams.get('code'));
+    ytAuth = { refresh_token: r.refresh_token, channel: r.channel, connected_at: now().toISOString() };
+    await setSetting(db, 'youtube', ytAuth);
+    log(`youtube: connected to ${r.channel.title} (${r.channel.id})`);
+    broadcast('refresh', { what: 'state' });
+    return page('YouTube connected', `Videos will be uploaded to <b>${String(r.channel.title).replace(/</g, '&lt;')}</b>. You can close this tab.`);
+  } catch (e) {
+    return page('YouTube not connected', String(e.message).replace(/</g, '&lt;'));
+  }
+}
+
 // status.json from the worker ('lecture/<stage>': {status,…}) folded into the dashboard's stage map.
 function mergeStages(current, fromWorker) {
   const out = { ...(current || {}) };
@@ -527,8 +737,12 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-const VIDEO_COLS = 'lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at';
-const withUpload = (v) => (uploading.has(v.lecture_id) ? { ...v, upload: uploading.get(v.lecture_id) } : v);
+const VIDEO_COLS = 'lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at';
+const withUpload = (v) => {
+  let out = uploading.has(v.lecture_id) ? { ...v, upload: uploading.get(v.lecture_id) } : v;
+  if (ytProgress.has(`lecture:${v.lecture_id}`)) out = { ...out, yt: ytProgress.get(`lecture:${v.lecture_id}`) };
+  return out;
+};
 async function videoRow(id) {
   const [[v]] = await db.query(`SELECT ${VIDEO_COLS} FROM videos WHERE lecture_id = ?`, [id]);
   return v ? withUpload(v) : null;
@@ -566,7 +780,7 @@ const route = (method, pattern, fn) => routes.push({ method, re: new RegExp(`^${
 // Summary videos: queue, worker API, library and routes of their own (summaries.js).
 const summaries = summaryService({
   getDb: () => db, broadcast, route, getCatalog: () => catalog, library: LIBRARY, keepLocal: KEEP_LOCAL,
-  onedrive, validateVideo, streamFile, log,
+  onedrive, validateVideo, streamFile, log, ytProgressOf: (id) => ytProgress.get(`summary:${id}`),
 });
 
 // Dashboard data
@@ -577,7 +791,7 @@ route('GET', '/api/state', async () => {
   const [queues] = await db.query('SELECT class_no, state FROM class_queues');
   return {
     jobs: jobs.map(compact), videos, queues, workers: await workersState(),
-    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT, roots: { lectures: onedrive.ROOT, summaries: onedrive.SUMMARY_ROOT }, storage: storageInfo,
+    sync: { ...sync, _t: undefined, last: sync.last || await getSetting(db, 'last_sync') }, library: LIBRARY_HOST_HINT, roots: { lectures: onedrive.ROOT, summaries: onedrive.SUMMARY_ROOT }, storage: storageInfo, youtube: youtubeInfo(),
   };
 });
 route('GET', '/api/jobs/:id', async ({ id }) => {
@@ -666,6 +880,15 @@ route('DELETE', '/api/videos/:id', async ({ id }) => {
 route('POST', '/api/workers/scale', async (_, body) => { const s = await k8s.setWorkerScale(body.replicas); scaleCache = { at: Date.now(), v: s }; pushWorkers(true); return s; });
 route('POST', '/api/sync', async () => { runSync(); return { started: true }; });
 route('POST', '/api/videos/:id/upload', async ({ id }) => { queueUpload(Number(id)); return { queued: true }; });
+route('GET', '/api/youtube', async () => youtubeInfo());
+route('POST', '/api/videos/:id/youtube', async ({ id }) => queueYoutube('lecture', Number(id)));
+route('POST', '/api/summary-videos/:id/youtube', async ({ id }) => queueYoutube('summary', Number(id)));
+route('POST', '/api/youtube/disconnect', async () => {
+  await setSetting(db, 'youtube', null);
+  ytAuth = null; youtube.use(null);
+  broadcast('refresh', { what: 'state' });
+  return { ok: true };
+});
 route('POST', '/api/uploads/retry', async () => {
   const [rows] = await db.query("SELECT lecture_id FROM videos WHERE storage IN ('failed','local')");
   rows.forEach((r) => queueUpload(r.lecture_id));
@@ -701,6 +924,15 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (url.pathname === '/healthz') return send(res, 200, { ok: true });
+    // YouTube sign-in: off to Google's consent page, and back (youtube.REDIRECT must point here).
+    if (url.pathname === '/api/youtube/connect' && req.method === 'GET') {
+      if (!youtube.configured()) return send(res, 400, { error: 'YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET are not set' });
+      const state = crypto.randomBytes(16).toString('hex');
+      ytStates.set(state, Date.now() + 15 * 60e3);
+      res.writeHead(302, { location: youtube.authUrl(state), 'cache-control': 'no-store' });
+      return res.end();
+    }
+    if (url.pathname === new URL(youtube.REDIRECT).pathname && req.method === 'GET') return youtubeCallback(url, res);
     let m = /^\/api\/videos\/(\d+)\/file$/.exec(url.pathname);
     if (m && req.method === 'GET') {
       // Local copy while it exists (before / without the OneDrive upload); otherwise a
@@ -763,6 +995,12 @@ export async function runCentral() {
   const [pending] = await db.query("SELECT lecture_id FROM videos WHERE storage IN ('local','uploading')");
   for (const p of pending) queueUpload(p.lecture_id);
   await summaries.resumeUploads();
+  // YouTube uploads that were waiting or half-way when the central stopped carry on.
+  await loadYoutubeAuth();
+  for (const [kind, K] of Object.entries(YT)) {
+    const [pending] = await db.query(`SELECT ${K.key} AS id FROM ${K.table} WHERE yt_status IN ('queued','uploading') ORDER BY ${K.key}`);
+    if (ytAuth?.refresh_token) for (const p of pending) queueYoutube(kind, p.id).catch((e) => log(`youtube ${kind} ${p.id}: ${e.message}`));
+  }
   server.listen(PORT, () => log(`central listening on :${PORT} · library ${LIBRARY} · storage ${storageInfo.provider}${storageInfo.ok === false ? ' (unreachable)' : ''}`));
 }
 

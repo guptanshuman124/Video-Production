@@ -13,6 +13,7 @@
 //   summary_events   a summary's activity log
 //   summary_videos   finished, validated summary videos (library root Summaries/, own OneDrive root)
 //   render_pieces    a summary's render, cut into pieces any worker can render
+//   youtube_playlists  the YouTube playlist made for each chapter folder (videos.yt_* hold each upload)
 
 import mysql from 'mysql2/promise';
 
@@ -100,6 +101,11 @@ const SCHEMA = [
     storage VARCHAR(20) NOT NULL DEFAULT 'local', remote_id VARCHAR(200) NULL, remote_url VARCHAR(1000) NULL,
     remote_error TEXT NULL, uploaded_at DATETIME(3) NULL
   ) CHARACTER SET utf8mb4`,
+  // One YouTube playlist per chapter folder (the video path's directory, as on OneDrive).
+  `CREATE TABLE IF NOT EXISTS youtube_playlists (
+    folder VARCHAR(600) PRIMARY KEY,
+    playlist_id VARCHAR(80) NOT NULL, title VARCHAR(200), created_at DATETIME(3) NOT NULL
+  ) CHARACTER SET utf8mb4`,
 ];
 
 export async function openDb(url) {
@@ -122,6 +128,16 @@ export async function openDb(url) {
     remote_url: 'VARCHAR(1000) NULL',
     remote_error: 'TEXT NULL',
     uploaded_at: 'DATETIME(3) NULL',
+  });
+  // YouTube (youtube.js), lecture and summary videos: yt_status queued | uploading | done | failed;
+  // the video id is saved as soon as the file is up, so a retry only redoes the playlist step.
+  for (const table of ['videos', 'summary_videos']) await addColumns(pool, name, table, {
+    yt_status: 'VARCHAR(20) NULL',
+    yt_video_id: 'VARCHAR(40) NULL',
+    yt_playlist_id: 'VARCHAR(80) NULL',
+    yt_error: 'TEXT NULL',
+    yt_warning: 'TEXT NULL',
+    yt_uploaded_at: 'DATETIME(3) NULL',
   });
   // A worker busy with a summary video (module_id) instead of a lecture.
   await addColumns(pool, name, 'workers', { summary_id: 'INT NULL', task: 'VARCHAR(160) NULL' });

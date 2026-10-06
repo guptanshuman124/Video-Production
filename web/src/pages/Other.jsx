@@ -1,8 +1,8 @@
-import { useContext, useMemo, useState } from 'react';
-import { Pause, Play, ChevronsUp, XCircle, RotateCcw, AlertTriangle, Film, Search, Server, Minus, Plus, Database, RefreshCw, FolderOpen, CheckCircle2, Layers, Cloud, CloudUpload, ExternalLink } from 'lucide-react';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { Pause, Play, ChevronsUp, XCircle, RotateCcw, AlertTriangle, Film, Search, Server, Minus, Plus, Database, RefreshCw, FolderOpen, CheckCircle2, Layers, Cloud, CloudUpload, ExternalLink, Youtube } from 'lucide-react';
 import { api, allLectures, countLectures, lectureStatus, queuedInOrder, stageLabel, useStore, useTick } from '../store.js';
 import { Btn, Card, Empty, Progress, StageDots, StatusChip, fmtAgo, fmtBytes, fmtDur, fmtElapsed, fmtMin, useAction, useToast } from '../components/ui.jsx';
-import { LectureButtons, useApp, useLectureActions, StorageBadge, hostPath } from '../components/lecture.jsx';
+import { LectureButtons, useApp, useLectureActions, StorageBadge, YoutubeButton, hostPath } from '../components/lecture.jsx';
 import { WorkerCard, RecentVideo } from './Overview.jsx';
 import { SummaryCtx } from './Summaries.jsx';
 import { allChapters, summaryStageLabel } from '../store.js';
@@ -221,7 +221,7 @@ function SummaryLibrary({ toggle }) {
                   <tr key={ch.module_id} className="clickable" onClick={() => playSummary(ch.module_id)}>
                     <td style={{ width: 70 }}>Ch {ch.chapter_no}</td><td className="cell-title">{ch.title}<div className="muted small">{v.parts ?? '—'} parts · {ch.lectures} lectures</div></td>
                     <td><StorageBadge v={v} provider={s.storage?.provider} /></td><td className="small muted">{fmtDur(v.duration_s)}</td><td className="small muted">{fmtBytes(v.bytes)}</td><td className="small muted">{fmtAgo(v.created_at)}</td>
-                    <td onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => openSummary(ch.module_id)}>Details</Btn></td>
+                    <td onClick={(e) => e.stopPropagation()}><div className="row-actions"><YoutubeButton id={ch.module_id} v={v} size="sm" summary /><Btn size="sm" variant="ghost" onClick={() => openSummary(ch.module_id)}>Details</Btn></div></td>
                   </tr>
                 ))}
               </tbody>
@@ -278,7 +278,7 @@ function LectureLibrary({ toggle }) {
                   {items.map(({ v, l }) => (
                     <tr key={l.lecture_id} className="clickable" onClick={() => play(l.lecture_id)}>
                       <td style={{ width: 60 }}>L{l.lecture_no}</td><td className="cell-title">{l.lecture_title}</td><td><StorageBadge v={v} provider={s.storage?.provider} /></td><td className="small muted">{fmtDur(v.duration_s)}</td><td className="small muted">{fmtBytes(v.bytes)}</td><td className="small muted">{fmtAgo(v.created_at)}</td>
-                      <td onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => openLecture(l.lecture_id)}>Details</Btn></td>
+                      <td onClick={(e) => e.stopPropagation()}><div className="row-actions"><YoutubeButton id={l.lecture_id} v={v} size="sm" /><Btn size="sm" variant="ghost" onClick={() => openLecture(l.lecture_id)}>Details</Btn></div></td>
                     </tr>
                   ))}
                 </tbody>
@@ -361,6 +361,148 @@ function StorageCard() {
   );
 }
 
+// ---- YouTube queue -------------------------------------------------------------------------------
+
+const YT_STEPS = { download: 'Fetching from OneDrive', upload: 'Uploading', thumbnail: 'Setting thumbnail', playlist: 'Adding to playlist' };
+
+export function YoutubePage() {
+  const s = useStore();
+  const { openLecture } = useApp();
+  const { openSummary } = useContext(SummaryCtx);
+  const [run] = useAction();
+  const [order, setOrder] = useState([]);
+  const chapters = useMemo(() => new Map(allChapters(s).map((c) => [c.module_id, c])), [s.catalog]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The waiting order lives in the central; refreshed while this page is open.
+  useEffect(() => {
+    let alive = true;
+    const load = () => api('GET', '/api/youtube').then((r) => alive && setOrder(r.queue || [])).catch(() => {});
+    load();
+    const t = setInterval(load, 3000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+  const yt = s.youtube || {};
+
+  // Every lecture and summary video with a YouTube state, as one list.
+  const items = [];
+  for (const v of Object.values(s.videos)) {
+    const l = s.catalog?.lectures[v.lecture_id];
+    if (v.yt_status && l) items.push({ key: `lecture:${v.lecture_id}`, kind: 'lecture', id: v.lecture_id, v, title: `L${l.lecture_no}: ${l.lecture_title}`, where: `Class ${l.class_no} · ${l.subject} · Ch ${l.chapter_no}: ${l.chapter_title}`, open: () => openLecture(v.lecture_id) });
+  }
+  for (const v of Object.values(s.summaryVideos || {})) {
+    const ch = chapters.get(v.module_id);
+    if (v.yt_status && ch) items.push({ key: `summary:${v.module_id}`, kind: 'summary', id: v.module_id, v, title: `Chapter summary: ${ch.title}`, where: `Class ${ch.class_no} · ${ch.subject} · Ch ${ch.chapter_no}`, open: () => openSummary(v.module_id) });
+  }
+  const pos = (k) => { const i = order.indexOf(k); return i < 0 ? 1e9 : i; };
+  const by = (st) => items.filter((x) => x.v.yt_status === st);
+  const active = by('uploading');
+  const waiting = by('queued').sort((a, b) => pos(a.key) - pos(b.key));
+  const failed = by('failed');
+  const done = by('done').sort((a, b) => new Date(b.v.yt_uploaded_at) - new Date(a.v.yt_uploaded_at));
+  const retry = (x) => run(`r${x.key}`, () => api('POST', `/api/${x.kind === 'summary' ? 'summary-videos' : 'videos'}/${x.id}/youtube`), 'Queued for YouTube');
+  const kindChip = (x) => <span className="chip chip-sm tone-gray">{x.kind === 'summary' ? 'Summary' : 'Lecture'}</span>;
+  const titleCell = (x) => <td className="cell-title"><a className="link" onClick={x.open}>{x.title}</a><div className="muted small">{x.where}</div></td>;
+
+  return (
+    <div className="page">
+      <div className="page-head"><div><h1>YouTube</h1><p className="muted">Videos sent with "Upload to YouTube", one at a time in this order: fetched from OneDrive, uploaded ({yt.privacy}{yt.kids === 'all' ? ', made for kids — comments off' : ''}), thumbnail, then the playlist. {yt.connected ? <>Channel: <a href={yt.channel?.url} target="_blank" rel="noreferrer">{yt.channel?.title}</a></> : <span className="t-amber">The channel is not connected (Source &amp; settings → YouTube).</span>}</p></div></div>
+      {yt.error && <div className="alert alert-red"><AlertTriangle size={16} /><div>{yt.error}</div></div>}
+
+      <Card title={`Uploading now (${active.length})`} pad={false}>
+        {active.length ? (
+          <table className="table"><tbody>
+            {active.map((x) => {
+              const p = x.v.yt?.step === 'upload' && x.v.yt.total ? Math.round((x.v.yt.done / x.v.yt.total) * 100) : null;
+              return (
+                <tr key={x.key}>
+                  <td style={{ width: 90 }}>{kindChip(x)}</td>{titleCell(x)}
+                  <td className="small">{YT_STEPS[x.v.yt?.step] || 'Starting'}</td>
+                  <td style={{ width: 220 }}>{p != null ? <Progress value={p} /> : <span className="muted small">…</span>}</td>
+                  <td className="small muted">{p != null ? `${p}% of ${fmtBytes(x.v.yt.total)}` : ''}</td>
+                </tr>
+              );
+            })}
+          </tbody></table>
+        ) : <Empty Icon={Youtube} title="Nothing uploading">Use "Upload to YouTube" on a video in the Library.</Empty>}
+      </Card>
+
+      <Card title={`Waiting (${waiting.length})`} pad={false}>
+        {waiting.length ? (
+          <table className="table"><tbody>
+            {waiting.map((x, i) => <tr key={x.key}><td style={{ width: 40 }} className="muted">{i + 1}</td><td style={{ width: 90 }}>{kindChip(x)}</td>{titleCell(x)}<td className="small muted">{fmtDur(x.v.duration_s)} · {fmtBytes(x.v.bytes)}</td></tr>)}
+          </tbody></table>
+        ) : <div className="muted small" style={{ padding: 16 }}>No videos waiting.</div>}
+      </Card>
+
+      {failed.length > 0 && (
+        <Card title={`Failed (${failed.length})`} pad={false}>
+          <table className="table"><tbody>
+            {failed.map((x) => <tr key={x.key}><td style={{ width: 90 }}>{kindChip(x)}</td>{titleCell(x)}<td className="small t-red" style={{ maxWidth: 420 }}>{x.v.yt_error}</td><td><Btn size="sm" Icon={RotateCcw} onClick={() => retry(x)}>Retry</Btn></td></tr>)}
+          </tbody></table>
+        </Card>
+      )}
+
+      <Card title={`On YouTube (${done.length})`} pad={false}>
+        {done.length ? (
+          <table className="table"><tbody>
+            {done.map((x) => (
+              <tr key={x.key}>
+                <td style={{ width: 90 }}>{kindChip(x)}</td>{titleCell(x)}
+                <td className="small muted">{fmtAgo(x.v.yt_uploaded_at)}{x.v.yt_warning && <div className="t-amber" title={x.v.yt_warning}>warning</div>}</td>
+                <td><div className="row-actions">
+                  <a className="btn btn-default btn-sm" href={`https://youtu.be/${x.v.yt_video_id}`} target="_blank" rel="noreferrer"><Youtube size={13} /><span>Video</span></a>
+                  {x.v.yt_playlist_id && <a className="btn btn-ghost btn-sm" href={`https://www.youtube.com/playlist?list=${x.v.yt_playlist_id}`} target="_blank" rel="noreferrer"><ExternalLink size={13} /><span>Playlist</span></a>}
+                </div></td>
+              </tr>
+            ))}
+          </tbody></table>
+        ) : <div className="muted small" style={{ padding: 16 }}>Nothing uploaded yet.</div>}
+      </Card>
+    </div>
+  );
+}
+
+// ---- YouTube ---------------------------------------------------------------------------------------
+
+function YoutubeCard() {
+  const s = useStore();
+  const [run, busy] = useAction();
+  const { ask } = useToast();
+  const yt = s.youtube || {};
+  const vids = [...Object.values(s.videos), ...Object.values(s.summaryVideos || {})];
+  const n = (x) => vids.filter((v) => v.yt_status === x).length;
+  // Google sends the browser back to yt.redirect (a localhost address): the sign-in only
+  // completes in a browser that reaches the central there, i.e. through the SSH tunnel.
+  const local = typeof window !== 'undefined' && window.location.origin === new URL(yt.redirect || 'http://localhost:8080').origin;
+  return (
+    <Card title={<><Youtube size={16} /> YouTube</>}>
+      {!yt.configured ? (
+        <p className="muted small">Not set up: add <span className="mono">YOUTUBE_CLIENT_ID</span> and <span className="mono">YOUTUBE_CLIENT_SECRET</span> (the OAuth client of the Google Cloud project) to .env, then deploy.</p>
+      ) : (
+        <>
+          <p className="muted small">"Upload to YouTube" on a finished video takes it from OneDrive, uploads it with its title, description and tags, sets the title slide as the thumbnail and adds it to its playlist: lectures to their chapter's playlist (in lecture order), summary videos to their subject's "Chapter Summaries" playlist (in chapter order).</p>
+          {yt.error && <div className="alert alert-red"><AlertTriangle size={16} /><div>{yt.error}</div></div>}
+          <dl className="kv">
+            <dt>Channel</dt><dd>{yt.connected ? <><a href={yt.channel?.url} target="_blank" rel="noreferrer">{yt.channel?.title || yt.channel?.id} <ExternalLink size={12} /></a> · connected {fmtAgo(yt.connected_at)}</> : <span className="t-amber">not connected</span>}</dd>
+            <dt>New videos are</dt><dd>{yt.privacy} <span className="muted small">(YOUTUBE_PRIVACY)</span></dd>
+            <dt>Made for kids</dt><dd>{yt.kids === 'all' ? 'every class — comments off' : yt.kids === 'none' ? 'no' : `classes ${yt.kids} — comments off on those`} <span className="muted small">(YOUTUBE_KIDS_CLASSES)</span></dd>
+            <dt>On YouTube</dt><dd>{n('done')}</dd>
+            <dt>Uploading / waiting</dt><dd>{n('uploading') + n('queued')}</dd>
+            <dt>Failed</dt><dd className={n('failed') ? 't-red' : ''}>{n('failed')}</dd>
+          </dl>
+          {!local && <div className="alert alert-amber"><AlertTriangle size={16} /><div>To connect, open the dashboard through the SSH tunnel (<span className="mono">ssh -L 8080:127.0.0.1:8080 factory-aws</span>, then <span className="mono">{new URL(yt.redirect || 'http://localhost:8080').origin}</span>): Google returns to that address after sign-in.</div></div>}
+          <div className="row-actions">
+            <a className={`btn btn-primary ${local ? '' : 'disabled'}`} href={local ? '/api/youtube/connect' : undefined} aria-disabled={!local}><Youtube size={15} /><span>{yt.connected ? 'Reconnect channel' : 'Connect channel'}</span></a>
+            {yt.connected && <Btn variant="ghost" busy={busy === 'dis'} onClick={async () => {
+              if (!(await ask({ title: 'Disconnect YouTube?', body: 'Uploads stop until the channel is connected again. Videos already on YouTube stay there.', ok: 'Disconnect', danger: true }))) return;
+              run('dis', () => api('POST', '/api/youtube/disconnect'), 'YouTube disconnected');
+            }}>Disconnect</Btn>}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
 // ---- Source + settings ----------------------------------------------------------------------------
 
 export function SourcePage() {
@@ -391,6 +533,7 @@ export function SourcePage() {
           }}>Copy from prepzy-mysql</Btn>
         </Card>
         <StorageCard />
+        <YoutubeCard />
       </div>
       <Card title={<><Layers size={16} /> Template packs</>} pad={false}>
         <table className="table">

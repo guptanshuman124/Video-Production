@@ -72,6 +72,7 @@ async function loadState() {
   state.library = s.library;
   state.roots = s.roots || { lectures: 'CBSE Lectures', summaries: 'CBSE Summaries' };
   state.storage = s.storage || { provider: 'local' };
+  state.youtube = s.youtube || { configured: false, connected: false };
 }
 async function loadActivity() {
   state.activity = await api('GET', '/api/activity');
@@ -117,6 +118,12 @@ function start() {
       const u = JSON.parse(e.data);
       const v = state.videos[u.lecture_id];
       if (v) { state.videos = { ...state.videos, [u.lecture_id]: { ...v, storage: 'uploading', upload: { done: u.done, total: u.total } } }; emitSoon(); }
+    });
+    es.addEventListener('ytupload', (e) => {
+      const u = JSON.parse(e.data);
+      const bag = u.kind === 'summary' ? 'summaryVideos' : 'videos';
+      const v = state[bag][u.id];
+      if (v) { state[bag] = { ...state[bag], [u.id]: { ...v, yt_status: 'uploading', yt: { step: u.step, done: u.done, total: u.total } } }; emitSoon(); }
     });
     es.addEventListener('workers', (e) => { state.workers = JSON.parse(e.data); emitSoon(); });
     es.addEventListener('queue', (e) => { const q = JSON.parse(e.data); state.queues = { ...state.queues, [q.class_no]: q.state }; emitSoon(); });
