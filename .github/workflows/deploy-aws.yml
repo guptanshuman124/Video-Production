@@ -40,11 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: SSH key
+        env:
+          KEY: ${{ secrets.AWS_SSH_KEY }}
+          HOST: ${{ secrets.AWS_HOST }}
         run: |
+          [ -n "$HOST" ] || { echo "::error::repository secret AWS_HOST is missing (Settings → Secrets and variables → Actions → Repository secrets)"; exit 1; }
+          [ -n "$KEY" ] || { echo "::error::repository secret AWS_SSH_KEY is missing"; exit 1; }
+          printf '%s\n' "$KEY" | grep -q "BEGIN .*PRIVATE KEY" || { echo "::error::AWS_SSH_KEY does not look like a .pem private key (paste the whole file, BEGIN and END lines included)"; exit 1; }
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/aws.pem
+          printf '%s\n' "$KEY" > ~/.ssh/aws.pem
           chmod 600 ~/.ssh/aws.pem
-          ssh-keyscan -H "${{ secrets.AWS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -T 15 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          grep -q . ~/.ssh/known_hosts || { echo "::error::cannot reach $HOST on port 22 — the security group must allow SSH from 0.0.0.0/0"; exit 1; }
+          ssh -i ~/.ssh/aws.pem -o ConnectTimeout=15 -o BatchMode=yes "ubuntu@$HOST" true || { echo "::error::port 22 is open but the key was refused — AWS_SSH_KEY must be video-creation-app.pem"; exit 1; }
+          echo "SSH to $HOST works"
       - name: Upload the code
         run: |
           git archive --format=tar.gz -o /tmp/repo.tgz HEAD

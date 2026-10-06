@@ -56,12 +56,27 @@ echo 'export FACTORY_LIBRARY=/home/ubuntu/library' >> ~/.profile    # read from 
 npm run factory -- up
 ```
 
+## Firewall (ufw, on the server)
+
+ufw is on with "deny incoming". Allowed: 22 (SSH, GitHub deploys), 80 (nginx login), and 3307 from the kind
+network only (`172.18.0.0/16`, the cluster reading the textbook DB). After `ufw enable` on a new server:
+
+```bash
+sudo ufw allow 22/tcp && sudo ufw allow 80/tcp
+sudo ufw allow from 172.18.0.0/16 to any port 3307 proto tcp    # kind subnet: docker network inspect kind
+```
+
+The AWS security group needs inbound 22 and 80 as well; never 8080 or 3307.
+
 ## Daily use
 
 - Dashboard: http://13.204.84.117 — nginx on port 80 with a login (user `prepzy`, password in
   `~/dashboard-password.txt` on the server; change it with `sudo htpasswd /etc/nginx/factory.htpasswd prepzy`).
   The dashboard itself has no login, so it stays bound to 127.0.0.1:8080; never open 8080 in the security group.
-  Plain HTTP: add a domain + `certbot --nginx` for HTTPS. The SSH tunnel
+  Plain HTTP: add a domain + `certbot --nginx` for HTTPS.
+  Public without login: `/privacy` (the privacy policy, `web/public/privacy.html`, linked from the
+  Google / YouTube API application) — `location = /privacy { auth_basic off; … }` blocks in
+  `/etc/nginx/sites-available/factory`, above the password-protected `location /`. The SSH tunnel
   (`ssh -L 8080:127.0.0.1:8080 factory-aws`, then http://localhost:8080) also still works.
 - Code changes: push to `main`. `.github/workflows/deploy-aws.yml` runs the tests, swaps the code into
   `~/factory` (keeping the server's `.env`; the previous copy stays in `~/factory.prev`) and runs
