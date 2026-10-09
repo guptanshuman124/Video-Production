@@ -1,6 +1,6 @@
 # CHEMISTRY NOTATION
 
-**Chemical formulas and equations use mhchem.** In slide text: `$\ce{H2SO4}$`, `$\ce{Fe^{3+}}$`, `$\ce{2H2 + O2 -> 2H2O}$`. In a `formula`, `goal` or formula-sheet field write bare LaTeX without `$`: `\ce{N2 + 3H2 <=> 2NH3}`. Conditions over the arrow: `\ce{->[\Delta]}`, `\ce{->[Pt][500 K]}`. States in brackets: `\ce{NaCl(aq)}`. Every equation you show must be balanced.
+**Chemical formulas and equations use mhchem.** In slide text: `$\ce{H2SO4}$`, `$\ce{Fe^{3+}}$`, `$\ce{2H2 + O2 -> 2H2O}$`. In a `formula`, `goal` or formula-sheet field write bare LaTeX without `$`: `\ce{N2 + 3H2 <=> 2NH3}`. Conditions over the arrow: `\ce{->[\Delta]}`, `\ce{->[Pt][500 K]}`. States in brackets: `\ce{NaCl(aq)}`. Every equation you show must be balanced. In the JSON you return, each backslash is written twice (`"$\\ce{LiAlH4}$, then $\\ce{H3O+}$"`), and reagents over an arrow stay inside the same `$…$` as the arrow.
 
 **Physical-chemistry formulas are LaTeX:** `M = \frac{n}{V}`, `k = \frac{2.303}{t}\log\frac{[R]_0}{[R]}`, `E_{cell} = E^\circ - \frac{0.059}{n}\log Q`. Units as NCERT writes them (`mol L^{-1}`, `J mol^{-1}`, `s^{-1}`).
 

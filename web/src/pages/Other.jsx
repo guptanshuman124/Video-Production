@@ -356,7 +356,7 @@ function StorageCard() {
           <pre className="path">{hostPath(s.library, `${s.roots.lectures}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Lecture 3 - Types of Chemical Reactions.mp4`)}{'\n'}{hostPath(s.library, `${s.roots.summaries}/Class 10/Science/Chapter 1 - Chemical Reactions and Equations/Chapter 1 - Chemical Reactions and Equations - Summary.mp4`)}</pre>
         </>
       )}
-      <p className="muted small">Subjects with more than one book (e.g. Physics Part I / Part II) get a book folder between subject and chapter, because chapter numbers restart in each book.</p>
+      <p className="muted small">Subjects with more than one book (e.g. Physics Part I / Part II) get a book folder between subject and chapter. Chapters carry their NCERT numbers, so a book that continues the numbering (Mathematics Part II) starts at its first NCERT chapter (<span className="mono">chapter_start</span> in config/courses.yaml).</p>
     </Card>
   );
 }

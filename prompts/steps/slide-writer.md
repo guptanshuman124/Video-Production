@@ -13,6 +13,8 @@ On-slide text is a **summary a student would copy into notes**, not prose:
 - **Every other field is plain text: any maths in it must be inside `$…$`** — symbols, Greek letters, subscripts, powers and units with powers. Otherwise it shows on screen as raw code.
   - Right: `angular speed (rad $s^{-1}$)`, `where $a_c$ is the centripetal acceleration`, `$\Delta\theta$ in radians`, `$\ce{H2O}$`.
   - Wrong: `\omega – angular speed (rad s^{-1})`, `a_c`, `\Delta\theta`.
+  - Each formula is complete inside one `$…$` pair — never a lone `$`. A literal dollar is `\$`.
+  - **In your JSON output every backslash is doubled:** `"$\\ce{LiAlH4}$"`, `"$\\beta$"`, `"$\\frac{1}{2}$"`. A single backslash breaks the string (`\b`, `\f`, `\n` become control characters) and shows a box or a bare `$` on screen.
 - Symbol keys are separate entries: `symbol` = the LaTeX symbol (`\omega`), `meaning` = what it is with its SI unit (`angular speed (rad $s^{-1}$)`).
 - `caption` (when the slide has an image): one short line naming what the student is looking at.
 - Optional fields you do not need: set them to null.

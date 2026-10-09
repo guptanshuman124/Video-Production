@@ -37,7 +37,9 @@ import katex from 'katex';
 import { wrapBareMath, mathOutside } from './validators/math.js';
 import 'katex/contrib/mhchem';
 
-const words = (s) => String(s ?? '').trim().split(/\s+/).filter(Boolean).length;
+// A $…$ formula counts as one word: "$\ce{CH3COOH + PCl5 -> CH3COCl}$" is one
+// thing on screen, and counting its tokens sent formula cells to the shortener.
+export const words = (s) => String(s ?? '').replace(/(?<!\\)\$[^$]+\$/g, 'x').trim().split(/\s+/).filter(Boolean).length;
 const isEmpty = (v) => v == null || v === '' || (Array.isArray(v) && v.length === 0);
 
 // ---- registry -----------------------------------------------------------------
@@ -191,6 +193,21 @@ function checkWords(v, lim, path, issues) {
   }
 }
 
+// Characters a model's JSON escapes can leave in text — a single-backslash
+// "\beta" or "\frac" decodes to a backspace / form feed — show as a missing
+// glyph box on screen. Tab, newline and carriage return are allowed.
+const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\ufffd]/;
+
+// A $ that is not part of a $…$ pair (a lone $, an empty $$) never reaches
+// KaTeX: the renderer shows it as text. Usually a formula cut short in generation.
+function mathShapeIssues(s, path) {
+  const out = [];
+  if (CONTROL.test(s)) out.push({ code: 'CONTROL_CHAR', severity: 'error', path, message: `${path}: contains a control character (shows as a box on screen) — usually a LaTeX backslash not doubled in JSON; write "$\\\\ce{…}$", "$\\\\beta$"` });
+  // Same pairing as the renderer (templates/_lib rich()): what is left is shown as text.
+  if (/(?<!\\)\$/.test(s.replace(/(?<!\\)\$[^$]+\$/g, ''))) out.push({ code: 'UNBALANCED_MATH', severity: 'error', path, message: `${path}: "${s.slice(0, 60)}" has an unpaired or empty $ — the $ shows as text on screen; write the whole formula inside one $…$ pair (or \\$ for a literal dollar)` });
+  return out;
+}
+
 function texIssues(s, path) {
   const out = [];
   const spans = [...String(s).matchAll(/\$([^$]+)\$/g)].map((m) => m[1]);
@@ -274,6 +291,8 @@ export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['for
     for (const m of [st.check(r.value) || []].flat()) issues.push({ code: 'TEMPLATE_CHECK', severity: 'error', path: where, message: `${where}: ${m}` });
   }
   walkStrings(data, where, (s, p) => {
+    if (!isFormula(p)) issues.push(...mathShapeIssues(s, p));
+    else if (CONTROL.test(s)) issues.push(...mathShapeIssues(s, p).filter((x) => x.code === 'CONTROL_CHAR'));
     issues.push(...texIssues(s, p));
     if (isFormula(p)) {
       try { katex.renderToString(s, { throwOnError: true }); } catch (e) {

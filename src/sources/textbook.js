@@ -27,6 +27,7 @@ import fs from 'node:fs';
 import readline from 'node:readline';
 import { parseContent } from './content.js';
 import { narrationLanguageOf } from '../curriculum/index.js';
+import { chapterNumbers } from './chapters.js';
 
 const SELECT = `SELECT t.content_id, t.course_id, t.module_id, t.lecture_id, t.content, t.keywords, t.mini_lecture,
   l.title AS lecture_title, l.orders AS lecture_order, l.is_active AS lecture_active,
@@ -36,6 +37,16 @@ const SELECT = `SELECT t.content_id, t.course_id, t.module_id, t.lecture_id, t.c
   LEFT JOIN lectures l ON l.lecture_id = t.lecture_id
   LEFT JOIN modules m ON m.module_id = t.module_id
   LEFT JOIN courses c ON c.course_id = t.course_id`;
+// Every textbook row of the courses that own the given modules, without content:
+// chapter numbers rank against the whole course even when a run picks one chapter.
+const COURSE_MODULES = `SELECT t.course_id, t.module_id, t.lecture_id,
+  l.title AS lecture_title, l.is_active AS lecture_active,
+  m.orders AS module_order, m.is_active AS module_active, c.is_active AS course_active
+  FROM textbook_raw t
+  LEFT JOIN lectures l ON l.lecture_id = t.lecture_id
+  LEFT JOIN modules m ON m.module_id = t.module_id
+  LEFT JOIN courses c ON c.course_id = t.course_id
+  WHERE t.course_id IN (SELECT course_id FROM textbook_raw WHERE module_id IN (?))`;
 const META_SELECT = `SELECT l.lecture_id, l.title AS lecture_title, l.orders AS lecture_order, l.is_active AS lecture_active,
   m.title AS module_title, m.orders AS module_order, m.is_active AS module_active,
   c.title AS course_title, c.is_active AS course_active
@@ -57,11 +68,17 @@ async function connect(url) {
 export async function rowsFromFile(file, filter = {}) {
   const rl = readline.createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity });
   const rows = [];
+  const others = [];             // rows of other modules, for chapter numbering
   for await (const line of rl) {
     if (!line.trim()) continue;
     const r = JSON.parse(line);
     // Lecture position needs the whole module, so filter by module/course only here.
     if (matches(r, { course: filter.course, module: filter.module })) rows.push(r);
+    else if (filter.module && matches(r, { course: filter.course })) { delete r.content; others.push(r); }
+  }
+  if (filter.module) {
+    const courses = new Set(rows.map((r) => Number(r.course_id)));
+    rows.courseModules = others.filter((r) => courses.has(Number(r.course_id)));
   }
   return rows;
 }
@@ -74,7 +91,9 @@ export async function rowsFromDb(url, filter = {}) {
     if (filter.course) { where.push(`t.course_id IN (${filter.course.map(() => '?').join(',')})`); args.push(...filter.course); }
     if (filter.module) { where.push(`t.module_id IN (${filter.module.map(() => '?').join(',')})`); args.push(...filter.module); }
     const [rows] = await conn.query(`${SELECT} ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY t.course_id, t.module_id, t.lecture_id`, args);
-    return rows.map((r) => ({ ...r, keywords: typeof r.keywords === 'string' ? r.keywords : JSON.stringify(r.keywords ?? null) }));
+    const out = rows.map((r) => ({ ...r, keywords: typeof r.keywords === 'string' ? r.keywords : JSON.stringify(r.keywords ?? null) }));
+    if (filter.module) [out.courseModules] = await conn.query(COURSE_MODULES, [filter.module]);
+    return out;
   } finally {
     await conn.end();
   }
@@ -88,10 +107,12 @@ async function attachMeta(rows, url) {
     const ids = [...new Set(rows.map((r) => Number(r.lecture_id)))];
     const [meta] = await conn.query(`${META_SELECT} WHERE l.lecture_id IN (${ids.map(() => '?').join(',')})`, ids);
     const byId = new Map(meta.map((m) => [Number(m.lecture_id), m]));
-    return rows.map((r) => {
+    const out = rows.map((r) => {
       const m = byId.get(Number(r.lecture_id));
       return m ? { ...r, ...m } : { ...r, lecture_title: null, lecture_active: null };
     });
+    out.courseModules = rows.courseModules;
+    return out;
   } finally {
     await conn.end();
   }
@@ -193,14 +214,22 @@ export function lectureInputs(rows, courseMeta, filter = {}, { includeInactive =
     return true;
   });
 
-  // Chapter number: rank of the module's `orders` among the course's modules.
+  // Chapter number: rank of the module's `orders` among the course's modules,
+  // from the course's `chapter_start` (sources/chapters.js). A load filtered to
+  // some modules carries the whole course's active modules in rows.courseModules.
   const moduleOrder = new Map();
-  for (const r of kept) {
+  const addModule = (r) => {
     const c = Number(r.course_id);
     if (!moduleOrder.has(c)) moduleOrder.set(c, new Map());
     moduleOrder.get(c).set(Number(r.module_id), Number(r.module_order ?? r.module_id));
-  }
-  const chapterNumber = (c, m) => [...moduleOrder.get(c).entries()].sort((a, b) => (a[1] - b[1]) || (a[0] - b[0])).findIndex(([id]) => id === m) + 1;
+  };
+  for (const r of rows.courseModules || []) if (!exclusionOf(r)) addModule(r);
+  for (const r of kept) addModule(r);
+  const numbers = new Map();
+  const chapterNumber = (c, m) => {
+    if (!numbers.has(c)) numbers.set(c, chapterNumbers(moduleOrder.get(c), courseMeta(c)?.chapter_start));
+    return numbers.get(c).get(m);
+  };
 
   const byModule = new Map();
   for (const r of kept) {

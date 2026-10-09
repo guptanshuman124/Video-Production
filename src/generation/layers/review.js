@@ -20,7 +20,10 @@ const SCHEMA = {
 
 export async function reviewLecture(G, plan, slides, narration) {
   const { llm, prepared, lecture } = G;
+  const L = prepared.lecture || {};
   const user = [
+    // The chapter number is the book's own (NCERT numbering carries on across Part I / Part II).
+    `${L.course_title ? `BOOK: ${L.course_title} · ` : ''}CHAPTER: ${L.chapter_number ? `Chapter ${L.chapter_number}: ` : ''}${prepared.chapter.title}`,
     `LECTURE ${lecture.index} of ${G.lectures}: ${lecture.title}`,
     lecture.recap ? `Previous lecture covered: ${lecture.recap}` : '',
     lecture.preview ? `Next lecture covers: ${lecture.preview}` : '',

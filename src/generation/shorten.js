@@ -3,7 +3,11 @@
 // strings, so instead only the offending strings go to the model with a hard
 // word budget each, and code patches them back in.
 
-const words = (s) => String(s).trim().split(/\s+/).filter(Boolean).length;
+import { words } from '../slides.js';
+
+// The $…$ formulas of a string, in order (escaped \$ is a literal dollar).
+const formulas = (s) => [...String(s).matchAll(/(?<!\\)\$[^$]+\$/g)].map((m) => m[0]);
+const sameMaths = (a, b) => JSON.stringify(formulas(a)) === JSON.stringify(formulas(b)) && !/(?<!\\)\$/.test(String(b).replace(/(?<!\\)\$[^$]+\$/g, ''));
 
 const SCHEMA = {
   type: 'object', additionalProperties: false, required: ['items'],
@@ -35,12 +39,17 @@ export async function shortenStrings(llm, targets, { unit, system }) {
   const user = targets.map((t, i) => `${i + 1}. (max ${t.max} words, now ${words(t.text)}) ${t.text}`).join('\n');
   const res = await llm.call({
     task: 'slide-write', unit: `${unit}/shorten`, schema: SCHEMA, schemaName: 'shortened',
-    system: `${system}\n\n---\n\n# TASK — SHORTEN\n\nRewrite each numbered line so it has **at most** its word limit. Keep the meaning, the key term and any $…$ maths exactly; drop filler words, use a phrase instead of a sentence. Return every line with its number as id.`,
+    system: `${system}\n\n---\n\n# TASK — SHORTEN\n\nRewrite each numbered line so it has **at most** its word limit (a whole $…$ formula counts as one word). Keep the meaning, the key term and every $…$ formula character for character; drop filler words, use a phrase instead of a sentence. In the JSON, every backslash inside a formula is written twice ("$\\\\ce{H2O}$"). Return every line with its number as id.`,
     user,
     context: { targets },
   });
   const out = new Map((res.data.items || []).map((x) => [x.id, x.text]));
-  return targets.map((t, i) => ({ ...t, text: out.get(i + 1) ?? t.text }));
+  // A rewrite that changed, dropped or cut a formula is not used: the long
+  // original then goes through the normal slide repair instead.
+  return targets.map((t, i) => {
+    const text = out.get(i + 1);
+    return { ...t, text: typeof text === 'string' && sameMaths(t.text, text) ? text : t.text };
+  });
 }
 
 export function applyShortened(data, shortened) {

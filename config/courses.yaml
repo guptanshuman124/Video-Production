@@ -4,6 +4,8 @@
 #
 # modules: per-chapter pack (Science) or variant (Chemistry), auto-classified from the chapter text.
 #          `review: true` = low confidence — check these first. Courses not listed are blocked at G0.
+# chapter_start: NCERT number of the book's first chapter, for books printed in parts that continue the
+#          numbering (Class 12 Mathematics Part II starts at 7). Left out = 1. Kept when this file is regenerated.
 # narration_language: what the voice-over is spoken in — hinglish (default), hindi (Hindi courses: taught in
 #          Hindi) or english (English courses: taught in English). English and Hindi use the `language` pack.
 #
@@ -40,6 +42,7 @@ courses:
   "19":
     class: 12
     subject: History
+    chapter_start: 5
     pack: theory
     variant: null
     slide_language: english
@@ -49,6 +52,7 @@ courses:
   "20":
     class: 12
     subject: History
+    chapter_start: 9
     pack: theory
     variant: null
     slide_language: english
@@ -441,6 +445,7 @@ courses:
   "57":
     class: 11
     subject: Chemistry
+    chapter_start: 7
     pack: chemistry
     variant: null
     slide_language: english
@@ -552,6 +557,7 @@ courses:
   "63":
     class: 11
     subject: Physics
+    chapter_start: 8
     pack: physics
     variant: null
     slide_language: english
@@ -571,6 +577,7 @@ courses:
   "65":
     class: 12
     subject: Chemistry
+    chapter_start: 6
     pack: chemistry
     variant: null
     slide_language: english
@@ -602,6 +609,7 @@ courses:
   "66":
     class: 12
     subject: Physics
+    chapter_start: 9
     pack: physics
     variant: null
     slide_language: english
@@ -711,6 +719,7 @@ courses:
   "83":
     class: 12
     subject: Mathematics
+    chapter_start: 7
     pack: mathematics
     variant: null
     slide_language: english
@@ -797,6 +806,7 @@ courses:
   "94":
     class: 12
     subject: Business Studies
+    chapter_start: 9
     pack: commerce
     variant: business-studies
     slide_language: english

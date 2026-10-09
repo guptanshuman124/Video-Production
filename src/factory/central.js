@@ -691,7 +691,34 @@ async function sweep() {
 async function reloadCatalog() {
   catalog = await loadCatalog();
   log(`catalog: ${catalog.lectures.size} lectures`);
+  await refreshNumbers().catch((e) => log(`chapter numbers: ${e.message}`));
   broadcast('refresh', { what: 'catalog' });
+}
+
+// Chapter numbers come from the catalog (config/courses.yaml chapter_start), so a
+// renumbered book updates the job and summary rows here. Videos already made carry
+// the old number on their intro slide and sit at the old path: they are listed in
+// the log; regenerating one (Redo) files it at the new path and removes the old copy.
+async function refreshNumbers() {
+  let jobs = 0;
+  let sums = 0;
+  const [jrows] = await db.query('SELECT lecture_id, chapter_no FROM jobs');
+  for (const j of jrows) {
+    const l = catalog.lectures.get(j.lecture_id);
+    if (l && Number(j.chapter_no) !== l.chapter_no) { await db.query('UPDATE jobs SET chapter_no=? WHERE lecture_id=?', [l.chapter_no, j.lecture_id]); jobs++; }
+  }
+  const [srows] = await db.query('SELECT module_id, chapter_no FROM summaries');
+  for (const r of srows) {
+    const ch = catalog.chapters.get(r.module_id);
+    if (ch && Number(r.chapter_no) !== ch.chapter_no) { await db.query('UPDATE summaries SET chapter_no=? WHERE module_id=?', [ch.chapter_no, r.module_id]); sums++; }
+  }
+  const [vids] = await db.query('SELECT lecture_id, path FROM videos');
+  const stale = vids.filter((v) => { const l = catalog.lectures.get(v.lecture_id); return l && v.path !== l.library_path; });
+  const [svids] = await db.query('SELECT module_id, path FROM summary_videos');
+  const staleSum = svids.filter((v) => { const ch = catalog.chapters.get(v.module_id); return ch && v.path !== ch.summary_path; });
+  if (jobs || sums) log(`chapter numbers: updated ${jobs} job(s), ${sums} summary row(s)`);
+  if (stale.length) log(`${stale.length} lecture video(s) filed under an old chapter number or title — regenerate to update: ${stale.map((v) => v.lecture_id).join(', ')}`);
+  if (staleSum.length) log(`${staleSum.length} summary video(s) filed under an old chapter number or title — regenerate to update: ${staleSum.map((v) => v.module_id).join(', ')}`);
 }
 
 async function runSync() {

@@ -206,9 +206,24 @@ test('course tables: order by modules/lectures orders, real titles, orphans and 
   assert.deepEqual(ins[2].position, { index: 3, count: 3 });
   assert.equal(ins[2].chapter_number, 1);
   assert.equal(ins.excluded.length, 2);
+  // A book that continues NCERT's numbering (Mathematics Part II opens at Chapter 7).
+  const part2 = lectureInputs(rows, courseLookup({ courses: { 29: { class: 12, subject: 'Mathematics', pack: 'mathematics', chapter_start: 7 } } }));
+  assert.equal(part2[0].chapter_number, 7);
   assert.equal(exclusionOf(rows[4]), 'not in the lectures table (orphan row)');
   assert.equal(titleCase('COULOMB’S LAW'), 'Coulomb’s Law');
   assert.equal(titleCase('THE pH SCALE'), 'The pH Scale');
+});
+
+test('chapter numbers rank against the whole course when a load picks one chapter', async () => {
+  const { rowsFromFile } = await import('../src/sources/textbook.js');
+  const r = (module_id, module_order, lecture_id) => ({ course_id: 83, module_id, lecture_id, content: doc(para(50)), mini_lecture: null, keywords: null,
+    lecture_title: `L${lecture_id}`, lecture_order: 1, lecture_active: 1, module_title: `M${module_id}`, module_order, module_active: 1, course_title: 'Mathematics Part II', course_active: 1 });
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'hvr-')), 'x.jsonl');
+  fs.writeFileSync(file, [r(574, 7, 1), r(576, 8, 2), r(577, 9, 3)].map((x) => JSON.stringify(x)).join('\n'));
+  const rows = await rowsFromFile(file, { module: [577] });
+  assert.equal(rows.length, 1);
+  const ins = lectureInputs(rows, courseLookup({ courses: { 83: { class: 12, subject: 'Mathematics', pack: 'mathematics', chapter_start: 7 } } }), { module: [577] });
+  assert.equal(ins[0].chapter_number, 9);
 });
 
 test('openers: intro and chapter index facts come from the course tables', async () => {

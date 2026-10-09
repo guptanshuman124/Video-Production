@@ -23,8 +23,9 @@ const SCHEMA = {
 export async function reviewPart(G, k, slides, narration) {
   const { llm, prepared, outline } = G;
   const part = outline.parts[k];
+  const S = prepared.summary || {};
   const user = [
-    `CHAPTER SUMMARY: "${prepared.chapter.title}" — part ${k + 1} of ${outline.parts.length}: ${part.title}`,
+    `${S.course_title ? `BOOK: ${S.course_title} · ` : ''}CHAPTER SUMMARY: ${S.chapter_number ? `Chapter ${S.chapter_number}: ` : ''}"${prepared.chapter.title}" — part ${k + 1} of ${outline.parts.length}: ${part.title}`,
     '# MUST INCLUDE (this part)',
     ...(part.must_include.length ? part.must_include.map((x) => `- ${x}`) : ['- (nothing listed)']),
     '',

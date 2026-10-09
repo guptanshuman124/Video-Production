@@ -10,6 +10,7 @@
 import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { exclusionOf, titleCase, loadRows, lectureInputs } from '../sources/textbook.js';
+import { chapterNumbers } from '../sources/chapters.js';
 import { summaryInput } from '../summary/input.js';
 import { courseLookup } from '../curriculum/courses.js';
 import { loadPacks } from '../templates.js';
@@ -57,10 +58,11 @@ export function buildCatalog(rows, { meta = courseLookup(), packs = loadPacks() 
   for (const [courseId, list] of byCourse) {
     const m = meta(courseId);
     if (!m || !m.class) continue;                 // not in config/courses.yaml → not offered
-    // Chapter number: rank of modules.orders inside the course.
+    // Chapter number: rank of modules.orders inside the course, from its chapter_start.
     const modOrder = new Map();
     for (const r of list) modOrder.set(Number(r.module_id), Number(r.module_order ?? r.module_id));
-    const modules = [...modOrder.entries()].sort((a, b) => (a[1] - b[1]) || (a[0] - b[0])).map(([id]) => id);
+    const numbers = chapterNumbers(modOrder, m.chapter_start);
+    const modules = [...numbers.keys()];
     const cls = classes.get(m.class) || { class_no: m.class, name: `Class ${m.class}`, subjects: new Map() };
     classes.set(m.class, cls);
     const subj = cls.subjects.get(m.subject) || { subject: m.subject, books: [] };
@@ -68,13 +70,14 @@ export function buildCatalog(rows, { meta = courseLookup(), packs = loadPacks() 
     const book = { course_id: courseId, title: String(list[0].course_title || m.subject).trim(), chapters: [] };
     subj.books.push(book);
 
-    modules.forEach((moduleId, k) => {
+    modules.forEach((moduleId) => {
+      const no = numbers.get(moduleId);
       const rowsOf = list.filter((r) => Number(r.module_id) === moduleId).sort(byOrder);
       const mod = m.modules?.[moduleId];
       const pack = mod?.pack ?? (m.pack === 'science' ? null : m.pack);
       const chapter = {
-        module_id: moduleId, no: k + 1,
-        title: m.chapters?.[moduleId] || titleCase(rowsOf[0].module_title) || `Chapter ${k + 1}`,
+        module_id: moduleId, no,
+        title: m.chapters?.[moduleId] || titleCase(rowsOf[0].module_title) || `Chapter ${no}`,
         pack, pack_review: !!mod?.review,
         supported: !!pack && installed.has(pack),
         why: !pack ? 'no template pack chosen for this chapter' : installed.has(pack) ? null : `waiting for the ${PACK_NAMES[pack] || pack} template pack`,

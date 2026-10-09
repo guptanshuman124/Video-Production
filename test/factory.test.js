@@ -15,7 +15,7 @@ test('catalog: course-table order, numbering and library folders', () => {
     row({ lecture_id: 99, course_id: 60, module_id: 2, lecture_title: 'Old', lecture_active: 0, module_title: 'x', module_order: 1 }),   // inactive: left out
   ];
   const c = buildCatalog(rows, {
-    meta: meta({ 60: { class: 12, subject: 'Physics', pack: 'physics' }, 66: { class: 12, subject: 'Physics', pack: 'physics' }, 70: { class: 12, subject: 'English', pack: 'theory' } }),
+    meta: meta({ 60: { class: 12, subject: 'Physics', pack: 'physics' }, 66: { class: 12, subject: 'Physics', pack: 'physics', chapter_start: 9 }, 70: { class: 12, subject: 'English', pack: 'theory' } }),
     packs,
   });
   assert.equal(c.lectures.size, 4);
@@ -27,6 +27,9 @@ test('catalog: course-table order, numbering and library folders', () => {
   assert.equal(coulomb.lecture_title, 'Coulomb’s Law');
   // Two Physics books in Class 12: a book folder between subject and chapter.
   assert.equal(coulomb.library_path, 'Class 12/Physics/Physics Part I/Chapter 1 - Electric Charges and Fields/Lecture 2 - Coulomb’s Law.mp4');
+  // Physics Part II continues NCERT's numbering (chapter_start: 9).
+  assert.equal(c.lectures.get(21).chapter_no, 9);
+  assert.equal(c.lectures.get(21).library_path, 'Class 12/Physics/Physics Part II/Chapter 9 - Ray Optics/Lecture 1 - Ray Optics Basics.mp4');
   // One English book: no book folder. No English templates yet: listed but not supported.
   const eng = c.lectures.get(31);
   assert.equal(eng.library_path, 'Class 12/English/Chapter 1 - Flamingo 1/Lecture 1 - The Last Lesson.mp4');

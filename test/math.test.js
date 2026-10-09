@@ -66,3 +66,22 @@ test('G3: a derivation goal is a maths field — never wrapped in $…$, and str
   assert.equal(dollars.data.goal, String.raw`a_c = \frac{v^2}{R}`);
   assert.ok(dollars.issues.some((i) => i.code === 'LATEX_UNWRAPPED'));
 });
+
+test('G3: a lone $ or a control character in slide text is an error, not a "$" on screen', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const { slideTypes, checkSlideData, words } = await import('../src/slides.js');
+  const T = slideTypes(await buildTemplates()).chemistry;
+  const table = (cells) => ({ title: 'Reduction Versus Decarboxylation', columns: ['Basis', 'Reduction', 'Decarboxylation'],
+    rows: [['Starting material', 'Carboxylic acid', 'Sodium carboxylate'], ['Conditions', cells[0], 'Heat with soda lime'], ['Product', 'Primary alcohol', cells[1]]] });
+  const codes = (r) => r.issues.filter((i) => i.severity === 'error').map((i) => i.code);
+  const ok = checkSlideData(T.comparison, table([String.raw`$\ce{LiAlH4}$, then $\ce{H3O+}$`, String.raw`Hydrocarbon and $\ce{Na2CO3}$`]), { where: 's07' });
+  assert.ok(!codes(ok).some((c) => c === 'UNBALANCED_MATH' || c === 'CONTROL_CHAR'), JSON.stringify(ok.issues));
+  // The Lecture 4 symptoms: "Has an $", a cell that is just "$", "$<backspace>9".
+  assert.ok(codes(checkSlideData(T.comparison, table(['Has an $', 'Hydrocarbon']), { where: 's07' })).includes('UNBALANCED_MATH'));
+  assert.ok(codes(checkSlideData(T.comparison, table(['$', 'Hydrocarbon']), { where: 's07' })).includes('UNBALANCED_MATH'));
+  assert.ok(codes(checkSlideData(T.comparison, table(['$\b9', 'Hydrocarbon']), { where: 's07' })).includes('CONTROL_CHAR'));
+  // A literal dollar stays allowed.
+  assert.ok(!codes(checkSlideData(T.comparison, table([String.raw`Costs \$5`, 'Hydrocarbon']), { where: 's07' })).includes('UNBALANCED_MATH'));
+  // A formula is one word for the length limits.
+  assert.equal(words(String.raw`Heat with $\ce{CH3COOH + PCl5 -> CH3COCl + POCl3 + HCl}$`), 3);
+});
