@@ -243,10 +243,18 @@ export function gateLecturePlan(plan, ctx) {
     if (to && ctx.types[to]) { fix('IMAGE_FALLBACK', i, `slide ${i + 1}: no suitable image for ${s.slide_type}; switched to ${to}`); s.slide_type = to; }
     else issues.push(issue('IMAGE_REQUIRED', 'error', at(i), `slide ${i + 1}: ${s.slide_type} needs an image and none fits`));
   });
-  const minUsed = Math.min(ctx.pack.images?.minUsed ?? 1, ctx.images.length);
+  // Only figures some teaching slide can show are insisted on: a tall or narrow
+  // figure may fit no teaching type (only a question slide, e.g. solved_example), and
+  // asking the planner for the impossible fails every repair (lecture 2901).
+  const teachingFits = (im) => Object.entries(ctx.types)
+    .filter(([t, st]) => takesImage(st.spec) && !st.spec.question && !OPENERS.has(t) && fitsRatio(im, st.spec.ratios)).map(([t]) => t);
+  const showable = ctx.images.map((im) => ({ im, fits: teachingFits(im) })).filter((x) => x.fits.length);
+  const minUsed = Math.min(ctx.pack.images?.minUsed ?? 1, showable.length);
   const shown = S.filter((s) => s.image_id).length;
   if (shown < minUsed) {
-    issues.push(issue('IMAGES_UNUSED', 'error', '/slides', `the catalog has ${ctx.images.length} usable figure(s) (${ctx.images.map((im) => im.id).join(', ')}) but the plan shows ${shown} — put the matching figures on labeled_diagram / image_points / mechanism / definition slides`));
+    issues.push(issue('IMAGES_UNUSED', 'error', '/slides', `the catalog has ${showable.length} figure(s) a teaching slide can show — ${showable.map((x) => `${x.im.id} on ${x.fits.join(' / ')}`).join('; ')} — but the plan shows ${shown}: put the matching figure on one of those slide types`));
+  } else if (!shown && ctx.images.length && !showable.length) {
+    issues.push(issue('IMAGES_UNSHOWABLE', 'warning', '/slides', `no teaching slide type can show this lecture's figure(s) (${ctx.images.map((im) => `${im.id} ${im.width}×${im.height}`).join(', ')}): the lecture has no figure`));
   } else if (shown < Math.min(ctx.images.length, 3)) {
     issues.push(issue('IMAGES_FEW', 'warning', '/slides', `${shown} of ${ctx.images.length} usable figures shown`));
   }

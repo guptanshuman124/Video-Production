@@ -222,6 +222,7 @@ function newTemplate(id) {
 const usage = `
   LECTURE FACTORY (Kubernetes: npm run factory -- up; dashboard http://localhost:8080)
   hvr central                                    backend + scheduler + dashboard (FACTORY_DB_URL, TEXTBOOK_DB_URL, LIBRARY_DIR)
+  hvr factory-rename [--apply]                   stored / published videos → current chapter numbers and titles (OneDrive, YouTube)
   hvr worker                                     claim lectures from CENTRAL_URL and produce them
 
   TEXTBOOK LECTURES (tutorai.textbook_raw: one row = one video)
@@ -277,10 +278,11 @@ const COMMANDS = {
   prompt: () => product.prompt(file, flag, has),
   central: async () => (await import('./factory/central.js')).runCentral(),
   worker: async () => (await import('./factory/worker.js')).runWorker(),
+  'factory-rename': async () => (await import('./factory/rename.js')).runRename(flag, has),
 };
 
 try {
-  const needsArg = !['templates', 'packs', 'lectures', 'summary', 'central', 'worker'].includes(cmd);
+  const needsArg = !['templates', 'packs', 'lectures', 'summary', 'central', 'worker', 'factory-rename'].includes(cmd);
   if (!COMMANDS[cmd] || (needsArg && !file)) { console.log(usage); process.exit(1); }
   await COMMANDS[cmd]();
 } catch (e) {

@@ -121,13 +121,48 @@ export async function remove(itemId) {
   const meta = await graph('GET', `/drives/${driveId}/items/${itemId}?select=id,parentReference`, { ok: [404] });
   if (meta.status === 404) return;
   await graph('DELETE', `/drives/${driveId}/items/${itemId}`, { ok: [404] });
-  let parent = meta.json.parentReference?.id;
+  await pruneEmpty(meta.json.parentReference?.id);
+}
+
+// Deletes the folder and the parents it leaves empty, up to (never including) a library root.
+async function pruneEmpty(folderId) {
+  const { driveId } = await drive();
+  let parent = folderId;
   for (let depth = 0; parent && depth < 4; depth++) {
     const p = await graph('GET', `/drives/${driveId}/items/${parent}?select=id,name,folder,parentReference`, { ok: [404] });
-    if (p.status === 404 || p.json.name === ROOT || !p.json.folder || p.json.folder.childCount > 0 || !p.json.parentReference?.path) break;
+    if (p.status === 404 || p.json.name === ROOT || p.json.name === SUMMARY_ROOT || !p.json.folder || p.json.folder.childCount > 0 || !p.json.parentReference?.path) break;
     await graph('DELETE', `/drives/${driveId}/items/${parent}`, { ok: [404] });
     parent = p.json.parentReference.id;
   }
+}
+
+// Creates the folder path (relative to the drive root) one level at a time; existing levels are fine.
+async function ensureFolder(folderPath) {
+  const { driveId } = await drive();
+  let at = '';
+  for (const name of folderPath.split('/').filter(Boolean)) {
+    const parent = at ? `/drives/${driveId}/root:/${encodePath(at)}:/children` : `/drives/${driveId}/root/children`;
+    await graph('POST', parent, { body: JSON.stringify({ name, folder: {}, '@microsoft.graph.conflictBehavior': 'fail' }), ok: [409] });
+    at = at ? `${at}/${name}` : name;
+  }
+}
+
+// Moves / renames the file to <root>/<rel> (folders created as needed), then removes
+// the old folders it left empty. A file already at the target is not overwritten:
+// Graph answers 409 and the error is thrown. Returns { id, webUrl }.
+export async function move(itemId, rel, { root = ROOT } = {}) {
+  const { driveId } = await drive();
+  const target = remotePath(rel, root);
+  const dir = target.split('/').slice(0, -1).join('/');
+  const name = target.split('/').at(-1);
+  const before = await graph('GET', `/drives/${driveId}/items/${itemId}?select=id,parentReference`);
+  await ensureFolder(dir);
+  const r = await graph('PATCH', `/drives/${driveId}/items/${itemId}`, {
+    body: JSON.stringify({ name, parentReference: { driveId, path: `/drive/root:/${dir}` } }),
+  });
+  const from = before.json.parentReference?.id;
+  if (from && from !== r.json.parentReference?.id) await pruneEmpty(from);
+  return { id: r.json.id, webUrl: r.json.webUrl };
 }
 
 // Web link to the library root folder (for the dashboard); created if missing.

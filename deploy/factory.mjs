@@ -183,11 +183,14 @@ try {
     const which = process.argv[3] || 'central';
     const target = which === 'db' ? 'statefulset/factory-db' : `deployment/${which}`;
     kubectl(['-n', NS, 'logs', target, '--tail=200', '-f', ...(which === 'worker' ? ['--all-pods=true', '--prefix'] : [])]);
+  } else if (cmd === 'rename') {
+    // Stored / published videos → current catalog names (src/factory/rename.js), inside the central pod.
+    kubectl(['-n', NS, 'exec', 'deployment/central', '--', 'node', 'src/cli.js', 'factory-rename', ...process.argv.slice(3)]);
   } else if (cmd === 'down') {
     sh(kindBin(), ['delete', 'cluster', '--name', CLUSTER]);
     say(`cluster deleted. Videos are still in ${LIBRARY}\n`);
   } else {
-    console.log('usage: npm run factory -- up | deploy | status | logs [central|worker|db] | down');
+    console.log('usage: npm run factory -- up | deploy | status | logs [central|worker|db] | rename [--apply] | down');
     process.exitCode = 1;
   }
 } catch (e) {

@@ -24,6 +24,7 @@ import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { waitForDb, json, parse, getSetting, setSetting } from './db.js';
 import { loadCatalog, inputFor } from './catalog.js';
+import { refreshNumbers as refreshRows } from './rename.js';
 import { syncSource } from './sync.js';
 import { probeAll } from '../qa.js';
 import * as k8s from './k8s.js';
@@ -695,30 +696,18 @@ async function reloadCatalog() {
   broadcast('refresh', { what: 'catalog' });
 }
 
-// Chapter numbers come from the catalog (config/courses.yaml chapter_start), so a
-// renumbered book updates the job and summary rows here. Videos already made carry
-// the old number on their intro slide and sit at the old path: they are listed in
-// the log; regenerating one (Redo) files it at the new path and removes the old copy.
+// Chapter numbers and titles come from the catalog (config/courses.yaml chapter_start),
+// so a renumbered book updates the job and summary rows here. Videos already stored
+// and published keep their old path and YouTube titles until `npm run factory -- rename`
+// (factory/rename.js) is run; their count is logged.
 async function refreshNumbers() {
-  let jobs = 0;
-  let sums = 0;
-  const [jrows] = await db.query('SELECT lecture_id, chapter_no FROM jobs');
-  for (const j of jrows) {
-    const l = catalog.lectures.get(j.lecture_id);
-    if (l && Number(j.chapter_no) !== l.chapter_no) { await db.query('UPDATE jobs SET chapter_no=? WHERE lecture_id=?', [l.chapter_no, j.lecture_id]); jobs++; }
-  }
-  const [srows] = await db.query('SELECT module_id, chapter_no FROM summaries');
-  for (const r of srows) {
-    const ch = catalog.chapters.get(r.module_id);
-    if (ch && Number(r.chapter_no) !== ch.chapter_no) { await db.query('UPDATE summaries SET chapter_no=? WHERE module_id=?', [ch.chapter_no, r.module_id]); sums++; }
-  }
+  const n = await refreshRows(db, catalog);
+  if (n.jobs || n.summaries) log(`chapter numbers: updated ${n.jobs} job(s), ${n.summaries} summary row(s)`);
   const [vids] = await db.query('SELECT lecture_id, path FROM videos');
-  const stale = vids.filter((v) => { const l = catalog.lectures.get(v.lecture_id); return l && v.path !== l.library_path; });
   const [svids] = await db.query('SELECT module_id, path FROM summary_videos');
-  const staleSum = svids.filter((v) => { const ch = catalog.chapters.get(v.module_id); return ch && v.path !== ch.summary_path; });
-  if (jobs || sums) log(`chapter numbers: updated ${jobs} job(s), ${sums} summary row(s)`);
-  if (stale.length) log(`${stale.length} lecture video(s) filed under an old chapter number or title — regenerate to update: ${stale.map((v) => v.lecture_id).join(', ')}`);
-  if (staleSum.length) log(`${staleSum.length} summary video(s) filed under an old chapter number or title — regenerate to update: ${staleSum.map((v) => v.module_id).join(', ')}`);
+  const stale = vids.filter((v) => { const l = catalog.lectures.get(v.lecture_id); return l && v.path !== l.library_path; }).length
+    + svids.filter((v) => { const ch = catalog.chapters.get(v.module_id); return ch && v.path !== ch.summary_path; }).length;
+  if (stale) log(`${stale} stored video(s) are filed under an old chapter number or title — run \`npm run factory -- rename\``);
 }
 
 async function runSync() {

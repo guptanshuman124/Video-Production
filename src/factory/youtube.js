@@ -206,6 +206,38 @@ export async function addToPlaylist(playlistId, videoId, position) {
   }
 }
 
+// ---- renaming what is already published (factory/rename.js) ----------------------------------
+
+// id -> snippet for up to any number of videos / playlists (50 per call, 1 quota unit each).
+async function snippets(kind, ids) {
+  const out = new Map();
+  for (let i = 0; i < ids.length; i += 50) {
+    const r = await call('GET', `/${kind}?part=snippet&maxResults=50&id=${ids.slice(i, i + 50).map(encodeURIComponent).join(',')}`);
+    for (const it of r.items || []) out.set(it.id, it.snippet);
+  }
+  return out;
+}
+export const getVideos = (ids) => snippets('videos', ids);
+export const getPlaylists = (ids) => snippets('playlists', ids);
+
+// New title, description and tags on an uploaded video (50 units). `current` is its
+// snippet from getVideos: fields not set here (e.g. the languages) are kept.
+export async function updateVideo(videoId, meta, current = {}) {
+  await call('PUT', '/videos?part=snippet', {
+    id: videoId,
+    snippet: {
+      title: meta.title, description: meta.description, tags: meta.tags, categoryId: current.categoryId || '27',
+      defaultLanguage: meta.language || current.defaultLanguage, defaultAudioLanguage: meta.audioLanguage || current.defaultAudioLanguage,
+    },
+  });
+}
+
+export async function updatePlaylist(playlistId, title, description, current = {}) {
+  await call('PUT', '/playlists?part=snippet', { id: playlistId, snippet: { title, description, defaultLanguage: current.defaultLanguage || 'en' } });
+}
+
+export const quotaExceeded = (e) => /daily quota is used up|daily upload limit/.test(String(e?.message));
+
 // ---- titles, descriptions, tags -------------------------------------------------------------
 
 const clean = (s) => String(s ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();

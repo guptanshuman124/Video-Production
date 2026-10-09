@@ -206,6 +206,14 @@ test('G2: empty image slots are filled with the figure whose description matches
   assert.ok(codes(none.issues).includes('IMAGES_UNUSED'), 'figures exist but none is shown');
 });
 
+test('G2: a figure no teaching slide can show (lecture 2901: tall 242×433) is a warning, not a dead end', () => {
+  const images = [{ id: 'img_2901_1', width: 242, height: 433, ratio: 'other', kind: 'figure', description: 'Field lines near a diamagnetic and a paramagnetic substance' }];
+  const s = (slide_type, extra = {}) => ({ slide_type, title: 't', purpose: 'p', key_points: ['k'], source_refs: ['s04'], image_id: null, ...extra });
+  const r = gateLecturePlan({ lecture_title: 'Diamagnetism', slides: [s('definition'), s('characteristics'), s('quick_revision', { source_refs: [] }), s('mcq'), s('mcq')] }, ctx({ images }));
+  assert.ok(!codes(r.issues).includes('IMAGES_UNUSED'), JSON.stringify(r.issues.filter((i) => i.severity === 'error')));
+  assert.ok(r.issues.some((i) => i.code === 'IMAGES_UNSHOWABLE' && i.severity === 'warning'));
+});
+
 test('G2: a well-matched figure in the wrong shape keeps its slide — the type switches, figures are not swapped', () => {
   // Lecture 2853: the planner put the wide rods figure on image_points and the
   // tall electroscope on labeled_diagram. Clearing both let autofill swap them.
