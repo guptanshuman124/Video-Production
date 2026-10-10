@@ -85,3 +85,22 @@ test('G3: a lone $ or a control character in slide text is an error, not a "$" o
   // A formula is one word for the length limits.
   assert.equal(words(String.raw`Heat with $\ce{CH3COOH + PCl5 -> CH3COCl + POCl3 + HCl}$`), 3);
 });
+
+test('G3: a worked example too tall for its card goes back to the writer; lecture 2602 fits in two columns', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const { slideTypes, checkSlideData } = await import('../src/slides.js');
+  const T = slideTypes(await buildTemplates()).mathematics;
+  const M = String.raw`\begin{bmatrix}4&4&4&-7\\35&-2&-39&22\\31&2&-27&11\end{bmatrix}`;
+  const ex = (n) => ({
+    title: 'Verify Associativity',
+    problem: String.raw`If $A=\begin{bmatrix}1&1&-1\\2&0&3\\3&-1&2\end{bmatrix}$ and $B=\begin{bmatrix}1&3\\0&2\\-1&4\end{bmatrix}$, show that $(AB)C=A(BC)$.`,
+    steps: Array.from({ length: n }, (_, i) => ({ text: `Step ${i + 1}: multiply.`, formula: `X_${i}=${M}` })),
+    answer: `Thus, $(AB)C=A(BC)=${M}$.`,
+    tip: 'Regroup the factors; do not change their order.',
+  });
+  const errors = (d) => checkSlideData(T.solved_example, d, { where: 's03' }).issues.filter((i) => i.code === 'TEMPLATE_CHECK');
+  assert.deepEqual(errors(ex(4)), [], 'four 3-row matrices fit in two columns (measured in the stage)');
+  const tall = errors(ex(6));
+  assert.equal(tall.length, 1);
+  assert.match(tall[0].message, /cut off screen/);
+});

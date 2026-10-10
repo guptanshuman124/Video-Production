@@ -20,6 +20,12 @@
   gap: calc(20px - var(--n) * 2px);
   font: 400 calc(29px - var(--n) * 0.8px)/1.35 var(--font-body); color: var(--brand-ink);
 }
+/* Tall solutions (template.jsx solutionFit): two columns, filled top to bottom (1–2 | 3–4). */
+.steps.two {
+  display: grid; grid-auto-flow: column; grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(var(--rows), auto); align-content: start; column-gap: 56px;
+  & li { display: list-item; }
+}
 .steps li::marker { color: var(--brand-navy); font-weight: 700; }
 .steps li { padding-left: 6px; }
 .stext { margin-right: 18px; }

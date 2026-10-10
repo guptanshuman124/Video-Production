@@ -57,21 +57,90 @@ export const schema = {
   cues: { type: 'object', fields: { problem: 'number', steps: { type: 'list', of: 'number' }, answer: 'number', image: 'number' } },
 };
 
+// ---- fitting the SOLUTION card ------------------------------------------------------------
+// A step with a 3-row matrix is three lines tall, and four of them overflow the
+// card (lecture 2602: the 4th step sat below the card, so its reveal never showed).
+// Heights are estimated from the text (measured in the stage, 1920×1080):
+// a line of steps ≈ 1.5 × the step font, cards stack in 756px with 14px gaps.
+// Tall solutions without an image go to two columns (steps 1–2 | 3–4); what
+// still needs more than FIT_LIMIT × the room (the stage shrinks to 0.7 at most)
+// is sent back to the writer by `check`.
+const CARDS_H = 756;
+const FIT_LIMIT = 1.3;
+const MATRIX = /\\begin\{([a-zA-Z]*matrix|array|cases|aligned)\}([\s\S]*?)\\end\{\1\}/g;
+// Rows a piece of LaTeX occupies: matrix rows, 2 for fractions / limits, else 1.
+function texRows(t) {
+  let rows = 1;
+  for (const m of String(t || '').matchAll(MATRIX)) rows = Math.max(rows, m[2].split(/\\\\/).length);
+  if (/\\[dt]?frac|\\(sum|int|prod|lim)\s*_/.test(t || '')) rows = Math.max(rows, 2);
+  return rows;
+}
+// Characters the LaTeX shows on one line: a matrix counts as its longest row.
+function texChars(t) {
+  return String(t || '')
+    .replace(MATRIX, (_, __, body) => body.split(/\\\\/).reduce((a, r) => (r.length > a.length ? r : a), '').replace(/&/g, '  '))
+    .replace(/\\[a-zA-Z]+/g, '').replace(/[{}^_$]/g, '').length;
+}
+const mathOf = (s) => [...String(s || '').matchAll(/\$([^$]+)\$/g)].map((m) => m[1]);
+const textRows = (s) => Math.max(1, ...mathOf(s).map(texRows));
+const textChars = (s) => String(s || '').replace(/\$([^$]+)\$/g, (_, m) => 'x'.repeat(texChars(m))).length;
+
+// { columns: 1 | 2, ratio }: how much of the SOLUTION card's room the steps need.
+export function solutionFit(d) {
+  const n = d.steps?.length || 0;
+  const wide = d.image ? 1112 : 1688;                       // text width inside a card
+  const box = (s, perLine, line) => {
+    const lines = Math.max(1, Math.ceil(textChars(s) / perLine));
+    return (lines - 1 + textRows(s)) * line;
+  };
+  const problem = Math.max(150, 71 + box(d.problem, wide / 13.5, 38));
+  const answer = Math.max(130, 71 + box(d.answer, wide / 13.5, 38) + (d.tip ? 10 + box(d.tip, wide / 11, 31) : 0));
+  const room = CARDS_H - 28 - problem - answer;
+  const font = 29 - n * 0.8;
+  const gap = 20 - n * 2;
+  const stepH = (st, width) => {
+    const perLine = (width - 42) / (font * 0.48);
+    const chars = textChars(st.text) + (st.formula ? texChars(st.formula) + 2 : 0);
+    const rows = Math.max(textRows(st.text), st.formula ? texRows(st.formula) : 1);
+    return (Math.max(1, Math.ceil(chars / perLine)) - 1 + rows) * font * 1.5;
+  };
+  const need = (hs) => 74 + hs.reduce((a, h) => a + h, 0) + Math.max(0, hs.length - 1) * gap;
+  const one = need((d.steps || []).map((st) => stepH(st, wide)));
+  const fit = { columns: 1, ratio: room > 0 ? one / room : Infinity };
+  if (fit.ratio > 1 && !d.image && n >= 3) {
+    const half = (d.steps || []).map((st) => stepH(st, wide / 2 - 20));
+    const k = Math.ceil(n / 2);
+    const two = Math.max(need(half.slice(0, k)), need(half.slice(k)));
+    const ratio = room > 0 ? two / room : Infinity;
+    if (ratio < fit.ratio) return { columns: 2, ratio, rows: k };
+  }
+  return fit;
+}
+
+// G3 (slides.js): a solution that cannot fit even in its best layout goes back to the writer.
+export function check(d) {
+  const fit = solutionFit(d);
+  if (fit.ratio <= FIT_LIMIT) return [];
+  const big = (d.steps || []).filter((s) => texRows(s.formula) >= 3 || textRows(s.text) >= 3).length;
+  return [`the worked solution is about ${Math.round(fit.ratio * 100)}% of the height its card has${big ? ` (${big} step(s) show a matrix of 3+ rows)` : ''}: the last steps would be cut off screen. Show fewer tall formulas — keep a big matrix only where it is the point of the step, give other results in words or as a single entry (e.g. $(AB)_{11}=4$), shorten the problem/answer, or split the example across two solved_example slides`];
+}
+
 export default function WorkedExample(d) {
   const c = d.cues || {};
   const n = d.steps.length;
+  const fit = solutionFit(d);
   return (
     <>
       <Header lecture={d.lecture} logo={d.logo} />
       <SlideTitle text={d.title} />
-      <div className={d.image ? 'cards with-image' : 'cards'} style={{ '--n': n }}>
+      <div className={d.image ? 'cards with-image' : 'cards'} style={{ '--n': n, '--rows': fit.rows || n }}>
         <section className="card problem" anim="riseIn" delay={350} at={sec(c.problem)} exit="riseOut">
           <div className="label">{d.problemLabel}</div>
           <div className="text"><Rich text={d.problem} /></div>
         </section>
         <section className="card solution" anim="riseIn" delay={800} at={cue(c.steps, 0)} exit="riseOut">
           <div className="label">{d.stepsLabel}</div>
-          <ol className="steps" stagger={260} delay={1100}>
+          <ol className={fit.columns === 2 ? 'steps two' : 'steps'} stagger={260} delay={1100}>
             {d.steps.map((s, i) => (
               <li anim="riseIn" at={cue(c.steps, i)}>
                 <span className="stext"><Rich text={s.text} /></span>
