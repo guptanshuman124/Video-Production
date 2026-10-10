@@ -31,10 +31,10 @@ const RANK = { fail: 3, running: 2, warn: 1, pass: 0 };
 const MAX_CRASH_RETRIES = 2;
 const WORKER_LOST_S = 180;    // summaries render for a long time; heartbeats keep coming meanwhile
 const COLS = 'module_id, status, stage, progress, from_stage, priority, attempts, worker, error_code, error_stage, error_message, cost_usd, queued_at, started_at, finished_at, stages';
-const VIDEO_COLS = 'module_id, course_id, class_no, path, bytes, duration_s, width, height, slides, parts, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at';
+const VIDEO_COLS = 'module_id, course_id, class_no, path, bytes, duration_s, width, height, slides, parts, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at, yt_replaces';
 
 // ytProgressOf(id): the central's YouTube upload progress for this summary video (central.js publishes them).
-export function summaryService({ getDb, broadcast, route, getCatalog, library, keepLocal, onedrive, validateVideo, streamFile, log, ytProgressOf = () => null }) {
+export function summaryService({ getDb, broadcast, route, getCatalog, library, keepLocal, onedrive, validateVideo, streamFile, log, ytProgressOf = () => null, ytReplaced = async () => {} }) {
   const db = () => getDb();
   const now = () => new Date();
   const SUMMARY_ROOT = onedrive.SUMMARY_ROOT;
@@ -226,7 +226,7 @@ export function summaryService({ getDb, broadcast, route, getCatalog, library, k
     const rel = chapter.summary_path;
     const dest = path.join(ROOT, ...rel.split('/'));
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    const [[old]] = await db().query('SELECT path, remote_id FROM summary_videos WHERE module_id = ?', [id]);
+    const [[old]] = await db().query('SELECT path, remote_id, yt_video_id, yt_replaces FROM summary_videos WHERE module_id = ?', [id]);
     if (old && old.path !== rel) {
       removeFile(old.path);
       if (old.remote_id && onedrive.configured()) onedrive.remove(old.remote_id).catch((e) => log(`old OneDrive copy of summary ${id}: ${e.message}`));
@@ -246,6 +246,7 @@ export function summaryService({ getDb, broadcast, route, getCatalog, library, k
     await push(id);
     broadcast('summary-video', await videoRow(id));
     log(`stored summary ${id} → ${SUMMARY_ROOT}/${rel}`);
+    await ytReplaced(id, old);       // was on YouTube: offered as "Re-upload to YouTube"
     queueUpload(id);
     return { status: 200, body: { ok: true, path: rel } };
   }

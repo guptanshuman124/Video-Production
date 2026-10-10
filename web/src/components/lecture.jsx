@@ -22,7 +22,9 @@ export function StorageBadge({ v, provider }) {
 
 // YouTube, beside the SharePoint button: upload, its progress, the link once it is there,
 // or a retry after a failure. size 'sm' for table rows; summary: a chapter summary video (id = module_id).
-const YT_STEP = { download: 'Fetching from OneDrive', upload: 'Uploading', thumbnail: 'Thumbnail', playlist: 'Playlist' };
+// A regenerated video that was on YouTube (yt_replaces): "Re-upload" puts the new one up in the old
+// one's playlist place and deletes the old one.
+const YT_STEP = { download: 'Fetching from OneDrive', upload: 'Uploading', thumbnail: 'Thumbnail', playlist: 'Playlist', replace: 'Deleting old video' };
 export function YoutubeButton({ id, v, size, summary = false }) {
   const s = useStore();
   const [run, busy] = useAction();
@@ -39,9 +41,9 @@ export function YoutubeButton({ id, v, size, summary = false }) {
   const ready = v.storage === 'onedrive' || v.storage === 'local' || v.storage === 'failed';
   return (
     <Btn size={size} Icon={Youtube} busy={busy === 'yt'} disabled={!yt.connected || !ready}
-      title={!yt.connected ? 'Connect the YouTube channel first (Settings → YouTube)' : failed ? v.yt_error || '' : `Upload as ${yt.privacy} to ${yt.channel?.title || 'the channel'}, into the ${summary ? 'subject\'s chapter-summaries' : 'chapter'} playlist`}
+      title={!yt.connected ? 'Connect the YouTube channel first (Settings → YouTube)' : failed ? v.yt_error || '' : v.yt_replaces ? `This video was regenerated: upload it in the old one's playlist place, and delete the old one (youtu.be/${v.yt_replaces})` : `Upload as ${yt.privacy} to ${yt.channel?.title || 'the channel'}, into the ${summary ? 'subject\'s chapter-summaries' : 'chapter'} playlist`}
       onClick={() => run('yt', () => api('POST', `/api/${summary ? 'summary-videos' : 'videos'}/${id}/youtube`), (r) => (r.already ? 'Already on YouTube' : 'Queued for YouTube'))}>
-      {failed ? 'Retry YouTube' : 'Upload to YouTube'}
+      {failed ? 'Retry YouTube' : v.yt_replaces ? 'Re-upload to YouTube' : 'Upload to YouTube'}
     </Btn>
   );
 }

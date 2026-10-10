@@ -131,6 +131,7 @@ export async function openDb(url) {
   });
   // YouTube (youtube.js), lecture and summary videos: yt_status queued | uploading | done | failed;
   // the video id is saved as soon as the file is up, so a retry only redoes the playlist step.
+  // yt_replaces: after a regenerate, the old video's id, deleted once the new one is in its playlist.
   for (const table of ['videos', 'summary_videos']) await addColumns(pool, name, table, {
     yt_status: 'VARCHAR(20) NULL',
     yt_video_id: 'VARCHAR(40) NULL',
@@ -138,6 +139,7 @@ export async function openDb(url) {
     yt_error: 'TEXT NULL',
     yt_warning: 'TEXT NULL',
     yt_uploaded_at: 'DATETIME(3) NULL',
+    yt_replaces: 'VARCHAR(40) NULL',
   });
   // A worker busy with a summary video (module_id) instead of a lecture.
   await addColumns(pool, name, 'workers', { summary_id: 'INT NULL', task: 'VARCHAR(160) NULL' });

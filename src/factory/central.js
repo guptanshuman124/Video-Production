@@ -326,7 +326,7 @@ async function receiveVideo(req, id, worker) {
   const rel = lecture.library_path;
   const dest = path.join(LECTURES, ...rel.split('/'));
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  const [[old]] = await db.query('SELECT path, remote_id FROM videos WHERE lecture_id = ?', [id]);
+  const [[old]] = await db.query('SELECT path, remote_id, yt_video_id, yt_replaces FROM videos WHERE lecture_id = ?', [id]);
   if (old && old.path !== rel) {
     removeFromLibrary(old.path);
     // The old OneDrive copy sits at the old path (the title changed): remove it.
@@ -346,6 +346,7 @@ async function receiveVideo(req, id, worker) {
   await pushJob(id); pushWorkers(true);
   broadcast('video', await videoRow(id));
   log(`stored lecture ${id} → ${rel}`);
+  await markReplaced('lecture', id, old);
   queueUpload(id);
   return { status: 200, body: { ok: true, path: rel } };
 }
@@ -489,6 +490,18 @@ const YT = {
   },
 };
 
+// A regenerated video whose old version is on YouTube: the row forgets that upload (its id
+// moves to yt_replaces) and the dashboard offers "Re-upload to YouTube"; youtubeOne then
+// uploads the new file into the old one's playlist place and deletes the old video.
+async function markReplaced(kind, id, old) {
+  const was = youtube.replacedId(old);
+  if (!was) return;
+  const K = YT[kind];
+  await db.query(`UPDATE ${K.table} SET yt_status=NULL, yt_video_id=NULL, yt_error=NULL, yt_warning=NULL, yt_replaces=? WHERE ${K.key}=?`, [was, id]);
+  await K.log(id, 'info', `regenerated: https://youtu.be/${was} on YouTube is the old version — "Re-upload to YouTube" uploads this one and deletes it`);
+  await K.push(id);
+}
+
 async function queueYoutube(kind, id) {
   const K = YT[kind];
   const v = await K.row(id);
@@ -522,7 +535,7 @@ async function ytStep(kind, id, step, done = 0, total = 0) {
 async function youtubeOne(kind, id) {
   const K = YT[kind];
   const key = `${kind}:${id}`;
-  const [[v]] = await db.query(`SELECT path, remote_id, yt_video_id FROM ${K.table} WHERE ${K.key} = ?`, [id]);
+  const [[v]] = await db.query(`SELECT path, remote_id, yt_video_id, yt_replaces FROM ${K.table} WHERE ${K.key} = ?`, [id]);
   if (!v) return;
   await db.query(`UPDATE ${K.table} SET yt_status='uploading', yt_error=NULL WHERE ${K.key}=?`, [id]);
   const tmpDir = path.join(LIBRARY, '.youtube');
@@ -588,7 +601,19 @@ async function youtubeOne(kind, id) {
     const position = inList.filter((r) => (K.orderOf(r.id) ?? 1e9) < d.order).length;
     await youtube.addToPlaylist(playlistId, videoId, position);
 
-    await db.query(`UPDATE ${K.table} SET yt_status='done', yt_playlist_id=?, yt_error=NULL, yt_warning=?, yt_uploaded_at=? WHERE ${K.key}=?`,
+    // 5. A regenerated video: the old upload is deleted (and with it its playlist entry). Not
+    //    deleted is only a warning — the new video is up either way.
+    if (v.yt_replaces && v.yt_replaces !== videoId) {
+      await ytStep(kind, id, 'replace');
+      try {
+        const gone = await youtube.deleteVideo(v.yt_replaces);
+        await K.log(id, 'info', `replaced https://youtu.be/${v.yt_replaces} → https://youtu.be/${videoId}${gone ? '; the old video is deleted' : ' (the old video was already deleted)'}`);
+      } catch (e) {
+        warnings.push(`old video https://youtu.be/${v.yt_replaces} not deleted (${e.message}) — delete it in YouTube Studio`);
+      }
+    }
+
+    await db.query(`UPDATE ${K.table} SET yt_status='done', yt_playlist_id=?, yt_error=NULL, yt_warning=?, yt_uploaded_at=?, yt_replaces=NULL WHERE ${K.key}=?`,
       [playlistId, warnings.join('; ') || null, now(), id]);
     if (warnings.length) await K.log(id, 'warn', warnings.join('; '));
     await K.log(id, 'info', `added to the playlist (position ${position + 1})`);
@@ -753,7 +778,7 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-const VIDEO_COLS = 'lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at';
+const VIDEO_COLS = 'lecture_id, course_id, module_id, class_no, path, bytes, duration_s, width, height, slides, cost_usd, created_at, storage, remote_url, remote_error, uploaded_at, yt_status, yt_video_id, yt_playlist_id, yt_error, yt_warning, yt_uploaded_at, yt_replaces';
 const withUpload = (v) => {
   let out = uploading.has(v.lecture_id) ? { ...v, upload: uploading.get(v.lecture_id) } : v;
   if (ytProgress.has(`lecture:${v.lecture_id}`)) out = { ...out, yt: ytProgress.get(`lecture:${v.lecture_id}`) };
@@ -797,6 +822,7 @@ const route = (method, pattern, fn) => routes.push({ method, re: new RegExp(`^${
 const summaries = summaryService({
   getDb: () => db, broadcast, route, getCatalog: () => catalog, library: LIBRARY, keepLocal: KEEP_LOCAL,
   onedrive, validateVideo, streamFile, log, ytProgressOf: (id) => ytProgress.get(`summary:${id}`),
+  ytReplaced: (id, old) => markReplaced('summary', id, old),
 });
 
 // Dashboard data

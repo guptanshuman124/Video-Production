@@ -236,7 +236,22 @@ export async function updatePlaylist(playlistId, title, description, current = {
   await call('PUT', '/playlists?part=snippet', { id: playlistId, snippet: { title, description, defaultLanguage: current.defaultLanguage || 'en' } });
 }
 
-export const quotaExceeded = (e) => /daily quota is used up|daily upload limit/.test(String(e?.message));
+// ---- replacing a regenerated video ------------------------------------------------------------
+// YouTube cannot swap the file of an uploaded video: a regenerated lecture / summary is uploaded
+// as a new video ("Re-upload to YouTube"), put in the old one's playlist slot, and the old one is deleted.
+
+// The YouTube video a freshly stored file replaces, from the row it overwrites: the uploaded one,
+// or the one still waiting to be replaced (regenerated twice before the replacement went up).
+export const replacedId = (old) => old?.yt_video_id || old?.yt_replaces || null;
+
+// Deleting a video also removes it from its playlists (50 units). False when it was already
+// gone (deleted in YouTube Studio).
+export async function deleteVideo(videoId) {
+  const r = await call('DELETE', `/videos?id=${encodeURIComponent(videoId)}`, null, { ok: [404] });
+  return r?.error?.code !== 404;
+}
+
+export const quotaExceeded =(e) => /daily quota is used up|daily upload limit/.test(String(e?.message));
 
 // ---- titles, descriptions, tags -------------------------------------------------------------
 
