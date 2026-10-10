@@ -18,11 +18,11 @@ export function blackSegments(file, { min = 0.5, pix = 0.1 } = {}) {
 }
 
 // Content the stage could not fit into its box even after wrapping and
-// shrinking (stage/index.html fitOverflow / layoutIssues): [{ where, what }].
+// shrinking (stage/index.html fitOverflow / layoutIssues): [{ where, what, px? }].
 async function layoutOf(stage, seen, out) {
   for (const x of await stage.page.evaluate(() => window.__layoutIssues?.() || [])) {
     const key = `${x.scene}|${x.what}`;
-    if (!seen.has(key)) { seen.add(key); out.push({ where: `s${String(x.scene + 1).padStart(2, '0')}`, what: x.what }); }
+    if (!seen.has(key)) { seen.add(key); out.push({ where: `s${String(x.scene + 1).padStart(2, '0')}`, what: x.what, ...(x.px != null ? { px: x.px } : {}) }); }
   }
 }
 

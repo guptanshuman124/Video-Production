@@ -71,6 +71,8 @@ export function gateSync(project, cues, required, cfg, { trackDuration = null } 
   return issues;
 }
 
+const CLIP_PX = 12;
+
 // probe: ffprobe JSON (all streams); expected: { duration (s), fps, width, height };
 // black: [[start, end]] from blackdetect; reveals: [{ where, changed }].
 export function gateVideo(probe, expected, { black = [], reveals = [], layout = reveals.layout || [], fadeIn = 0, fadeOut = 0 } = {}) {
@@ -90,6 +92,11 @@ export function gateVideo(probe, expected, { black = [], reveals = [], layout = 
   }
   for (const r of reveals) if (!r.changed) issues.push(issue('REVEAL_NOT_VISIBLE', 'error', r.where, `${r.where}: nothing changed on screen at this cue`));
   // Wrapping and shrinking already ran on the stage; what still overflows is flagged for a look.
-  for (const l of layout) issues.push(issue('LAYOUT_OVERFLOW', 'warning', l.where, `${l.where}: ${l.what}`));
+  // Text cut off by more than CLIP_PX is content the viewer cannot see (Class 12 Maths
+  // "Order of a Matrix": half of a worked example's step 4) — the video is not stored.
+  for (const l of layout) {
+    if (l.px > CLIP_PX) issues.push(issue('TEXT_CLIPPED', 'error', l.where, `${l.where}: ${l.what} — content is cut off on screen; the template has to fit it (or the slide must hold less)`));
+    else issues.push(issue('LAYOUT_OVERFLOW', 'warning', l.where, `${l.where}: ${l.what}`));
+  }
   return issues;
 }

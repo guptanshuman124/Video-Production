@@ -66,26 +66,36 @@ export const schema = {
 // still needs more than FIT_LIMIT × the room (the stage shrinks to 0.7 at most)
 // is sent back to the writer by `check`.
 const CARDS_H = 756;
-const FIT_LIMIT = 1.3;
+const FIT_LIMIT = 1.2;           // the estimate runs up to ~15% low; the stage rescues 1/0.7 ≈ 1.43
 const MATRIX = /\\begin\{([a-zA-Z]*matrix|array|cases|aligned)\}([\s\S]*?)\\end\{\1\}/g;
-// Rows a piece of LaTeX occupies: matrix rows, 2 for fractions / limits, else 1.
+// Lines a piece of LaTeX occupies (measured in the stage; step formulas and
+// text maths are both inline-style KaTeX): a matrix row is 1 line, 1.7 with a
+// \dfrac in it, 1.1 with a small \frac; outside a matrix a \dfrac is 1.7
+// lines, a \frac or limits 1.2. Lecture "Order of a Matrix": a 3-row answer
+// matrix of \dfrac entries is 5 lines, not 3.
+const rowLines = (r) => (/\\dfrac/.test(r) ? 1.7 : /\\t?frac/.test(r) ? 1.1 : 1);
 function texRows(t) {
+  const s = String(t || '');
   let rows = 1;
-  for (const m of String(t || '').matchAll(MATRIX)) rows = Math.max(rows, m[2].split(/\\\\/).length);
-  if (/\\[dt]?frac|\\(sum|int|prod|lim)\s*_/.test(t || '')) rows = Math.max(rows, 2);
+  for (const m of s.matchAll(MATRIX)) rows = Math.max(rows, m[2].split(/\\\\/).reduce((a, r) => a + rowLines(r), 0));
+  const rest = s.replace(MATRIX, '');
+  if (/\\dfrac/.test(rest)) rows = Math.max(rows, 1.7);
+  else if (/\\t?frac|\\(sum|int|prod|lim)\s*_/.test(rest)) rows = Math.max(rows, 1.2);
   return rows;
 }
-// Characters the LaTeX shows on one line: a matrix counts as its longest row.
+// Characters' worth of width the LaTeX takes on one line: a matrix is about 5
+// per column (entries plus column spacing and brackets).
 function texChars(t) {
   return String(t || '')
-    .replace(MATRIX, (_, __, body) => body.split(/\\\\/).reduce((a, r) => (r.length > a.length ? r : a), '').replace(/&/g, '  '))
+    .replace(MATRIX, (_, __, body) => 'x'.repeat(5 * Math.max(...body.split(/\\\\/).map((r) => r.split('&').length)) + 2))
     .replace(/\\[a-zA-Z]+/g, '').replace(/[{}^_$]/g, '').length;
 }
 const mathOf = (s) => [...String(s || '').matchAll(/\$([^$]+)\$/g)].map((m) => m[1]);
 const textRows = (s) => Math.max(1, ...mathOf(s).map(texRows));
 const textChars = (s) => String(s || '').replace(/\$([^$]+)\$/g, (_, m) => 'x'.repeat(texChars(m))).length;
 
-// { columns: 1 | 2, ratio }: how much of the SOLUTION card's room the steps need.
+// { columns: 1 | 2, ratio, rows?, problem, answer, room }: how much of the SOLUTION card's room
+// the steps need (problem / answer / room: estimated card heights, px).
 export function solutionFit(d) {
   const n = d.steps?.length || 0;
   const wide = d.image ? 1112 : 1688;                       // text width inside a card
@@ -112,14 +122,16 @@ export function solutionFit(d) {
     const k = Math.ceil(n / 2);
     const two = Math.max(need(half.slice(0, k)), need(half.slice(k)));
     const ratio = room > 0 ? two / room : Infinity;
-    if (ratio < fit.ratio) return { columns: 2, ratio, rows: k };
+    if (ratio < fit.ratio) return { columns: 2, ratio, rows: k, problem, answer, room };
   }
-  return fit;
+  return { ...fit, problem, answer, room };
 }
 
 // G3 (slides.js): a solution that cannot fit even in its best layout goes back to the writer.
-export function check(d) {
+// opts.fit: return the estimate itself (tests, calibration).
+export function check(d, opts = {}) {
   const fit = solutionFit(d);
+  if (opts.fit) return fit;
   if (fit.ratio <= FIT_LIMIT) return [];
   const big = (d.steps || []).filter((s) => texRows(s.formula) >= 3 || textRows(s.text) >= 3).length;
   return [`the worked solution is about ${Math.round(fit.ratio * 100)}% of the height its card has${big ? ` (${big} step(s) show a matrix of 3+ rows)` : ''}: the last steps would be cut off screen. Show fewer tall formulas — keep a big matrix only where it is the point of the step, give other results in words or as a single entry (e.g. $(AB)_{11}=4$), shorten the problem/answer, or split the example across two solved_example slides`];

@@ -117,7 +117,11 @@
         }
         for (const box of sec.querySelectorAll('*')) {
           if (box.matches(SKIP) || box.closest(SKIP)) continue;
-          if (getComputedStyle(box).overflow === 'hidden' && box.children.length && overflows(box)) out.push({ scene, what: `text clipped in .${String(box.className).split(' ')[0] || box.tagName.toLowerCase()}: ${box.textContent.trim().slice(0, 60)}` });
+          if (getComputedStyle(box).overflow === 'hidden' && box.children.length && overflows(box)) {
+            // px: how much is cut off (the larger of height and width) — a few px is padding, more is lost content.
+            const px = Math.max(box.scrollHeight - box.clientHeight, box.scrollWidth - box.clientWidth);
+            out.push({ scene, px, what: `text clipped in .${String(box.className).split(' ')[0] || box.tagName.toLowerCase()} (${px}px cut off): ${box.textContent.trim().slice(0, 60)}` });
+          }
         }
       }
       return out;

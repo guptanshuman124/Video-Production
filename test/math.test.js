@@ -104,3 +104,34 @@ test('G3: a worked example too tall for its card goes back to the writer; lectur
   assert.equal(tall.length, 1);
   assert.match(tall[0].message, /cut off screen/);
 });
+
+test('G3: fraction entries make a worked example taller ("Order of a Matrix": its 4 steps fit only in two columns)', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const { slideTypes, checkSlideData } = await import('../src/slides.js');
+  const build = await buildTemplates();
+  const T = slideTypes(build).mathematics;
+  const fit = (d) => build.registry['mathematics/worked-example'].check(d, { fit: true });
+  // As in the stored video: each step works out both entries of a row.
+  const step = (r) => ({ text: `Substitute indices for row ${r} of the matrix.`, formula: String.raw`a_{${r}1}=\dfrac{1}{2}|${r}-3(1)|=\dfrac{1}{2},\quad a_{${r}2}=\dfrac{1}{2}|${r}-3(2)|=\dfrac{3}{2}` });
+  const d = {
+    title: 'Construct a Matrix from Entries',
+    problem: String.raw`Construct a $3\times 2$ matrix whose elements are given by $a_{ij}=\dfrac{1}{2}|i-3j|$.`,
+    steps: [{ text: 'Write the entry positions.', formula: String.raw`A=\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\\a_{31}&a_{32}\end{bmatrix}` }, step(1), step(2), step(3)],
+    answer: String.raw`The required matrix is $A=\begin{bmatrix}1&\dfrac{5}{2}\\\dfrac{1}{2}&2\\0&\dfrac{3}{2}\end{bmatrix}$.`,
+    tip: 'Use $i$ for the row and $j$ for the column.',
+  };
+  const errors = (x) => checkSlideData(T.solved_example, x, { where: 's05' }).issues.filter((i) => i.code === 'TEMPLATE_CHECK');
+  assert.deepEqual(errors(d), []);
+  assert.equal(fit(d).columns, 2);
+  assert.ok(fit(d).answer > 280, `a 3-row matrix of \\dfrac entries is ~5 lines tall (estimated ${fit(d).answer}px, measured 308px)`);
+  assert.equal(errors({ ...d, steps: [...d.steps, step(4), step(5)] }).length, 1, 'two more fraction steps no longer fit');
+});
+
+test('V1: text cut off by more than a few px is an error, padding-sized overflow a warning', async () => {
+  const { gateVideo } = await import('../src/validators/media.js');
+  const probe = { streams: [{ codec_type: 'video', width: 1920, height: 1080, r_frame_rate: '25/1' }, { codec_type: 'audio' }], format: { duration: '10' } };
+  const issues = gateVideo(probe, { duration: 10, fps: 25, width: 1920, height: 1080 }, {
+    layout: [{ where: 's05', what: 'text clipped in .card (40px cut off): SOLUTION…', px: 40 }, { where: 's06', what: 'text clipped in .card (4px cut off)', px: 4 }],
+  });
+  assert.deepEqual(issues.map((i) => [i.code, i.severity, i.path]), [['TEXT_CLIPPED', 'error', 's05'], ['LAYOUT_OVERFLOW', 'warning', 's06']]);
+});
