@@ -95,7 +95,7 @@ export function gateVideo(probe, expected, { black = [], reveals = [], layout = 
   // Text cut off by more than CLIP_PX is content the viewer cannot see (Class 12 Maths
   // "Order of a Matrix": half of a worked example's step 4) — the video is not stored.
   for (const l of layout) {
-    if (l.px > CLIP_PX) issues.push(issue('TEXT_CLIPPED', 'error', l.where, `${l.where}: ${l.what} — content is cut off on screen; the template has to fit it (or the slide must hold less)`));
+    if (l.px > CLIP_PX) issues.push(issue('TEXT_CLIPPED', 'error', l.where, `${l.where}: ${l.what} — content is cut off or runs out of its box on screen; the template has to fit it (or the slide must hold less)`));
     else issues.push(issue('LAYOUT_OVERFLOW', 'warning', l.where, `${l.where}: ${l.what}`));
   }
   return issues;

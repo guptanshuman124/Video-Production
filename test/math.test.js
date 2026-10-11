@@ -135,3 +135,70 @@ test('V1: text cut off by more than a few px is an error, padding-sized overflow
   });
   assert.deepEqual(issues.map((i) => [i.code, i.severity, i.path]), [['TEXT_CLIPPED', 'error', 's05'], ['LAYOUT_OVERFLOW', 'warning', 's06']]);
 });
+
+// Lecture "Applications of Gauss's Law" (Class 12 Physics Ch 1): the symbol key ran out of its box
+// and the derivation steps out of theirs and off the slide.
+const gauss = {
+  sheet: {
+    lecture: 'Applications of Gauss’s Law', title: 'Three Symmetries, Four Field Results',
+    items: [
+      { formula: String.raw`\vec{E} = \frac{\lambda}{2\pi\varepsilon_0 r}\hat{n}`, label: 'Wire: cylindrical surface' },
+      { formula: String.raw`\vec{E} = \frac{\sigma}{2\varepsilon_0}\hat{n}`, label: 'Sheet: two faces' },
+      { formula: String.raw`\vec{E} = \frac{q}{4\pi\varepsilon_0 r^2}\hat{r} \quad (r > R)`, label: 'Shell: outside' },
+      { formula: String.raw`\vec{E} = 0 \quad (r < R)`, label: 'Shell: inside' },
+    ],
+    symbols: [
+      [String.raw`\vec{E}`, 'electric field (N $C^{-1}$)'], [String.raw`\lambda`, 'linear charge density (C $m^{-1}$)'],
+      [String.raw`\sigma`, 'surface charge density (C $m^{-2}$)'], ['q', 'shell charge (C)'], ['r', 'radial distance (m)'],
+      ['R', 'shell radius (m)'], [String.raw`\hat{n}`, 'outward normal (unitless)'], [String.raw`\hat{r}`, 'radial unit vector (unitless)'],
+    ].map(([symbol, meaning]) => ({ symbol, meaning })),
+  },
+  wire: {
+    lecture: 'Applications of Gauss’s Law', title: 'Field of an Infinite Wire',
+    goal: String.raw`\vec{E} = \frac{\lambda}{2\pi\varepsilon_0 r}\hat{n}`,
+    steps: [
+      { text: 'By **symmetry**, the field is radial and depends only on $r$.', formula: String.raw`\vec{E} = E(r)\hat{n}` },
+      { text: 'End flux vanishes; curved-surface flux equals field times area.', formula: String.raw`\Phi = E(2\pi r l)` },
+      { text: 'Substitute enclosed charge $\lambda l$ into Gauss’s law.', formula: String.raw`E(2\pi r l) = \frac{\lambda l}{\varepsilon_0}` },
+      { text: 'Cancel $l$ and express the radial field vector.', formula: String.raw`\vec{E} = \frac{\lambda}{2\pi\varepsilon_0 r}\hat{n}` },
+    ],
+  },
+};
+
+test('G3: a symbol key taller than its box goes back to the writer; with 4 formulas it gets the whole column', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const t = (await buildTemplates()).registry['physics/formula-sheet'];
+  const d = structuredClone(gauss.sheet);
+  assert.deepEqual(t.check(d), []);
+  assert.equal(t.check(d, { fit: true }).room, 730, 'rows 1–4 of the right column');
+  const six = { ...d, items: [...d.items, ...d.items.slice(0, 2)] };
+  assert.equal(t.check(six, { fit: true }).room, 360, 'tiles 5–6 take the bottom of the right column');
+  assert.deepEqual(t.check(six), [], 'short meanings: the stage shrinks the key a little and it fits');
+  const long = { ...six, symbols: six.symbols.map((s) => ({ ...s, meaning: `${s.meaning} measured along the closed gaussian surface` })) };
+  assert.match(String(t.check(long)), /symbol key needs ~\d+px but has 360px.*cut off screen/);
+});
+
+test('G3: derivation steps taller than their share go back to the writer; without an image text and equation share a row', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const t = (await buildTemplates()).registry['physics/derivation'];
+  const d = structuredClone(gauss.wire);
+  assert.deepEqual(t.check(d), []);
+  const fit = t.check(d, { fit: true });
+  assert.equal(fit.share, 123);
+  assert.ok(fit.ratio < 1, `fits beside each other: ${JSON.stringify(fit)}`);
+  // a fraction inside a fraction is taller than one fraction
+  const nested = { ...d, steps: d.steps.map((s) => ({ ...s, formula: String.raw`\dfrac{\vec{E}}{\dfrac{a}{b}}` })) };
+  assert.ok(t.check(nested, { fit: true }).need[0] > fit.need[3]);
+  const tall = { ...d, steps: d.steps.map((s) => ({ ...s, formula: String.raw`\dfrac{\dfrac{\dfrac{a}{b}}{c}}{\dfrac{d}{e}}` })) };
+  assert.match(String(t.check(tall)), /step S1 needs ~\d+px but each step has 123px.*cut off screen/);
+  assert.deepEqual((await buildTemplates()).registry['chemistry/derivation'].check(tall).length, 1, 'chemistry uses the same template');
+});
+
+test('V1: a box its content runs out of (not clipped) is an error too', async () => {
+  const { gateVideo } = await import('../src/validators/media.js');
+  const probe = { streams: [{ codec_type: 'video', width: 1920, height: 1080, r_frame_rate: '25/1' }, { codec_type: 'audio' }], format: { duration: '10' } };
+  const issues = gateVideo(probe, { duration: 10, fps: 25, width: 1920, height: 1080 }, {
+    layout: [{ where: 's07', what: 'text spills out of .symbols (47px outside it)', px: 47 }, { where: 's03', what: '.step runs 30px off the bottom of the slide', px: 30 }],
+  });
+  assert.deepEqual(issues.map((i) => [i.code, i.severity]), [['TEXT_CLIPPED', 'error'], ['TEXT_CLIPPED', 'error']]);
+});

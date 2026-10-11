@@ -25,6 +25,14 @@
 .seq .katex-display { margin: 0; }
 .slabel { position: absolute; right: 24px; bottom: 14px; font: 400 24.9px/1 var(--font-body); color: var(--brand-navy); }
 
+/* Without an image the goal box sits on top and the steps share what is left
+   (~120px each for 4): the text goes left and the equation right, one row. */
+.layout:not(.with-image) .step {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 36px; align-items: center;
+  padding: 12px 96px 12px 33px;
+}
+.layout:not(.with-image) .seq { height: 100%; }
+
 .arrow { flex: 0 0 43px; display: flex; justify-content: center; align-items: center; }
 .arrow i {
   position: relative; display: block; width: 6px; height: 30px; background: var(--brand-muted); border-radius: 3px;

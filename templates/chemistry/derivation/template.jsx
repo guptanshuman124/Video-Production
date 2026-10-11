@@ -1,6 +1,6 @@
 // Chemistry deck page 7: same design as physics/derivation, so it reuses that template.
 import { meta as base } from '../../physics/derivation/template.jsx';
-export { default, schema } from '../../physics/derivation/template.jsx';
+export { default, schema, check } from '../../physics/derivation/template.jsx';
 
 export const meta = {
   ...base,

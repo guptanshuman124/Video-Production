@@ -82,13 +82,28 @@
     }
     // Nothing may run out of its box. After every slide is laid out:
     //  1. a formula wider than the block it sits in is scaled to fit (down to 55%);
-    //  2. a card that clips its content (overflow hidden) has that content
-    //     scaled down step by step (to 70%) until it fits.
+    //  2. a card that clips its content (overflow hidden), or a visible box (its own
+    //     background or rounded corners) whose content spills out of it, has that
+    //     content scaled down step by step (to 70%) until it fits.
     // `zoom` scales layout as well as paint, so the shrunk content reflows.
     // What still does not fit is reported by __layoutIssues() (the video QA).
     const blockOf = (el) => { let b = el.parentElement; while (b && getComputedStyle(b).display.startsWith('inline')) b = b.parentElement; return b; };
-    const overflows = (el) => el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
     const SKIP = '.panel, .panel-media, .art, .brand-header, .brand-title, figure, img, svg';
+    // A box the viewer sees the edges of: content outside it reads as broken, clipped or not.
+    const clips = (cs) => cs.overflow === 'hidden';
+    const visibleBox = (cs) => cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(cs.borderRadius) > 0;
+    const fitted = (box) => {
+      if (box.matches(SKIP) || box.closest(SKIP) || !box.children.length || box.closest('.katex')) return null;
+      const cs = getComputedStyle(box);
+      return clips(cs) ? 'clipped' : visibleBox(cs) ? 'spills' : null;
+    };
+    // px of content outside the box: past the padding edge when it clips, past the box's own
+    // edge when it does not (content reaching into the padding still sits inside the card).
+    const outside = (box, kind) => {
+      const cs = getComputedStyle(box);
+      const pb = kind === 'spills' ? parseFloat(cs.paddingBottom) : 0, pr = kind === 'spills' ? parseFloat(cs.paddingRight) : 0;
+      return Math.max(box.scrollHeight - box.clientHeight - pb, box.scrollWidth - box.clientWidth - pr);
+    };
     function fitOverflow() {
       for (const k of document.querySelectorAll('.scene.tpl .katex')) {
         if (k.closest('.katex .katex')) continue;
@@ -99,8 +114,9 @@
         if (room > 0 && w > room + 1) k.style.zoom = String(Math.max(0.55, Math.floor((room / w) * 100) / 100));
       }
       for (const box of document.querySelectorAll('.scene.tpl *')) {
-        if (box.matches(SKIP) || box.closest(SKIP) || getComputedStyle(box).overflow !== 'hidden' || !box.children.length) continue;
-        for (let z = 0.95; overflows(box) && z >= 0.7; z = Math.round((z - 0.05) * 100) / 100) {
+        const kind = fitted(box);
+        if (!kind) continue;
+        for (let z = 0.95; outside(box, kind) > 2 && z >= 0.7; z = Math.round((z - 0.05) * 100) / 100) {
           for (const c of box.children) c.style.zoom = String(z);
         }
       }
@@ -116,12 +132,18 @@
           if (box && k.getBoundingClientRect().width > box.getBoundingClientRect().width + 2) out.push({ scene, what: `formula wider than its box: ${k.textContent.slice(0, 50)}` });
         }
         for (const box of sec.querySelectorAll('*')) {
-          if (box.matches(SKIP) || box.closest(SKIP)) continue;
-          if (getComputedStyle(box).overflow === 'hidden' && box.children.length && overflows(box)) {
-            // px: how much is cut off (the larger of height and width) — a few px is padding, more is lost content.
-            const px = Math.max(box.scrollHeight - box.clientHeight, box.scrollWidth - box.clientWidth);
-            out.push({ scene, px, what: `text clipped in .${String(box.className).split(' ')[0] || box.tagName.toLowerCase()} (${px}px cut off): ${box.textContent.trim().slice(0, 60)}` });
+          const kind = fitted(box);
+          if (!kind) continue;
+          const name = `.${String(box.className).split(' ')[0] || box.tagName.toLowerCase()}`;
+          const text = box.textContent.trim().slice(0, 60);
+          const px = outside(box, kind);
+          if (px > 2) {
+            // px: how much is outside (the larger of height and width) — a few px is padding, more is lost content.
+            out.push({ scene, px, what: kind === 'clipped' ? `text clipped in ${name} (${px}px cut off): ${text}` : `text spills out of ${name} (${px}px outside it): ${text}` });
           }
+          // A box pushed (partly) off the slide by the ones above it.
+          const below = posIn(box, sec).y + box.offsetHeight - sec.clientHeight;
+          if (below > 2 && !box.parentElement.closest('.katex')) out.push({ scene, px: Math.round(below), what: `${name} runs ${Math.round(below)}px off the bottom of the slide: ${text}` });
         }
       }
       return out;
