@@ -105,6 +105,26 @@ test('G3: a worked example too tall for its card goes back to the writer; lectur
   assert.match(tall[0].message, /cut off screen/);
 });
 
+test('G3: the fit check sizes the slide with the figure the plan gives it (lecture 2736 failed at build instead)', async () => {
+  const { buildTemplates } = await import('../src/templates.js');
+  const { slideTypes } = await import('../src/slides.js');
+  const { gateSlides } = await import('../src/validators/generation.js');
+  const T = slideTypes(await buildTemplates()).mathematics;
+  const M = String.raw`\begin{bmatrix}4&4&4&-7\\35&-2&-39&22\\31&2&-27&11\end{bmatrix}`;
+  const data = {
+    title: 'Verify Associativity',
+    problem: String.raw`If $A=\begin{bmatrix}1&1&-1\\2&0&3\\3&-1&2\end{bmatrix}$ and $B=\begin{bmatrix}1&3\\0&2\\-1&4\end{bmatrix}$, show that $(AB)C=A(BC)$.`,
+    steps: Array.from({ length: 4 }, (_, i) => ({ text: `Step ${i + 1}: multiply.`, formula: `X_${i}=${M}` })),
+    answer: `Thus, $(AB)C=A(BC)=${M}$.`,
+  };
+  const plan = (image_id) => [{ slide_type: 'solved_example', source_refs: [], ...(image_id ? { image_id } : {}) }];
+  const checks = (image_id) => gateSlides([{ slide_type: 'solved_example', data }], plan(image_id), T, {}).issues.filter((i) => i.code === 'TEMPLATE_CHECK');
+  assert.deepEqual(checks(null), [], 'without a figure it fits in two columns');
+  const withFig = checks('fig_13_1');
+  assert.equal(withFig.length, 1, 'beside a figure the card is narrow and one column: back to the writer at G3');
+  assert.match(withFig[0].message, /beside its figure/);
+});
+
 test('G3: fraction entries make a worked example taller ("Order of a Matrix": its 4 steps fit only in two columns)', async () => {
   const { buildTemplates } = await import('../src/templates.js');
   const { slideTypes, checkSlideData } = await import('../src/slides.js');

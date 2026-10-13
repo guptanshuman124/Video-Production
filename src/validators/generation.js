@@ -405,7 +405,7 @@ export function gateSlides(written, planSlides, types, sectionText, { slideLangu
     if (!p) { issues.push(issue('EXTRA_SLIDE', 'error', where, `${where}: not in the plan`)); return w; }
     if (w.slide_type !== p.slide_type) issues.push(issue('TYPE_CHANGED', 'error', where, `${where}: planned ${p.slide_type}, written as ${w.slide_type}`));
     const st = types[p.slide_type];
-    const { data, issues: di } = checkSlideData(st, w.data, { where, slideLanguage });
+    const { data, issues: di } = checkSlideData(st, w.data, { where, slideLanguage, image: !!p.image_id });
     issues.push(...di);
     langCheck(data, where);
     const src = p.source_refs.map((r) => sectionText[r] || '').join('\n');
@@ -454,7 +454,10 @@ export function pictureNote(pic) {
   return 'Picture on screen: NONE — do not mention any figure, diagram, image or picture ("this diagram", "look at the figure", "चित्र में देखिए"); just explain the content. (Telling the student to draw a diagram in the exam is fine.)';
 }
 
-const PIC = String.raw`(?:diagrams?|figures?|fig\.|images?|pictures?|illustrations?|photos?|photographs?|sketch(?:es)?|चित्रों|चित्र|आरेख|आकृति|तस्वीर(?:ों|ें)?)`;
+// A whole word only: "photo" is not the start of photosynthesis (lecture 1933), "image" not of
+// imagine, चित्र not of चित्रण. (JS \b does not treat Devanagari as letters, hence a lookahead.)
+const WORD_END = String.raw`(?![A-Za-z\u0900-\u097F])`;
+const PIC = String.raw`(?:diagrams?|figures?|fig\.|images?|pictures?|illustrations?|photos?|photographs?|sketch(?:es)?|चित्रों|चित्र|आरेखों|आरेख|आकृतियों|आकृतियाँ|आकृतियां|आकृति|तस्वीर(?:ों|ें)?)${WORD_END}`;
 // Pointing at a picture on screen: "this diagram", "look at the figure", "Figure 4.2", "इस चित्र में", "diagram में देखिए".
 const POINTS_AT = new RegExp([
   String.raw`\b(?:this|these|that|those|above|following|here)\s+(?:\w+\s+)?${PIC}`,
@@ -467,7 +470,7 @@ const POINTS_AT = new RegExp([
 // More than one picture: "two diagrams", "both figures", "these images", "दोनों चित्र".
 const COUNTS_MANY = new RegExp([
   String.raw`\b(?:two|three|both|these|those|several|multiple|the)\s+(?:\w+\s+)?(?:diagrams|figures|images|pictures|illustrations|photos|sketches)\b`,
-  String.raw`(?:दो|दोनों|तीन|इन)\s+(?:\S+\s+)?(?:चित्रों|चित्र|आरेखों|आरेख|आकृतियों|आकृतियाँ|तस्वीरें|तस्वीरों|diagrams|figures|images|pictures)`,
+  String.raw`(?:दो|दोनों|तीन|इन)\s+(?:\S+\s+)?(?:चित्रों|चित्र|आरेखों|आरेख|आकृतियों|आकृतियाँ|तस्वीरें|तस्वीरों|diagrams|figures|images|pictures)${WORD_END}`,
 ].join('|'), 'i');
 // Stating the video's length: "this 60-minute video", "in the next hour", "इस एक घंटे के वीडियो में".
 const STATES_LENGTH = new RegExp([

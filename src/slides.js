@@ -245,7 +245,10 @@ function walkStrings(v, path, fn) {
 // when KaTeX can render it, otherwise it is an error the writer must fix.
 // opts.slideLanguage: the course's slide language; the spec's `labels` for it
 // (on-screen labels such as "Question" → "प्रश्न") are applied like defaults.
-export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula', 'symbol'], slideLanguage = 'english' } = {}) {
+// opts.image: the plan gives this slide a figure (attached later, at build), so
+// the template's check sizes the layout with it (lecture 2736: a worked example
+// fitted in two columns without its figure, then failed at build with it).
+export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['formula', 'symbol'], slideLanguage = 'english', image = false } = {}) {
   const issues = [];
   const fixed = { ...st.spec.defaults, ...(st.spec.labels?.[slideLanguage] || {}) };
   // Plus every field the template marks `latex: true` (e.g. derivation `goal`), at any depth.
@@ -288,7 +291,8 @@ export function checkSlideData(st, raw, { where = 'slide', formulaFields = ['for
     for (const m of RULES[name]?.(data) || [`unknown rule "${name}"`]) issues.push({ code: 'RULE', severity: 'error', path: where, message: `${where}: ${m}` });
   }
   if (!r.errors.length && st.check) {
-    for (const m of [st.check(r.value) || []].flat()) issues.push({ code: 'TEMPLATE_CHECK', severity: 'error', path: where, message: `${where}: ${m}` });
+    const planned = image && st.schema.image && !r.value.image ? { ...r.value, image: 'planned' } : r.value;
+    for (const m of [st.check(planned) || []].flat()) issues.push({ code: 'TEMPLATE_CHECK', severity: 'error', path: where, message: `${where}: ${m}` });
   }
   walkStrings(data, where, (s, p) => {
     if (!isFormula(p)) issues.push(...mathShapeIssues(s, p));

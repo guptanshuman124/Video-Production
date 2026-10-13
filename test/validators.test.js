@@ -252,6 +252,13 @@ test('narration points only at the picture the slide shows, and never states the
   assert.deepEqual(codes(pictureIssues('Look at this diagram: the atoms form a ring.', none)), ['PICTURE_NOT_ON_SLIDE']);
   assert.deepEqual(codes(pictureIssues('इस चित्र में देखिए, ring बनती है।', none)), ['PICTURE_NOT_ON_SLIDE']);
   assert.deepEqual(codes(pictureIssues('In the exam, draw a neat labelled diagram.', none)), []);
+  // Lecture 1933: "photo…" words are not photos, "imagine" is not an image.
+  for (const t of ['यह process photosynthesis का हिस्सा है।', 'इस photorespiration में energy waste होती है।', 'In the photosystem II, water splits.', 'This photosynthesis step needs light.', 'Imagine this reaction in the leaf.', 'इस चित्रण से समझिए।']) {
+    assert.deepEqual(codes(pictureIssues(t, none)), [], t);
+  }
+  for (const t of ['यह photo देखिए।', 'Look at this figure.', 'इन आकृतियों में देखिए।', 'In the photos, the leaf is green.']) {
+    assert.deepEqual(codes(pictureIssues(t, none)), ['PICTURE_NOT_ON_SLIDE'], t);
+  }
   assert.deepEqual(codes(pictureIssues('A concave mirror forms a virtual image; this image is erect.', none)), []);
   assert.deepEqual(codes(pictureIssues('These two diagrams show cyclohexane and benzene.', one)), ['PICTURE_COUNT']);
   assert.deepEqual(codes(pictureIssues('This figure shows the ring.', one)), []);

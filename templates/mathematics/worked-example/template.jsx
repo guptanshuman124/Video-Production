@@ -134,7 +134,8 @@ export function check(d, opts = {}) {
   if (opts.fit) return fit;
   if (fit.ratio <= FIT_LIMIT) return [];
   const big = (d.steps || []).filter((s) => texRows(s.formula) >= 3 || textRows(s.text) >= 3).length;
-  return [`the worked solution is about ${Math.round(fit.ratio * 100)}% of the height its card has${big ? ` (${big} step(s) show a matrix of 3+ rows)` : ''}: the last steps would be cut off screen. Show fewer tall formulas — keep a big matrix only where it is the point of the step, give other results in words or as a single entry (e.g. $(AB)_{11}=4$), shorten the problem/answer, or split the example across two solved_example slides`];
+  const narrow = d.image ? ' — beside its figure the card is narrower and cannot use two columns' : '';
+  return [`the worked solution is about ${Math.round(fit.ratio * 100)}% of the height its card has${big ? ` (${big} step(s) show a matrix of 3+ rows)` : ''}${narrow}: the last steps would be cut off screen. Show fewer tall formulas — keep a big matrix only where it is the point of the step, give other results in words or as a single entry (e.g. $(AB)_{11}=4$), shorten the problem/answer, or split the example across two solved_example slides`];
 }
 
 export default function WorkedExample(d) {
