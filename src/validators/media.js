@@ -10,6 +10,20 @@
 import { timeline } from '../project.js';
 import { issue } from './text.js';
 
+// The length a lecture is held to at A1: its source-based minutes, or what its
+// planned slides take when that is more. Every slide type has its own narration
+// range (~1.8 min a slide, curriculum.slide_minutes), and short sources are
+// planned with the slides their pack requires plus room to teach (planBudget):
+// lecture 2847 (8-min source, 7 teaching slides) ran 13.8 min with every slide
+// inside its range and failed against the 8-min target.
+const OPENER_TYPES = new Set(['intro', 'chapter_index']);
+export function lectureTarget(sourceMinutes, content, cfg) {
+  const [lo, hi] = cfg.curriculum?.slide_minutes || [1.6, 2];
+  const teaching = (content?.slides || []).filter((s) => !OPENER_TYPES.has(s.slide_type)).length;
+  const planned = Math.round((teaching * (lo + hi) / 2 + 0.3) * 10) / 10;
+  return sourceMinutes ? Math.max(sourceMinutes, planned) : null;
+}
+
 // voice: sound.synthesizeLecture() result; cfg: full config. targetMinutes:
 // the lecture's own target (textbook lectures scale with their source); the
 // band is ±duration.band around it. Without one, curriculum.lecture_minutes_band.

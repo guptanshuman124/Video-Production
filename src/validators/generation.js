@@ -208,16 +208,18 @@ export function gateLecturePlan(plan, ctx) {
   });
   const S = out.slides;
 
-  // Too few practice MCQs (pack.json types.mcq.min) and room in the budget:
-  // append them before the planner is asked again. The writer builds each
-  // question from the lecture's own topics and sections.
+  // Too few practice MCQs (pack.json types.mcq.min): append them before the
+  // planner is asked again. The writer builds each question from the lecture's
+  // own topics and sections. They are required by the pack, so they never make
+  // a plan too long (lecture 5279: a full plan with 1 MCQ failed TYPE_MIN).
   const mcqMin = ctx.pack.types?.mcq?.min || 0;
-  const teaching = () => S.filter((x) => !OPENERS.has(x.slide_type)).length;
   const topics = S.filter((x) => !OPENERS.has(x.slide_type) && !['mcq', 'quick_revision', 'formula_sheet'].includes(x.slide_type)).map((x) => x.title);
-  while (ctx.types.mcq && S.filter((x) => x.slide_type === 'mcq').length < mcqMin && teaching() < ctx.budget.max) {
+  let mcqAdded = 0;
+  while (ctx.types.mcq && S.filter((x) => x.slide_type === 'mcq').length < mcqMin) {
     S.push({ slide_type: 'mcq', title: 'Check Your Understanding', purpose: 'practice question on what this lecture taught',
              key_points: topics.slice(-4).length ? topics.slice(-4) : ['this lecture'], source_refs: [...ctx.sectionIds], image_id: null });
     fix('MCQ_ADDED', S.length - 1, `added a practice MCQ (at least ${mcqMin} per lecture)`);
+    mcqAdded++;
   }
 
   const lt = String(out.lecture_title || '').trim();
@@ -225,8 +227,9 @@ export function gateLecturePlan(plan, ctx) {
   else if (lt.split(/\s+/).length > 8 || lt.length > 60) issues.push(issue('LECTURE_TITLE_LONG', 'error', '/lecture_title', `lecture title "${lt}" is too long (≤ 8 words, ≤ 60 characters — it sits in every slide header)`));
   // The intro and chapter index are short openers: not counted in the budget.
   const content = S.filter((x) => !OPENERS.has(x.slide_type)).length;
-  if (content < ctx.budget.min || content > ctx.budget.max) {
-    issues.push(issue('SLIDE_COUNT', 'error', '/slides', `${content} teaching slides (besides the opening); this lecture needs ${ctx.budget.min}–${ctx.budget.max}`));
+  const maxSlides = ctx.budget.max + mcqAdded;
+  if (content < ctx.budget.min || content > maxSlides) {
+    issues.push(issue('SLIDE_COUNT', 'error', '/slides', `${content} teaching slides (besides the opening); this lecture needs ${ctx.budget.min}–${maxSlides}`));
   }
 
   // Images, in four passes: (1) check the planner's picks, (2) fill image

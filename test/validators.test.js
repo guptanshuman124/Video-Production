@@ -47,6 +47,17 @@ const ctx = (over = {}) => ({
 });
 const slide = (slide_type, extra = {}) => ({ slide_type, title: 't', purpose: 'p', key_points: ['k'], source_refs: ['s04'], image_id: null, ...extra });
 
+test('G2: the MCQs a pack requires are added even when the plan is full (TYPE_MIN, lecture 5279)', () => {
+  const packs = loadPacks();
+  const types = slideTypes(build);
+  const budget = planBudget({ min: 4, max: 5, minutes: 8 }, packs.mathematics, 2, 5, types.mathematics);
+  const full = Array.from({ length: budget.max - 4 }, () => slide('definition')).concat([slide('illustration'), slide('solved_example'), slide('quick_revision', { source_refs: [] }), slide('mcq')]);
+  const r = gateLecturePlan({ lecture_title: 'The Never-Ending Journey', slides: full }, { lecture: 2, lectures: 5, sectionIds: ['s04', 's05'], pack: packs.mathematics, types: types.mathematics, budget, images: [] });
+  assert.ok(r.issues.some((i) => i.code === 'MCQ_ADDED'));
+  assert.equal(r.plan.slides.filter((x) => x.slide_type === 'mcq').length, 2);
+  assert.deepEqual(r.issues.filter((i) => ['SLIDE_COUNT', 'TYPE_MIN'].includes(i.code)), []);
+});
+
 test('G2: a short lecture still has room for teaching besides the slides its pack requires (SLIDE_COUNT, lower classes)', () => {
   const packs = loadPacks();
   const types = slideTypes(build);

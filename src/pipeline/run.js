@@ -27,7 +27,7 @@ import { toHinglish } from '../generation/layers/hinglish.js';
 import { reviewLecture } from '../generation/layers/review.js';
 import { assembleLecture } from '../generation/assemble.js';
 import { gateInput, gatePrepared, gateLectureInput, gatePreparedLecture } from '../validators/generation.js';
-import { gateAudio, gateSync, gateVideo } from '../validators/media.js';
+import { gateAudio, gateSync, gateVideo, lectureTarget } from '../validators/media.js';
 import { synthesizeLecture } from '../sound/index.js';
 import { duration as wavDuration } from '../sound/wav.js';
 import { buildProject } from '../build/project.js';
@@ -333,7 +333,7 @@ async function runLecture({ G, store, unit, rel, dir, cfg, gate, inRange, opts, 
       // are cached, so a re-run only pays for what is missing.
       gate(unit, 'voice', [{ code: 'TTS_FAILED', severity: 'error', path: '/', message: `${cfg.tts.provider}: ${e.message.slice(0, 300)}` }]);
     }
-    gate(unit, 'voice', gateAudio(voice, cfg, { targetMinutes: G.targetMinutes }));
+    gate(unit, 'voice', gateAudio(voice, cfg, { targetMinutes: lectureTarget(G.targetMinutes, content, cfg) }));
     store.write(rel('voice.json'), voice);
   }
   if (!store.has(rel('voice.json'))) return;

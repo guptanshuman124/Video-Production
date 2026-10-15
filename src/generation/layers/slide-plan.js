@@ -18,6 +18,9 @@ export async function planLecture(G) {
   const images = prepared.images.filter((im) => (im.kind || 'figure') === 'figure' && fitsRatio(im, ratios));
   // Room for the pack's required slides plus real teaching, also in short lectures.
   const budget = planBudget(prepared.budget, pack, lecture.index, G.lectures, types, cfg.curriculum?.teaching_room ?? 3);
+  // A widened budget plays longer than the source-based minutes (~1.8 min a slide); the planner is told so.
+  const [slo, shi] = cfg.curriculum?.slide_minutes || [1.6, 2];
+  const minutes = budget.max > prepared.budget.max ? Math.max(G.vars.lecture_minutes, Math.round(budget.max * (slo + shi) / 2)) : G.vars.lecture_minutes;
   const L = prepared.lecture || {};
   const chapterNo = L.chapter_number ? `Chapter ${L.chapter_number}: ` : '';
 
@@ -50,7 +53,7 @@ export async function planLecture(G) {
     llm, cfg,
     req: {
       task: 'slide-plan', unit: `${prepared.chapter.chapter_id}/L${lecture.index}`,
-      system: systemPrompt('slide-plan', { ...G.vars, slide_max: budget.max }, [slideCatalog(types), flowRules(pack)]),
+      system: systemPrompt('slide-plan', { ...G.vars, slide_max: budget.max, lecture_minutes: minutes }, [slideCatalog(types), flowRules(pack)]),
       user, schema, schemaName: 'lecture_plan',
       context: { lecture: lecture.index, lectures: G.lectures, sections, images, types: typeHints, budget,
                  words: sections.map((s) => s.text).join(' ').split(/\s+/) },

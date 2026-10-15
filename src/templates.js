@@ -242,6 +242,11 @@ function norm(spec) {
   return spec;
 }
 
+// Characters a text shows on screen: rich()'s *emphasis* / **strong** markers
+// are not drawn (lecture 5372: a 125-character point, 121 visible, failed a
+// 120 limit). Maths is counted as written, which errs on the long side.
+export const visibleLength = (val) => String(val).replace(/(?<!\\)\*\*?/g, '').length;
+
 export function validate(schema, data, { where = 'data', assetDir = null } = {}) {
   const errors = [];
   const fail = (p, msg) => errors.push(`${p}: ${msg}`);
@@ -258,7 +263,7 @@ export function validate(schema, data, { where = 'data', assetDir = null } = {})
       case 'any': return val;
       case 'text':
         if (typeof val !== 'string' && typeof val !== 'number') return fail(p, 'expected text');
-        if (spec.max && String(val).length > spec.max) fail(p, `longer than ${spec.max} chars`);
+        if (spec.max && visibleLength(val) > spec.max) fail(p, `longer than ${spec.max} chars`);
         return String(val);
       case 'number':
         if (typeof val !== 'number' || !Number.isFinite(val)) return fail(p, 'expected a number');
