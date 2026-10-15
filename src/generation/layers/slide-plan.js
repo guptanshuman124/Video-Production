@@ -1,7 +1,7 @@
 // L2 — slide planner: one lecture's sections -> slide list.
 
 import { schemaOf } from '../../contracts/index.js';
-import { gateLecturePlan } from '../../validators/generation.js';
+import { gateLecturePlan, planBudget } from '../../validators/generation.js';
 import { needsImage, takesImage } from '../../slides.js';
 import { fitsRatio } from '../prepare.js';
 import { systemPrompt, slideCatalog, flowRules } from '../prompts.js';
@@ -16,6 +16,8 @@ export async function planLecture(G) {
   const ratios = [...new Set(Object.values(types).flatMap((st) => (takesImage(st.spec) ? st.spec.ratios : [])))];
   // Only real figures (not screenshots of problems, tables or equations) that some slot can show.
   const images = prepared.images.filter((im) => (im.kind || 'figure') === 'figure' && fitsRatio(im, ratios));
+  // Room for the pack's required slides plus real teaching, also in short lectures.
+  const budget = planBudget(prepared.budget, pack, lecture.index, G.lectures, types, cfg.curriculum?.teaching_room ?? 3);
   const L = prepared.lecture || {};
   const chapterNo = L.chapter_number ? `Chapter ${L.chapter_number}: ` : '';
 
@@ -48,15 +50,15 @@ export async function planLecture(G) {
     llm, cfg,
     req: {
       task: 'slide-plan', unit: `${prepared.chapter.chapter_id}/L${lecture.index}`,
-      system: systemPrompt('slide-plan', G.vars, [slideCatalog(types), flowRules(pack)]),
+      system: systemPrompt('slide-plan', { ...G.vars, slide_max: budget.max }, [slideCatalog(types), flowRules(pack)]),
       user, schema, schemaName: 'lecture_plan',
-      context: { lecture: lecture.index, lectures: G.lectures, sections, images, types: typeHints, budget: prepared.budget,
+      context: { lecture: lecture.index, lectures: G.lectures, sections, images, types: typeHints, budget,
                  words: sections.map((s) => s.text).join(' ').split(/\s+/) },
     },
     check: (data) => {
       const r = gateLecturePlan(data, {
         lecture: lecture.index, lectures: G.lectures, sectionIds: lecture.section_ids,
-        images, types, pack, budget: prepared.budget,
+        images, types, pack, budget,
         lectureTitle: lecture.title, chapterTitle: prepared.chapter.title, chapterLectures: L.chapter_lectures || [],
         sectionHeadings: sections.map((x) => x.heading),
       });

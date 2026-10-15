@@ -8,6 +8,7 @@ curriculum:
   lecture_minutes: 20          # target; each lecture may drift within the band below
   lecture_minutes_band: [15, 25]
   slide_minutes: [1.6, 2]      # screen time per slide (Hinglish narration + transitions), for the slide budget
+  teaching_room: 3             # teaching slides always allowed on top of the slides the pack requires (short lectures had none: SLIDE_COUNT)
 
 duration:                      # textbook lectures: video length follows the source
   base_minutes: 5.3            # minutes = base + words/1000 × per_1000, clamped to [min, max]

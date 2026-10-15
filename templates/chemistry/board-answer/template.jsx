@@ -56,7 +56,7 @@ export default function BoardAnswer(d) {
       <div className={d.image ? 'cards with-image' : 'cards'}>
         <section className="card problem" anim="riseIn" delay={350} at={sec(c.problem)} exit="riseOut">
           <div className="label">{d.problemLabel}</div>
-          <div className="text"><Rich text={d.problem} /></div>
+          <div className="prose"><Rich text={d.problem} /></div>
         </section>
         <section className="card reasoning" anim="riseIn" delay={800} at={cue(c.reasoning, 0)} exit="riseOut">
           <div className="label">{d.reasoningLabel}</div>
@@ -67,7 +67,7 @@ export default function BoardAnswer(d) {
         {d.takeaway && (
           <section className="card takeaway" anim="riseIn" delay={1900} at={sec(c.takeaway)} exit="riseOut">
             <div className="label">{d.takeawayLabel}</div>
-            <div className="text"><Rich text={d.takeaway} /></div>
+            <div className="prose"><Rich text={d.takeaway} /></div>
           </section>
         )}
       </div>

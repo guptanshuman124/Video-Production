@@ -48,7 +48,7 @@ export default function Practice(d) {
         {d.problems.map((p, i) => (
           <section className="card" anim="riseIn" at={cue(c.problems, i)} exit="riseOut">
             <div className="label">{d.label}{d.problems.length > 1 ? ` ${i + 1}` : ''}{p.marks && <span className="marks">{p.marks}</span>}</div>
-            <div className="text"><Rich text={p.text} /></div>
+            <div className="prose"><Rich text={p.text} /></div>
           </section>
         ))}
       </div>

@@ -149,7 +149,7 @@ export default function WorkedExample(d) {
       <div className={d.image ? 'cards with-image' : 'cards'} style={{ '--n': n, '--rows': fit.rows || n }}>
         <section className="card problem" anim="riseIn" delay={350} at={sec(c.problem)} exit="riseOut">
           <div className="label">{d.problemLabel}</div>
-          <div className="text"><Rich text={d.problem} /></div>
+          <div className="prose"><Rich text={d.problem} /></div>
         </section>
         <section className="card solution" anim="riseIn" delay={800} at={cue(c.steps, 0)} exit="riseOut">
           <div className="label">{d.stepsLabel}</div>
@@ -164,7 +164,7 @@ export default function WorkedExample(d) {
         </section>
         <section className="card answer" anim="riseIn" delay={1900} at={sec(c.answer)} exit="riseOut">
           <div className="label">{d.answerLabel}</div>
-          <div className="text strong"><Rich text={d.answer} /></div>
+          <div className="prose strong"><Rich text={d.answer} /></div>
           {d.tip && <div className="tip"><b>{d.tipLabel}:</b> <Rich text={d.tip} /></div>}
         </section>
       </div>

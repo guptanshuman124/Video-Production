@@ -56,15 +56,15 @@ export default function Principle(d) {
       <div className={d.image ? 'cards with-image' : 'cards'}>
         <section className="card statement" anim="riseIn" delay={400} at={sec(c.statement)} exit="riseOut">
           <div className="label">{d.statementLabel}</div>
-          <div className="text"><Rich text={d.statement} /></div>
+          <div className="prose"><Rich text={d.statement} /></div>
         </section>
         <section className="card illustration" anim="riseIn" delay={1000} at={sec(c.illustration)} exit="riseOut">
           <div className="label">{d.illustrationLabel}</div>
-          <div className="text"><Rich text={d.illustration} /></div>
+          <div className="prose"><Rich text={d.illustration} /></div>
         </section>
         <section className="card significance" anim="riseIn" delay={1600} at={sec(c.significance)} exit="riseOut">
           <div className="label">{d.significanceLabel}</div>
-          <div className="text"><Rich text={d.significance} /></div>
+          <div className="prose"><Rich text={d.significance} /></div>
         </section>
       </div>
       {d.image && <Panel className="side" image={d.image} caption={d.caption} fit={d.fit} at={sec(c.image)} />}

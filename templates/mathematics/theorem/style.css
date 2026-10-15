@@ -11,7 +11,7 @@
 .cards.only .statement { flex: 1 1 auto; max-height: 560px; justify-content: flex-start; }
 .given, .prove { flex: 0 0 auto; min-height: 177px; background: var(--brand-cream); }
 .label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; }
-.text { margin-top: 10px; padding-left: 12px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
+.prose { margin-top: 10px; padding-left: 12px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
 .eq { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; margin-top: 8px; font-size: 42px; color: var(--brand-navy); }
 .cards.only .eq { font-size: 52px; }
 .eq .katex-display { margin: 0; }

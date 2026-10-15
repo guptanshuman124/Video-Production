@@ -13,6 +13,6 @@
 .significance { flex: 0 0 auto; min-height: 200px; background: var(--brand-cream); }
 .label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); }
 .quote { margin: 12px 0 0; font: italic 400 34px/1.45 var(--font-body); color: var(--brand-ink); }
-.text { margin-top: 10px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
+.prose { margin-top: 10px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
 .side { left: 1257px; top: 220px; width: 579px; height: 756px; }
 .side .panel-caption { padding-bottom: 15px; }

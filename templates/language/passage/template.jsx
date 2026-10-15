@@ -56,7 +56,7 @@ export default function Passage(d) {
         <div className="heads" anim="fadeIn" delay={450} exit="fadeOut"><span className="label">{d.textLabel}</span><span className="label">{d.meaningLabel}</span></div>
         {d.lines.map((l, i) => (
           <div className="row">
-            <blockquote className="text" anim="riseIn" delay={700 + i * 500} at={partCue(c.lines, i, 0)} exit="riseOut"><div><Rich text={l.text} /></div></blockquote>
+            <blockquote className="prose" anim="riseIn" delay={700 + i * 500} at={partCue(c.lines, i, 0)} exit="riseOut"><div><Rich text={l.text} /></div></blockquote>
             <div className="meaning" anim="riseIn" delay={950 + i * 500} at={partCue(c.lines, i, 1)} exit="riseOut"><div><Rich text={l.meaning} /></div></div>
           </div>
         ))}

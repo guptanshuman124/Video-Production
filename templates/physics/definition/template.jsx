@@ -96,7 +96,7 @@ export default function DefinitionFormula(d) {
           </div>
         )}
         {d.formula && (
-          <section className="fbox" anim="riseIn" delay={1100} at={sec(c.formula)} exit="riseOut">
+          <section className="fcard" anim="riseIn" delay={1100} at={sec(c.formula)} exit="riseOut">
             <div className="flabel">Formula for{d.formulaFor ? <> <Rich text={d.formulaFor} /></> : ''}</div>
             <div className="feq">{tex(d.formula, { display: true })}</div>
             {d.symbols.length > 0 && (

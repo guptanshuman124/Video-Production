@@ -63,7 +63,7 @@ export default function Extract(d) {
         </section>
         <section className="card significance" anim="riseIn" delay={1400} at={sec(c.significance)} exit="riseOut">
           <div className="label">{d.significanceLabel}</div>
-          <div className="text"><Rich text={d.significance} /></div>
+          <div className="prose"><Rich text={d.significance} /></div>
         </section>
       </div>
       {d.image && <Panel className="side" image={d.image} caption={d.caption} fit={d.fit} at={sec(c.image)} />}

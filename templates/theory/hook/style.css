@@ -2,13 +2,13 @@
 
 /* PDF p1: hook text at (108,225) in the left column; image panel 856×833 at (960,157).
    Without an image the text runs 1600 wide and a little larger. */
-.text {
+.prose {
   position: absolute; left: 108px; top: 235px; width: 1600px;
   display: flex; flex-direction: column; gap: 36px;
   &.with-image { width: 800px; }
 }
 .hook { margin: 0; font: 400 34px/1.4 var(--font-body); color: var(--brand-ink); }
-.text.with-image .hook { font-size: 31px; }
+.prose.with-image .hook { font-size: 31px; }
 .question {
   align-self: flex-start; max-width: 100%;
   padding: 20px 26px 22px; border-radius: var(--radius-card);

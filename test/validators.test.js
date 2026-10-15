@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildTemplates, loadPacks } from '../src/templates.js';
 import { slideTypes, checkSlideData, requiredMarkers } from '../src/slides.js';
-import { gateLecturePlan, gateNarration, gateHinglish, gateChapterPlan, pictureOf, pictureIssues, lengthIssues } from '../src/validators/generation.js';
+import { gateLecturePlan, planBudget, gateNarration, gateHinglish, gateChapterPlan, pictureOf, pictureIssues, lengthIssues } from '../src/validators/generation.js';
 
 const build = await buildTemplates();
 const T = slideTypes(build).biology;
@@ -46,6 +46,26 @@ const ctx = (over = {}) => ({
   ...over,
 });
 const slide = (slide_type, extra = {}) => ({ slide_type, title: 't', purpose: 'p', key_points: ['k'], source_refs: ['s04'], image_id: null, ...extra });
+
+test('G2: a short lecture still has room for teaching besides the slides its pack requires (SLIDE_COUNT, lower classes)', () => {
+  const packs = loadPacks();
+  const types = slideTypes(build);
+  const short = { min: 4, max: 5, minutes: 8 };
+  const b = (p, lecture, lectures = 5, budget = short) => planBudget(budget, packs[p], lecture, lectures, types[p]);
+  // Maths: solved example + illustration + 2 MCQs + quick revision, and the hook in lecture 1.
+  assert.deepEqual([b('mathematics', 1).required, b('mathematics', 1).max], [6, 9]);
+  assert.deepEqual([b('mathematics', 2).required, b('mathematics', 2).max], [5, 8]);
+  assert.ok(b('biology', 2).max >= 6 && b('physics', 2).max >= 7);
+  assert.ok(b('biology', 5).required > b('biology', 2).required, 'the last lecture closes with more questions');
+  assert.equal(b('mathematics', 2, 5, { min: 10, max: 13, minutes: 20 }).max, 13, 'a long lecture keeps its time-based budget');
+  assert.equal(b('mathematics', 2).min, 4);
+  // A maths lecture 2 plan with 6 teaching slides (lecture "Mean Deviation for Ungrouped Data").
+  const plan = { lecture_title: 'Mean Deviation', slides: [slide('definition'), slide('concept_intro'), slide('solved_example'), slide('quick_revision', { source_refs: [] }), slide('mcq'), slide('mcq')] };
+  const mctx = (budget) => ({ lecture: 2, lectures: 5, sectionIds: ['s04', 's05'], pack: packs.mathematics, types: types.mathematics, budget, images: [] });
+  const count = (budget) => gateLecturePlan(structuredClone(plan), mctx(budget)).issues.filter((i) => i.code === 'SLIDE_COUNT');
+  assert.equal(count(short).length, 1, 'the raw 4–5 budget cannot hold what the pack requires');
+  assert.deepEqual(count(b('mathematics', 2)), []);
+});
 
 test('G2: an image-required slide without an image falls back to its image-free type', () => {
   const plan = { lecture_title: 'Transport in Plants', slides: [slide('definition'), slide('labeled_diagram'), slide('quick_revision', { source_refs: [] }), slide('mcq'), slide('definition'), slide('mcq')] };

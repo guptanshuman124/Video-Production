@@ -54,7 +54,7 @@ export default function Numerical(d) {
       <div className={d.image ? 'cards with-image' : 'cards'}>
         <section className="card problem" anim="riseIn" delay={350} at={sec(c.problem)} exit="riseOut">
           <div className="label">{d.problemLabel}</div>
-          <div className="text"><Rich text={d.problem} /></div>
+          <div className="prose"><Rich text={d.problem} /></div>
         </section>
         <ul className="steps" stagger={260} delay={900} exitStagger={60} exitDelay={200}>
           {d.steps.map((s, i) => <li anim="riseIn" at={cue(c.steps, i)} exit="riseOut"><Rich text={s} /></li>)}

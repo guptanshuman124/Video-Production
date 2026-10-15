@@ -13,8 +13,8 @@
 .solution { flex: 1 1 auto; min-height: 0; background: var(--brand-cream); overflow: hidden; }
 .answer { flex: 0 0 auto; min-height: 130px; background: var(--brand-cream); }
 .label { font: 700 24px/1.2 var(--font-body); color: var(--brand-muted); text-transform: uppercase; }
-.text { margin-top: 8px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
-.text.strong { font-weight: 600; color: var(--brand-navy); }
+.prose { margin-top: 8px; font: 400 28px/1.35 var(--font-body); color: var(--brand-ink); }
+.prose.strong { font-weight: 600; color: var(--brand-navy); }
 .steps {
   margin: 10px 0 0; padding-left: 36px; display: flex; flex-direction: column;
   gap: calc(20px - var(--n) * 2px);

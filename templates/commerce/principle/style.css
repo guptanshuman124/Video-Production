@@ -13,7 +13,7 @@
 .illustration { flex: 1 1 0; min-height: 0; background: var(--brand-cream); }
 .significance { flex: 1 1 0; min-height: 0; background: var(--brand-cream); }
 .label { font: 700 24px/1.2 var(--font-body); text-transform: uppercase; }
-.text { margin-top: 10px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
-.statement .text { font-weight: 600; }
+.prose { margin-top: 10px; font: 400 29px/1.4 var(--font-body); color: var(--brand-ink); }
+.statement .prose { font-weight: 600; }
 .side { left: 1260px; top: 223px; width: 576px; height: 756px; }
 .side .panel-caption { padding-bottom: 15px; }

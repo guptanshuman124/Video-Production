@@ -153,6 +153,33 @@ const OPENERS = new Set(['intro', 'chapter_index']);
 const IMAGE_SWAP = ['labeled_diagram', 'image_points', 'definition', 'mechanism'];
 const NO_SOURCE_OK = new Set(['intro', 'chapter_index', 'hook', 'quick_revision', 'formula_sheet']);
 
+// The slide budget a plan is held to: the time-based one (curriculum/lectureBudget),
+// widened so the slides the pack requires (type mins, flow includes, the lecture-1
+// opening, the last lecture's closing questions) still leave `room` real teaching
+// slides. A short maths lecture (8 min → 4–5 slides) required 5 (6 in lecture 1),
+// so every plan failed SLIDE_COUNT.
+export function planBudget(budget, pack, lecture, lectures, types, room = 3) {
+  const lim = pack.types || {};
+  const flow = pack.flow || {};
+  const offered = (t) => !!types[t] && lim[t]?.max !== 0;
+  const hasMin = (t) => (lim[t]?.min || 0) > 0;
+  let required = Object.keys(lim).filter((t) => !OPENERS.has(t) && offered(t)).reduce((a, t) => a + (lim[t].min || 0), 0);
+  const counted = new Set(Object.keys(lim).filter(hasMin));
+  const need = (t) => { if (offered(t) && !OPENERS.has(t) && !counted.has(t)) { counted.add(t); required++; } };
+  const needAny = (set) => { if (set?.length && !set.some((t) => counted.has(t)) && set.some(offered)) { counted.add(set.find(offered)); required++; } };
+  const every = flow.everyLecture || {};
+  (every.includes || []).forEach(need);
+  needAny(every.includesAnyOf);
+  if (lecture === 1) (flow.firstLecture?.opening || []).forEach(need);
+  if (lecture === lectures) {
+    (flow.lastLecture?.includes || []).forEach(need);
+    needAny(flow.lastLecture?.includesAnyOf);
+    const questionMins = (pack.questionTypes || []).reduce((a, t) => a + (offered(t) ? lim[t]?.min || 0 : 0), 0);
+    required += Math.max(0, (flow.lastLecture?.minTrailingQuestions || 0) - questionMins);
+  }
+  return { ...budget, max: Math.max(budget.max, required + room), required };
+}
+
 // ctx: { lecture (1-based), lectures, sectionIds, images (usable figures),
 // types (pack slide types), pack (pack.json), budget, lectureTitle,
 // chapterTitle, chapterLectures, sectionHeadings }

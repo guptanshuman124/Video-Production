@@ -51,19 +51,19 @@ export default function Theorem(d) {
       <div className={d.given || d.toProve ? 'cards' : 'cards only'}>
         <section className="card statement" anim="riseIn" delay={400} at={sec(c.statement)} exit="riseOut">
           <div className="label">Statement:</div>
-          <div className="text"><Rich text={d.statement} /></div>
+          <div className="prose"><Rich text={d.statement} /></div>
           {d.formula && <div className="eq">{tex(d.formula, { display: true })}</div>}
         </section>
         {d.given && (
           <section className="card given" anim="riseIn" delay={1000} at={sec(c.given)} exit="riseOut">
             <div className="label">Given:</div>
-            <div className="text"><Rich text={d.given} /></div>
+            <div className="prose"><Rich text={d.given} /></div>
           </section>
         )}
         {d.toProve && (
           <section className="card prove" anim="riseIn" delay={1500} at={sec(c.toProve)} exit="riseOut">
             <div className="label">To prove:</div>
-            <div className="text"><Rich text={d.toProve} /></div>
+            <div className="prose"><Rich text={d.toProve} /></div>
           </section>
         )}
       </div>

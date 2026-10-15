@@ -13,7 +13,7 @@
 .layout.with-image .top.two { grid-template-columns: 1008px 715px; }
 .card { border-radius: var(--radius-card); padding: 14px 20px 16px; background: var(--brand-cream); min-height: 110px; }
 .label { font: 700 21.3px/1.2 var(--font-card); color: var(--brand-navy); text-transform: uppercase; }
-.text { margin-top: 8px; padding-left: 6px; font: 400 27px/1.35 var(--font-body); color: var(--brand-ink); }
+.prose { margin-top: 8px; padding-left: 6px; font: 400 27px/1.35 var(--font-body); color: var(--brand-ink); }
 
 .steps { display: flex; flex-direction: column; min-height: 0; }
 .step {

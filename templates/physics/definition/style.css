@@ -23,7 +23,7 @@
 }
 .head .dcell { background: var(--brand-surface-head); }
 
-.fbox {
+.fcard {
   min-height: 250px; max-height: 288px; padding: 16px 23px 18px;
   border-radius: var(--radius-card); background: var(--brand-surface-head);
   display: flex; flex-direction: column;

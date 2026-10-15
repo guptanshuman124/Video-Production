@@ -48,7 +48,7 @@ export default function Hook(d) {
     <>
       <Header lecture={d.lecture} logo={d.logo} />
       <SlideTitle text={d.title} />
-      <div className={d.image ? 'text with-image' : 'text'}>
+      <div className={d.image ? 'prose with-image' : 'prose'}>
         <p className="hook" anim="riseIn" delay={450} at={sec(c.hook)} exit="riseOut"><Rich text={d.hook} /></p>
         {d.question && (
           <section className="question" anim="riseIn" delay={1200} at={sec(c.question)} exit="riseOut">

@@ -59,12 +59,12 @@ export default function Proof(d) {
         <div className={d.given ? 'top two' : 'top'}>
           <section className="card prove" anim="riseIn" delay={350} exit="riseOut">
             <div className="label">To prove:</div>
-            <div className="text"><Rich text={d.toProve} /></div>
+            <div className="prose"><Rich text={d.toProve} /></div>
           </section>
           {d.given && (
             <section className="card given" anim="riseIn" delay={550} exit="riseOut">
               <div className="label">Given:</div>
-              <div className="text"><Rich text={d.given} /></div>
+              <div className="prose"><Rich text={d.given} /></div>
             </section>
           )}
         </div>

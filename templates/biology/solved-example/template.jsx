@@ -79,12 +79,12 @@ export default function Problem(d) {
       <div className={d.image ? 'cards with-image' : 'cards'}>
         <section className="card problem" anim="riseIn" delay={350} at={sec(c.problem)} exit="riseOut" exitDelay={150}>
           <div className="label">{d.problemLabel}</div>
-          <div className="text"><Rich text={d.problem} /></div>
+          <div className="prose"><Rich text={d.problem} /></div>
         </section>
         <section className="card answer" anim="riseIn" delay={1100} at={cardAt} exit="riseOut">
           <div className="label">{d.answerLabel}</div>
           {d.answer && (
-            <div className="text" {...(answerAt != null && answerAt > cardAt ? { anim: 'riseIn', at: answerAt } : {})}>
+            <div className="prose" {...(answerAt != null && answerAt > cardAt ? { anim: 'riseIn', at: answerAt } : {})}>
               <Rich text={d.answer} />
             </div>
           )}
